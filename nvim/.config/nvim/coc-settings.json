@@ -1,0 +1,6 @@
+{
+  "diagnostic-languageserver.filetypes": {
+    "vim": "vint",
+    "sh": "shellcheck"
+  }
+}
