@@ -10,7 +10,6 @@
     packages = with pkgs; [
       curl
       fd
-      fish
       fzf
       git
       jq
@@ -19,7 +18,6 @@
       stow
       tree
       wget
-      zsh
     ];
   };
 

@@ -14,19 +14,23 @@ let g:coc_global_extensions = [
       \ 'coc-prettier',
       \ 'coc-tabnine',
       \ 'coc-tsserver',
+      \ 'coc-rls',
       \ 'coc-yaml',
       \ ]
 
 call plug#begin('~/.config/nvim/plugged')
 Plug 'HerringtonDarkholme/yats.vim'
 Plug 'airblade/vim-gitgutter'
+Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
 Plug 'lifepillar/vim-solarized8'
 Plug 'LnL7/vim-nix'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': {-> coc#util#install()}}
 Plug 'simnalamburt/vim-mundo'
+Plug 'tpope/vim-eunuch'
 Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-surround'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'vim-nerdtree/nerdtree'
@@ -69,16 +73,6 @@ set notimeout ttimeout ttimeoutlen=10
 " Suppress bell
 set visualbell
 set vb t_vb=
-
-" fix yank
-nnoremap Y y$
-
-" Shortcut to rapidly toggle `set list`
-" ws for `whitespace`
-" nmap <leader>ws :set list!<CR>
-
-" Shortcut to remove trailing whitespace
-" nmap <leader>wr :%s/\s\+$//g<CR>
 
 " FZF
 command! -bang -nargs=* Rg
