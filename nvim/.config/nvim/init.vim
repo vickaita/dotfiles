@@ -5,9 +5,11 @@ if empty(glob('~/.config/nvim/autoload/plug.vim'))
 endif
 
 let g:coc_global_extensions = [
+      \ 'coc-conjure',
       \ 'coc-css',
       \ 'coc-diagnostic',
       \ 'coc-eslint',
+      \ 'coc-elixir',
       \ 'coc-html',
       \ 'coc-jest',
       \ 'coc-json',
@@ -20,14 +22,19 @@ let g:coc_global_extensions = [
 
 call plug#begin('~/.config/nvim/plugged')
 Plug 'HerringtonDarkholme/yats.vim'
+Plug 'LnL7/vim-nix'
 Plug 'airblade/vim-gitgutter'
+Plug 'alx741/vim-hindent' " Optional
+Plug 'cespare/vim-toml'
+Plug 'elixir-editors/vim-elixir'
 Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
 Plug 'lifepillar/vim-solarized8'
-Plug 'LnL7/vim-nix'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': {-> coc#util#install()}}
+Plug 'neovimhaskell/haskell-vim'
 Plug 'simnalamburt/vim-mundo'
+Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-eunuch'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
