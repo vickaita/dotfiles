@@ -33,6 +33,7 @@ Plug 'junegunn/fzf.vim'
 Plug 'lifepillar/vim-solarized8'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': {-> coc#util#install()}}
 Plug 'neovimhaskell/haskell-vim'
+Plug 'preservim/tagbar'
 Plug 'simnalamburt/vim-mundo'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-eunuch'
@@ -41,6 +42,7 @@ Plug 'tpope/vim-surround'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'vim-nerdtree/nerdtree'
+Plug 'vim-test/vim-test'
 Plug 'vimwiki/vimwiki'
 call plug#end()
 
