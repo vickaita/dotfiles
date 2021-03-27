@@ -23,13 +23,17 @@ let g:coc_global_extensions = [
 call plug#begin('~/.config/nvim/plugged')
 Plug 'HerringtonDarkholme/yats.vim'
 Plug 'LnL7/vim-nix'
+Plug 'SirVer/ultisnips'
 Plug 'airblade/vim-gitgutter'
 Plug 'alx741/vim-hindent' " Optional
+Plug 'arcticicestudio/nord-vim'
 Plug 'cespare/vim-toml'
 Plug 'elixir-editors/vim-elixir'
+Plug 'honza/vim-snippets'
 Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
+" Plug 'jxnblk/vim-mdx-js'
 Plug 'lifepillar/vim-solarized8'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': {-> coc#util#install()}}
 Plug 'neovimhaskell/haskell-vim'
@@ -38,6 +42,7 @@ Plug 'simnalamburt/vim-mundo'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-eunuch'
 Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-markdown'
 Plug 'tpope/vim-surround'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
@@ -155,11 +160,78 @@ command! JestInit :call CocAction('runCommand', 'jest.init')
 " Vimwiki
 let g:vimwiki_list = [{'path': '~/vimwiki/', 'syntax': 'markdown', 'ext': '.md'}]
 
+" Ctags
+let g:rust_use_custom_ctags_defs = 1  " if using rust.vim
+let g:tagbar_type_rust = {
+  \ 'ctagsbin' : '/path/to/your/universal/ctags',
+  \ 'ctagstype' : 'rust',
+  \ 'kinds' : [
+      \ 'n:modules',
+      \ 's:structures:1',
+      \ 'i:interfaces',
+      \ 'c:implementations',
+      \ 'f:functions:1',
+      \ 'g:enumerations:1',
+      \ 't:type aliases:1:0',
+      \ 'v:constants:1:0',
+      \ 'M:macros:1',
+      \ 'm:fields:1:0',
+      \ 'e:enum variants:1:0',
+      \ 'P:methods:1',
+  \ ],
+  \ 'sro': '::',
+  \ 'kind2scope' : {
+      \ 'n': 'module',
+      \ 's': 'struct',
+      \ 'i': 'interface',
+      \ 'c': 'implementation',
+      \ 'f': 'function',
+      \ 'g': 'enum',
+      \ 't': 'typedef',
+      \ 'v': 'variable',
+      \ 'M': 'macro',
+      \ 'm': 'field',
+      \ 'e': 'enumerator',
+      \ 'P': 'method',
+  \ },
+\ }
+
+let g:tagbar_type_elixir = {
+    \ 'ctagstype' : 'elixir',
+    \ 'kinds' : [
+        \ 'p:protocols',
+        \ 'm:modules',
+        \ 'e:exceptions',
+        \ 'y:types',
+        \ 'd:delegates',
+        \ 'f:functions',
+        \ 'c:callbacks',
+        \ 'a:macros',
+        \ 't:tests',
+        \ 'i:implementations',
+        \ 'o:operators',
+        \ 'r:records'
+    \ ],
+    \ 'sro' : '.',
+    \ 'kind2scope' : {
+        \ 'p' : 'protocol',
+        \ 'm' : 'module'
+    \ },
+    \ 'scope2kind' : {
+        \ 'protocol' : 'p',
+        \ 'module' : 'm'
+    \ },
+    \ 'sort' : 0
+\ }
+
 set shiftwidth=2 tabstop=8 softtabstop=2 autoindent expandtab
+
+autocmd BufNewFile,BufRead *.mdx set filetype=markdown
 
 autocmd FileType css        setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType html       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
+autocmd FileType markdown  setlocal textwidth=80 formatoptions+=t spell
 autocmd FileType ruby       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType typescript setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType yaml       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
