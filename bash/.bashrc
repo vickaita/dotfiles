@@ -127,4 +127,6 @@ fi
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.npm-packages/bin:$PATH"
+export GEM_HOME=$HOME/.gem
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.npm-packages/bin:$GEM_HOME/ruby/2.7.0/bin:$PATH"
+eval "$(direnv hook bash)"
