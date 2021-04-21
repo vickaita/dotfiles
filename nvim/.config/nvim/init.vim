@@ -88,6 +88,9 @@ set notimeout ttimeout ttimeoutlen=10
 set visualbell
 set vb t_vb=
 
+" Autopairs
+let g:AutoPairsFlyMode = 1
+
 " FZF
 command! -bang -nargs=* Rg
   \ call fzf#vim#grep(
@@ -231,7 +234,7 @@ autocmd BufNewFile,BufRead *.mdx set filetype=markdown
 autocmd FileType css        setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType html       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
-autocmd FileType markdown  setlocal textwidth=80 formatoptions+=t spell
+autocmd FileType markdown   setlocal textwidth=80 formatoptions+=t spell
 autocmd FileType ruby       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType typescript setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType yaml       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
