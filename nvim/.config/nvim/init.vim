@@ -14,6 +14,8 @@ let g:coc_global_extensions = [
       \ 'coc-jest',
       \ 'coc-json',
       \ 'coc-prettier',
+      \ 'coc-pyright',
+      \ 'coc-spell-checker',
       \ 'coc-tabnine',
       \ 'coc-tsserver',
       \ 'coc-rls',
@@ -28,7 +30,9 @@ Plug 'airblade/vim-gitgutter'
 Plug 'alx741/vim-hindent' " Optional
 Plug 'arcticicestudio/nord-vim'
 Plug 'cespare/vim-toml'
+Plug 'clojure-vim/vim-jack-in'
 Plug 'elixir-editors/vim-elixir'
+Plug 'eraserhd/parinfer-rust', {'do': 'cargo build --release'}
 Plug 'honza/vim-snippets'
 Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
@@ -37,10 +41,14 @@ Plug 'junegunn/fzf.vim'
 Plug 'lifepillar/vim-solarized8'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': {-> coc#util#install()}}
 Plug 'neovimhaskell/haskell-vim'
+Plug 'Olical/conjure', {'tag': 'v4.22.1'}
 Plug 'preservim/tagbar'
+Plug 'radenling/vim-dispatch-neovim' " Only in Neovim:
 Plug 'simnalamburt/vim-mundo'
 Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-eunuch'
+Plug 'tpope/vim-fireplace'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-markdown'
 Plug 'tpope/vim-surround'
@@ -111,7 +119,7 @@ nmap <silent> [g <Plug>(coc-diagnostic-prev)
 nmap <silent> ]g <Plug>(coc-diagnostic-next)
 nmap <silent> ge <Plug>(coc-diagnostic-info)
 
-" Remap keys for gotos
+" Remap keys for goto
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
@@ -141,7 +149,7 @@ nmap <leader>f  <Plug>(coc-format-selected)
 " Coc Prettier
 command! -nargs=0 Prettier :CocCommand prettier.formatFile
 
-" Oraganize imports
+" Organize imports
 command! -nargs=0 OrganizeImports :CocCommand tsserver.organizeImports
 
 " Cleanup
@@ -158,6 +166,9 @@ nnoremap <leader>te :call CocAction('runCommand', 'jest.singleTest')<CR>
 
 " Init jest in current cwd, require global jest command exists
 command! JestInit :call CocAction('runCommand', 'jest.init')
+
+vmap <leader>a <Plug>(coc-codeaction-selected)
+nmap <leader>a <Plug>(coc-codeaction-selected)
 " end Coc.nvim
 
 " Vimwiki
