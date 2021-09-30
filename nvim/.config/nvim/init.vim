@@ -97,7 +97,7 @@ set visualbell
 set vb t_vb=
 
 " Autopairs
-let g:AutoPairsFlyMode = 1
+let g:AutoPairsFlyMode = 0
 
 " FZF
 command! -bang -nargs=* Rg
@@ -146,11 +146,15 @@ nmap <leader>rn <Plug>(coc-rename)
 xmap <leader>f  <Plug>(coc-format-selected)
 nmap <leader>f  <Plug>(coc-format-selected)
 
+" Edit this file
+command! EditConfig :edit ~/.config/nvim/init.vim
+
 " Coc Prettier
 command! -nargs=0 Prettier :CocCommand prettier.formatFile
 
 " Organize imports
-command! -nargs=0 OrganizeImports :CocCommand tsserver.organizeImports
+autocmd FileType javascript command! -nargs=0 OrganizeImports :CocCommand tsserver.organizeImports
+autocmd FileType python command! -nargs=0 OrganizeImports :CocCommand pyright.organizeimports
 
 " Cleanup
 nmap <leader>c :Prettier<CR>OrganizeImports<CR>
@@ -249,3 +253,5 @@ autocmd FileType markdown   setlocal textwidth=80 formatoptions+=t spell
 autocmd FileType ruby       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType typescript setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType yaml       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
+autocmd FileType clojure    nnoremap <buffer> <C-j> :Eval<CR>
+autocmd BufRead,BufNewFile *.am set filetype=ambient
