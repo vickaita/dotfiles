@@ -85,6 +85,7 @@ set laststatus=2
 filetype plugin on
 filetype indent on
 
+" Colorscheme
 set background=light
 colorscheme solarized8_flat
 let g:airline_theme='solarized'
@@ -176,7 +177,7 @@ nmap <leader>a <Plug>(coc-codeaction-selected)
 " end Coc.nvim
 
 " Vimwiki
-let g:vimwiki_list = [{'path': '~/vimwiki/', 'syntax': 'markdown', 'ext': '.md'}]
+let g:vimwiki_list = [{'path': '~/vimwiki/'}]
 
 " Ctags
 let g:rust_use_custom_ctags_defs = 1  " if using rust.vim
