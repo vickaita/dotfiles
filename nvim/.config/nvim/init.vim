@@ -179,6 +179,10 @@ nmap <leader>a <Plug>(coc-codeaction-selected)
 " Vimwiki
 let g:vimwiki_list = [{'path': '~/vimwiki/'}]
 
+"" So that list completion will work with hard returns
+autocmd FileType vimwiki inoremap <silent><buffer> <CR> <C-]><Esc>:VimwikiReturn 3 5<CR>
+autocmd FileType vimwiki inoremap <silent><buffer> <S-CR> <Esc>:VimwikiReturn 2 2<CR>
+
 " Ctags
 let g:rust_use_custom_ctags_defs = 1  " if using rust.vim
 let g:tagbar_type_rust = {
