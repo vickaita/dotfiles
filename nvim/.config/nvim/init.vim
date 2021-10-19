@@ -247,7 +247,7 @@ let g:tagbar_type_elixir = {
     \ 'sort' : 0
 \ }
 
-set shiftwidth=2 tabstop=8 softtabstop=2 autoindent expandtab
+set shiftwidth=4 tabstop=4 softtabstop=4 autoindent expandtab
 
 autocmd BufNewFile,BufRead *.mdx set filetype=markdown
 
