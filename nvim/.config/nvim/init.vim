@@ -23,28 +23,22 @@ let g:coc_global_extensions = [
       \ ]
 
 call plug#begin('~/.config/nvim/plugged')
-Plug 'HerringtonDarkholme/yats.vim'
-Plug 'LnL7/vim-nix'
 Plug 'SirVer/ultisnips'
 Plug 'airblade/vim-gitgutter'
-Plug 'alx741/vim-hindent' " Optional
 Plug 'arcticicestudio/nord-vim'
-Plug 'cespare/vim-toml'
 Plug 'clojure-vim/vim-jack-in'
-Plug 'elixir-editors/vim-elixir'
 Plug 'eraserhd/parinfer-rust', {'do': 'cargo build --release'}
 Plug 'honza/vim-snippets'
 Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
-" Plug 'jxnblk/vim-mdx-js'
 Plug 'lifepillar/vim-solarized8'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': {-> coc#util#install()}}
-Plug 'neovimhaskell/haskell-vim'
 Plug 'Olical/conjure', {'tag': 'v4.22.1'}
 Plug 'preservim/tagbar'
 Plug 'radenling/vim-dispatch-neovim' " Only in Neovim:
 Plug 'simnalamburt/vim-mundo'
+Plug 'sheerun/vim-polyglot'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-eunuch'
