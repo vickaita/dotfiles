@@ -8,6 +8,10 @@ case $- in
       *) return;;
 esac
 
+DOTFILES=$HOME/.dotfiles
+
+source $DOTFILES/shared/prompt.sh
+
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 HISTCONTROL=ignoreboth
@@ -127,9 +131,8 @@ fi
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
-# export GEM_HOME=$HOME/.gem
-# export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.npm-packages/bin:$GEM_HOME/ruby/2.7.0/bin:$PATH"
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.npm-packages/bin:$PATH"
+export GEM_HOME=$HOME/.gem
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.npm-packages/bin:$GEM_HOME/ruby/2.7.0/bin:$PATH"
 eval "$(direnv hook bash)"
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
