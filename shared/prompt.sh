@@ -20,10 +20,10 @@ GIT_PS1_STATESEPARATOR=""
 if [ -n "$ZSH_VERSION" ]; then
     precmd () {
         local ret_status="%(?:%{%f%}:%{%F{red}%})"
-        __git_ps1 "%F{cyan}%~%f %B%F{blue}[%F{red}" "%F{blue}]%b%f ${ret_status}%#%f " "%s"
+        __git_ps1 "%F{cyan}%~%f" " ${ret_status}%#%f " " %%B%%F{blue}[%%F{red}%s%%F{blue}]%%b%%f"
     }
 fi
 
 if [ -n "$BASH_VERSION" ]; then
-   PROMPT_COMMAND='__git_ps1 "\[\033[36m\]\w \[\033[1;34m\][\[\033[1;31m\]" "\[\033[1;34m\]]\[\033[0;0m\] $ " "%s"';
+   PROMPT_COMMAND='__git_ps1 "\[\033[36m\]\w" " $ " " \[\033[1;34m\][\[\033[1;31m\]%s\[\033[1;34m\]]\[\033[0;0m\]"';
 fi
