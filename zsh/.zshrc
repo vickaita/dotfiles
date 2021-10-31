@@ -1,6 +1,7 @@
 DOTFILES=$HOME/.dotfiles
 
 source $DOTFILES/shared/prompt.sh
+source $DOTFILES/shared/history.sh
 
 # Configure FZF integration
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
