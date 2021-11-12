@@ -24,11 +24,20 @@
       }
     }
   },
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": true,
+  "python.formatting.provider": "black",
+  "python.analysis.typeCheckingMode": "strict",
+  "python.pythonPath": "python3",
   "cSpell.userWords": [
     "Aita",
     "Frontmatter",
     "Vick",
     "nord",
+    "pylint",
+    "pyright",
+    "shellcheck",
     "spork",
     "struct"
   ]
