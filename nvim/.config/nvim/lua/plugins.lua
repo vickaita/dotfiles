@@ -12,7 +12,7 @@ vim.g.coc_global_extensions = {
   'coc-eslint',
   'coc-elixir',
   'coc-html',
-  -- 'coc-jedi',
+  'coc-jedi',
   'coc-jest',
   'coc-json',
   'coc-lua',
@@ -75,7 +75,7 @@ return require('packer').startup(function(use)
   use 'clojure-vim/vim-jack-in'
   use {'eraserhd/parinfer-rust', run = 'cargo build --release'}
   use 'honza/vim-snippets'
-  use 'jiangmiao/auto-pairs'
+  -- use 'jiangmiao/auto-pairs'
   -- use 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   -- use 'junegunn/fzf.vim'
   use 'lifepillar/vim-solarized8'
@@ -97,6 +97,14 @@ return require('packer').startup(function(use)
   use 'vim-nerdtree/nerdtree'
   use 'vim-test/vim-test'
   use 'vimwiki/vimwiki'
+  use {
+    'windwp/nvim-autopairs',
+    config=function()
+      require('nvim-autopairs').setup {
+        disable_filetype = { 'TelescopePrompt', 'vim' }
+      }
+    end
+  }
 
   -- Automatically set up your configuration after cloning packer.nvim
   -- Put this at the end after all plugins
