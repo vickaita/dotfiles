@@ -35,36 +35,11 @@ return require('packer').startup(function(use)
     config = function()
       require('gitsigns').setup {
         signs = {
-          add = {
-            hl = 'GitSignsAdd',
-            text = '+',
-            numhl='GitSignsAddNr',
-            linehl='GitSignsAddLn'
-          },
-          change = {
-            hl = 'GitSignsChange',
-            text = '~',
-            numhl='GitSignsChangeNr',
-            linehl='GitSignsChangeLn'
-          },
-          delete = {
-            hl = 'GitSignsDelete',
-            text = '_',
-            numhl='GitSignsDeleteNr',
-            linehl='GitSignsDeleteLn'
-          },
-          topdelete = {
-            hl = 'GitSignsDelete',
-            text = '‾',
-            numhl='GitSignsDeleteNr',
-            linehl='GitSignsDeleteLn'
-          },
-          changedelete = {
-            hl = 'GitSignsChange',
-            text = '~',
-            numhl='GitSignsChangeNr',
-            linehl='GitSignsChangeLn'
-          },
+          add          = { hl = 'GitSignsAdd',    text = '+', numhl='GitSignsAddNr',    linehl='GitSignsAddLn'    },
+          change       = { hl = 'GitSignsChange', text = '~', numhl='GitSignsChangeNr', linehl='GitSignsChangeLn' },
+          delete       = { hl = 'GitSignsDelete', text = '_', numhl='GitSignsDeleteNr', linehl='GitSignsDeleteLn' },
+          topdelete    = { hl = 'GitSignsDelete', text = '‾', numhl='GitSignsDeleteNr', linehl='GitSignsDeleteLn' },
+          changedelete = { hl = 'GitSignsChange', text = '~', numhl='GitSignsChangeNr', linehl='GitSignsChangeLn' },
         }
     } end
   }
@@ -78,7 +53,16 @@ return require('packer').startup(function(use)
   -- use 'jiangmiao/auto-pairs'
   -- use 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   -- use 'junegunn/fzf.vim'
+  use 'jnurmine/Zenburn'
   use 'lifepillar/vim-solarized8'
+  use {
+    'lukas-reineke/indent-blankline.nvim',
+    config = require('indent_blankline').setup {
+      -- char = '¦',
+      enabled = false,
+      show_first_indent_level = false,
+    }
+  }
   use {'neoclide/coc.nvim', branch = 'release'}
   use {'Olical/conjure', tag = 'v4.22.1'}
   use 'preservim/tagbar'
@@ -96,10 +80,11 @@ return require('packer').startup(function(use)
   use 'vim-airline/vim-airline-themes'
   use 'vim-nerdtree/nerdtree'
   use 'vim-test/vim-test'
+  use 'vim-scripts/Wombat'
   use 'vimwiki/vimwiki'
   use {
     'windwp/nvim-autopairs',
-    config=function()
+    config = function()
       require('nvim-autopairs').setup {
         disable_filetype = { 'TelescopePrompt', 'vim' }
       }

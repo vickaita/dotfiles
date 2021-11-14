@@ -33,12 +33,12 @@ set notimeout ttimeout ttimeoutlen=10
 set visualbell
 set vb t_vb=
 
-source ~/.config/nvim/colorscheme.vim
-source ~/.config/nvim/coc.vim
-source ~/.config/nvim/fzf.vim
-source ~/.config/nvim/vimwiki.vim
-source ~/.config/nvim/ctags.vim
-source ~/.config/nvim/nerdtree.vim
+source ~/.config/nvim/init/coc.vim
+source ~/.config/nvim/init/colorscheme.vim
+source ~/.config/nvim/init/ctags.vim
+source ~/.config/nvim/init/fzf.vim
+source ~/.config/nvim/init/nerdtree.vim
+source ~/.config/nvim/init/vimwiki.vim
 
 " Autopairs
 " let g:AutoPairsFlyMode = 0
@@ -55,6 +55,7 @@ autocmd FileType html       setlocal shiftwidth=2 tabstop=2 softtabstop=2
 autocmd FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
 autocmd FileType lua        setlocal shiftwidth=2 tabstop=2 softtabstop=2
 autocmd FileType markdown   setlocal textwidth=80 formatoptions+=t spell
+autocmd FileType python     let b:indent_blankline_enabled = 1
 autocmd FileType ruby       setlocal shiftwidth=2 tabstop=2 softtabstop=2
 autocmd FileType typescript setlocal shiftwidth=2 tabstop=2 softtabstop=2
 autocmd FileType yaml       setlocal shiftwidth=2 tabstop=2 softtabstop=2
