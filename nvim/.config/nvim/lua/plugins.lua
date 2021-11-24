@@ -11,6 +11,7 @@ vim.g.coc_global_extensions = {
   'coc-diagnostic',
   'coc-eslint',
   'coc-elixir',
+  'coc-highlight',
   'coc-html',
   'coc-jedi',
   'coc-jest',
@@ -53,34 +54,54 @@ return require('packer').startup(function(use)
   -- use 'jiangmiao/auto-pairs'
   -- use 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   -- use 'junegunn/fzf.vim'
-  use 'jnurmine/Zenburn'
-  use 'lifepillar/vim-solarized8'
   use {
     'lukas-reineke/indent-blankline.nvim',
     config = require('indent_blankline').setup {
       -- char = '¦',
+      char_highlight_list = {
+        'IndentLine'
+      },
       enabled = false,
       show_first_indent_level = false,
     }
   }
   use {'neoclide/coc.nvim', branch = 'release'}
+  -- use {
+  --   'norcalli/nvim-colorizer.lua',
+  --   config = function()
+  --     require('colorizer').setup { '*' }
+  --   end
+  -- }
+  use {
+    'nvim-treesitter/nvim-treesitter',
+    run = ':TSUpdate',
+    config = function()
+      require('nvim-treesitter.configs').setup {
+        ensure_installed = "maintained",
+        highlight = { enabled = true },
+        incremental_selection = { enabled = true },
+        indent = { enabled = true }
+      }
+    end
+  }
   use {'Olical/conjure', tag = 'v4.22.1'}
   use 'preservim/tagbar'
   use 'radenling/vim-dispatch-neovim'
   use 'simnalamburt/vim-mundo'
   use 'sheerun/vim-polyglot'
   use 'tpope/vim-commentary'
+  use 'tpope/vim-dadbod'
   use 'tpope/vim-dispatch'
   use 'tpope/vim-eunuch'
   use 'tpope/vim-fireplace'
   use 'tpope/vim-fugitive'
   use 'tpope/vim-markdown'
+  use 'tpope/vim-repeat'
   use 'tpope/vim-surround'
-  use 'vim-airline/vim-airline'
-  use 'vim-airline/vim-airline-themes'
+  -- use 'vim-airline/vim-airline'
+  -- use 'vim-airline/vim-airline-themes'
   use 'vim-nerdtree/nerdtree'
   use 'vim-test/vim-test'
-  use 'vim-scripts/Wombat'
   use 'vimwiki/vimwiki'
   use {
     'windwp/nvim-autopairs',
@@ -90,6 +111,12 @@ return require('packer').startup(function(use)
       }
     end
   }
+
+  -- Colorschemes
+  use 'gerw/vim-HiLinkTrace'
+  use 'jnurmine/Zenburn'
+  use 'lifepillar/vim-solarized8'
+  use 'vim-scripts/Wombat'
   use 'yorickpeterse/vim-paper'
 
   -- Automatically set up your configuration after cloning packer.nvim

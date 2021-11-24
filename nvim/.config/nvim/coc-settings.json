@@ -3,6 +3,7 @@
     "vim": "vint",
     "sh": "shellcheck"
   },
+  "highlight.colorNames.enable": false,
   "languageserver": {
     "haskell": {
       "command": "hie-wrapper",
@@ -37,8 +38,10 @@
     "nord",
     "pylint",
     "pyright",
+    "rocketmetalic",
     "shellcheck",
     "spork",
-    "struct"
+    "struct",
+    "yinmnblue"
   ]
 }
