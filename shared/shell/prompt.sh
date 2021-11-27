@@ -11,7 +11,7 @@ function git_prompt_info() {
 }
 
 if ! typeset -f __git_ps1 > /dev/null; then
-    source $DOTFILES/shared/git-prompt.sh
+    source $DOTFILES/shared/shell/git-prompt.sh
 fi
 
 GIT_PS1_SHOWDIRTYSTATE=1

@@ -1,11 +1,10 @@
-if empty(glob('~/.config/nvim/autoload/plug.vim'))
-  silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
     \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
 let g:coc_global_extensions = [
-      \ 'coc-conjure',
       \ 'coc-css',
       \ 'coc-diagnostic',
       \ 'coc-eslint',
@@ -22,7 +21,7 @@ let g:coc_global_extensions = [
       \ 'coc-yaml',
       \ ]
 
-call plug#begin('~/.config/nvim/plugged')
+call plug#begin('~/.vim/plugged')
 Plug 'SirVer/ultisnips'
 Plug 'airblade/vim-gitgutter'
 Plug 'arcticicestudio/nord-vim'
@@ -53,43 +52,15 @@ Plug 'vim-test/vim-test'
 Plug 'vimwiki/vimwiki'
 call plug#end()
 
-set nocompatible
-set expandtab
-set encoding=utf-8
-set showcmd
-set showmatch
-set mouse=a
-set hlsearch
-set incsearch
-set ignorecase
-set smartcase
-set number
-set ruler
-set colorcolumn=81
-highlight ColorColumn term=reverse ctermbg=7
-set listchars=tab:▸\ ,trail:•
-set list!
-set wildmenu
-set undofile
-set undodir=~/.vimundo
-set nomodeline
-set hidden
-set termguicolors
-set laststatus=2
-filetype plugin on
-filetype indent on
-
-" Colorscheme
-set background=light
-colorscheme solarized8_flat
-let g:airline_theme='solarized'
-
-" Quickly time out on keycodes, but never time out on mappings
-set notimeout ttimeout ttimeoutlen=10
-
-" Suppress bell
-set visualbell
-set vb t_vb=
+" TODO: set the `.dotfiles` directory from the environment variable instead of
+"       hard coding it.
+source ~/.dotfiles/shared/vim/init/base.vim
+source ~/.dotfiles/shared/vim/init/coc.vim
+source ~/.dotfiles/shared/vim/init/colorscheme.vim
+source ~/.dotfiles/shared/vim/init/ctags.vim
+source ~/.dotfiles/shared/vim/init/fzf.vim
+source ~/.dotfiles/shared/vim/init/nerdtree.vim
+source ~/.dotfiles/shared/vim/init/vimwiki.vim
 
 " Autopairs
 let g:AutoPairsFlyMode = 0
@@ -104,142 +75,6 @@ command! -bang -nargs=* Rg
 nnoremap <C-x><C-b> :Buffers<CR>
 nnoremap <C-x><C-f> :Files<CR>
 nnoremap <C-x><C-g> :GFiles<CR>
-
-" NERDTree
-nnoremap <leader>n :NERDTreeToggle<CR>
-
-" Coc.nvim
-" Use `[g` and `]g` to navigate diagnostics
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
-nmap <silent> ge <Plug>(coc-diagnostic-info)
-
-" Remap keys for goto
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
-
-" Use K to show documentation in preview window
-nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
-  else
-    call CocAction('doHover')
-  endif
-endfunction
-
-" Highlight symbol under cursor on CursorHold
-autocmd CursorHold * silent call CocActionAsync('highlight')
-
-" Remap for rename current word
-nmap <leader>rn <Plug>(coc-rename)
-
-" Remap for format selected region
-xmap <leader>f  <Plug>(coc-format-selected)
-nmap <leader>f  <Plug>(coc-format-selected)
-
-" Edit this file
-command! EditConfig :edit ~/.config/nvim/init.vim
-
-" Coc Prettier
-command! -nargs=0 Prettier :CocCommand prettier.formatFile
-
-" Organize imports
-autocmd FileType javascript command! -nargs=0 OrganizeImports :CocCommand tsserver.organizeImports
-autocmd FileType python command! -nargs=0 OrganizeImports :CocCommand pyright.organizeimports
-
-" Cleanup
-nmap <leader>c :Prettier<CR>OrganizeImports<CR>
-
-" Run jest for current project
-command! -nargs=0 Jest :call  CocAction('runCommand', 'jest.projectTest')
-
-" Run jest for current file
-command! -nargs=0 JestCurrent :call  CocAction('runCommand', 'jest.fileTest', ['%'])
-
-" Run jest for current test
-nnoremap <leader>te :call CocAction('runCommand', 'jest.singleTest')<CR>
-
-" Init jest in current cwd, require global jest command exists
-command! JestInit :call CocAction('runCommand', 'jest.init')
-
-vmap <leader>a <Plug>(coc-codeaction-selected)
-nmap <leader>a <Plug>(coc-codeaction-selected)
-" end Coc.nvim
-
-" Vimwiki
-let g:vimwiki_list = [{'path': '~/vimwiki/'}]
-
-"" So that list completion will work with hard returns
-autocmd FileType vimwiki inoremap <silent><buffer> <CR> <C-]><Esc>:VimwikiReturn 3 5<CR>
-autocmd FileType vimwiki inoremap <silent><buffer> <S-CR> <Esc>:VimwikiReturn 2 2<CR>
-
-" Ctags
-let g:rust_use_custom_ctags_defs = 1  " if using rust.vim
-let g:tagbar_type_rust = {
-  \ 'ctagsbin' : '/path/to/your/universal/ctags',
-  \ 'ctagstype' : 'rust',
-  \ 'kinds' : [
-      \ 'n:modules',
-      \ 's:structures:1',
-      \ 'i:interfaces',
-      \ 'c:implementations',
-      \ 'f:functions:1',
-      \ 'g:enumerations:1',
-      \ 't:type aliases:1:0',
-      \ 'v:constants:1:0',
-      \ 'M:macros:1',
-      \ 'm:fields:1:0',
-      \ 'e:enum variants:1:0',
-      \ 'P:methods:1',
-  \ ],
-  \ 'sro': '::',
-  \ 'kind2scope' : {
-      \ 'n': 'module',
-      \ 's': 'struct',
-      \ 'i': 'interface',
-      \ 'c': 'implementation',
-      \ 'f': 'function',
-      \ 'g': 'enum',
-      \ 't': 'typedef',
-      \ 'v': 'variable',
-      \ 'M': 'macro',
-      \ 'm': 'field',
-      \ 'e': 'enumerator',
-      \ 'P': 'method',
-  \ },
-\ }
-
-let g:tagbar_type_elixir = {
-    \ 'ctagstype' : 'elixir',
-    \ 'kinds' : [
-        \ 'p:protocols',
-        \ 'm:modules',
-        \ 'e:exceptions',
-        \ 'y:types',
-        \ 'd:delegates',
-        \ 'f:functions',
-        \ 'c:callbacks',
-        \ 'a:macros',
-        \ 't:tests',
-        \ 'i:implementations',
-        \ 'o:operators',
-        \ 'r:records'
-    \ ],
-    \ 'sro' : '.',
-    \ 'kind2scope' : {
-        \ 'p' : 'protocol',
-        \ 'm' : 'module'
-    \ },
-    \ 'scope2kind' : {
-        \ 'protocol' : 'p',
-        \ 'module' : 'm'
-    \ },
-    \ 'sort' : 0
-\ }
 
 set shiftwidth=4 tabstop=4 softtabstop=4 autoindent expandtab
 

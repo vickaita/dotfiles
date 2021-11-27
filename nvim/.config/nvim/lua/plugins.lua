@@ -6,7 +6,7 @@ end
 
 vim.g.coc_global_extensions = {
   'coc-calc',
-  'coc-conjure', -- clojure
+  'coc-conjure',       -- clojure
   'coc-css',
   'coc-diagnostic',
   'coc-eslint',
@@ -19,11 +19,13 @@ vim.g.coc_global_extensions = {
   'coc-lua',
   'coc-prettier',
   'coc-pyright',
-  'coc-solargraph', -- ruby
+  'coc-sh',            -- bash
+  'coc-solargraph',    -- ruby
   'coc-spell-checker',
   'coc-tabnine',
   'coc-tsserver',
-  'coc-rls', -- rust
+  'coc-rls',           -- rust
+  'coc-vimlsp',
   'coc-yaml',
 }
 

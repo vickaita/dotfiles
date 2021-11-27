@@ -10,9 +10,9 @@ esac
 
 DOTFILES=$HOME/.dotfiles
 
-source $DOTFILES/shared/prompt.sh
-source $DOTFILES/shared/history.sh
-source $DOTFILES/shared/path.sh
+source $DOTFILES/shared/shell/prompt.sh
+source $DOTFILES/shared/shell/history.sh
+source $DOTFILES/shared/shell/path.sh
 
 
 # check the window size after each command and, if necessary,
