@@ -56,21 +56,15 @@ command! -nargs=+ Hi call s:Hi(<f-args>)
 "" Greys, from oldlace (lightest) to darkpurple (darkest)
 let s:oldlace             = '#fcf6e6'
 let s:cornsilk            = '#faf0d3'
-
 let s:champagne           = '#f3e9cc'
 let s:dutchwhite          = '#ded1b7'
 let s:khakiweb            = '#c2b4a2'
 let s:rocketmetalic       = '#8a7a77'
-
 let s:eggplant            = '#53414d'
 let s:darkpurple          = '#1b0722'
 
 "" Reds
 let s:venetianred         = '#c51e1a'
-let s:rossocorsa          = '#D21A14'
-let s:maximumred          = '#db1b14'
-let s:redpigment          = '#ea2b1f'
-let s:middlered           = '#F28E79'
 let s:apricot             = '#f6bfa6'
 
 "" Browns
@@ -79,52 +73,28 @@ let s:beaver              = '#ae8971'
 let s:tan                 = '#d4bda2'
 
 "" Purples
-let s:pearlypurple        = '#a861a7'
-let s:razzmicberry        = '#854b86'
-" let s:maximumpurple       = '#744076'
-" let s:maximumpurple       = '#a04ba8'
-" let s:maximumpurple       = '#b150ba'
+" let s:palatinatepurple    = '#623465'
 let s:maximumpurple       = '#943E9D'
-let s:palatinatepurple    = '#623465'
 
 "" Oranges
-let s:flame               = '#ec5d2f'
+" let s:flame               = '#ec5d2f'
 let s:orangecrayola       = '#EC6D34'
-let s:sunray              = '#edae49'
-let s:deepchampagne       = '#F4CF8E'
-let s:wheat               = '#f7e0b1'
+" let s:sunray              = '#edae49'
 
 "" Yellows
 let s:jasmine             = '#f9df74'
 let s:mediumchampagne     = '#fae8a4'
-let s:lemonmeringue       = '#faecbc'
 
 "" Greens
-let s:persiangreen        = '#37a492'
-let s:illuminatingemerald = '#2B8F7F'
 let s:celedongreen        = '#258575'
-let s:pinegreen           = '#1f7a6b'
 let s:polishedpine        = '#68a691'
-let s:laurelgreen         = '#c4d3b9'
-
-let s:wintergreendream    = '#557f76'
-let s:polishedpine        = '#68a691'
-let s:cambridgeblue       = '#8DB59F'
-" let s:illuminatingemerald = '#429482'
-let s:ming                = '#1a737f'
 
 "" Blues
-let s:celticblue          = '#1967cc'
+" let s:celticblue          = '#1967cc'
 let s:brightnavyblue      = '#2371D6'
-" let s:azure               = '#3b84e1'
 let s:azure               = '#2d7be0'
-let s:lightsteelblue      = '#9bbada'
-let s:lightgray           = '#cbd5d7'
 
 let s:cyan                = '#168dc0'
-let s:yinmnblue           = '#364a73'
-let s:tuftsblue           = '#518cc3'
-let s:cgblue              = '#3680a1'
 
 let s:colors = {
 \  'black': s:darkpurple,
@@ -222,7 +192,7 @@ Hi Macro orange NONE NONE
 Hi MatchParen NONE NONE bold
 Hi MoreMsg black NONE NONE
 Hi NonText green NONE NONE
-Hi Normal black background NONE
+Hi Normal dark_grey background NONE
 " Hi NormalFloat black lighter_grey NONE
 hi! link NormalFloat Pmenu
 Hi Bold black NONE bold
