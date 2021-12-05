@@ -1,3 +1,5 @@
+import foo
+
 def test_fn(x: int, y: str) -> int:
     if True:
         return x * len(y)

@@ -43,7 +43,8 @@ return require('packer').startup(function(use)
           delete       = { hl = 'GitSignsDelete', text = '_', numhl='GitSignsDeleteNr', linehl='GitSignsDeleteLn' },
           topdelete    = { hl = 'GitSignsDelete', text = '‾', numhl='GitSignsDeleteNr', linehl='GitSignsDeleteLn' },
           changedelete = { hl = 'GitSignsChange', text = '~', numhl='GitSignsChangeNr', linehl='GitSignsChangeLn' },
-        }
+        },
+        numhl = true
     } end
   }
   use {
@@ -53,9 +54,7 @@ return require('packer').startup(function(use)
   use 'clojure-vim/vim-jack-in'
   use {'eraserhd/parinfer-rust', run = 'cargo build --release'}
   use 'honza/vim-snippets'
-  -- use 'jiangmiao/auto-pairs'
-  -- use 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-  -- use 'junegunn/fzf.vim'
+  use 'rktjmp/lush.nvim'
   use {
     'lukas-reineke/indent-blankline.nvim',
     config = require('indent_blankline').setup {
@@ -68,12 +67,6 @@ return require('packer').startup(function(use)
     }
   }
   use {'neoclide/coc.nvim', branch = 'release'}
-  -- use {
-  --   'norcalli/nvim-colorizer.lua',
-  --   config = function()
-  --     require('colorizer').setup { '*' }
-  --   end
-  -- }
   use {
     'nvim-treesitter/nvim-treesitter',
     run = ':TSUpdate',
@@ -100,8 +93,6 @@ return require('packer').startup(function(use)
   use 'tpope/vim-markdown'
   use 'tpope/vim-repeat'
   use 'tpope/vim-surround'
-  -- use 'vim-airline/vim-airline'
-  -- use 'vim-airline/vim-airline-themes'
   use 'vim-nerdtree/nerdtree'
   use 'vim-test/vim-test'
   use 'vimwiki/vimwiki'

@@ -6,5 +6,5 @@ autocmd FileType vimwiki inoremap <silent><buffer> <CR> <C-]><Esc>:VimwikiReturn
 autocmd FileType vimwiki inoremap <silent><buffer> <S-CR> <Esc>:VimwikiReturn 2 2<CR>
 
 "" Open tagbar automatically in a vimwiki file
-autocmd FileType vimwiki nested :call tagbar#autoopen(0)
+" autocmd FileType vimwiki nested :call tagbar#autoopen(0)
 
