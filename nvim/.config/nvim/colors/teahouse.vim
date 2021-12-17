@@ -71,7 +71,9 @@ let s:maximumpurple       = '#943E9D'
 let s:lilac               = '#C797B8'
 
 "" Oranges
-let s:burntumber          = '#843A2B'
+" let s:burntumber          = '#843A2B'
+" let s:chestnut            = '#9E472E'
+let s:rust                = '#B85430'
 let s:orangecrayola       = '#EC6D34'
 let s:deepchampagne       = '#F4CF8E'
 
@@ -116,7 +118,7 @@ let s:colors = {
 \  'dark_yellow': s:sunray,
 \  'yellow': s:jasmine,
 \  'light_yellow': s:mediumchampagne,
-\  'dark_orange': s:burntumber,
+\  'dark_orange': s:rust,
 \  'orange': s:orangecrayola,
 \  'light_orange': s:deepchampagne,
 \  'dark_purple': s:palatinatepurple,
@@ -292,13 +294,16 @@ Hi LineNr dark_grey background NONE
 Hi FoldColumn black background NONE
 
 " Messaging
+Hi NoteMsg NONE NONE bold
+Hi ErrorMsg red NONE bold
+Hi MoreMsg black NONE NONE
+Hi Title black NONE bold
+Hi Todo red NONE bold
+Hi WarningMsg dark_orange NONE bold
 
 " Generic highlight groups
 Hi Directory blue NONE bold
-Hi ErrorMsg red NONE bold
-Hi Include black NONE bold
 Hi MatchParen NONE NONE bold
-Hi MoreMsg black NONE NONE
 Hi NonText NONE NONE NONE
 " Hi NormalFloat black lighter_grey NONE
 hi! link NormalFloat Pmenu
@@ -316,11 +321,8 @@ Hi StatusLineNC black light_grey NONE
 Hi TabLine dark_grey lighter_grey NONE
 Hi TabLineFill black lighter_grey NONE
 Hi TabLineSel black background bold
-Hi Title black NONE bold
-Hi Todo purple NONE bold
 Hi VertSplit lighter_grey NONE NONE
 Hi Visual NONE light_yellow NONE
-Hi WarningMsg orange NONE bold
 
 hi! link Error ErrorMsg
 hi! link Folded Comment
@@ -343,7 +345,7 @@ hi! link TSConstMacro Constant
 hi! link TSConstructor Structure
 hi! link TSError Error
 hi! link TSException Exception
-hi! link TSField TransNormal
+hi! link TSField Normal
 hi! link TSFloat Float
 hi! link TSFunction Function
 hi! link TSFuncBuiltin Builtin
@@ -362,31 +364,31 @@ hi! link TSOperator Operator
 hi! link TSParameter Parameter
 hi! link TSParameterReference ParameterReference
 hi! link TSProperty TSField
-hi! link TSPunctDelimiter TransNormal
-hi! link TSPunctBracket TransNormal
-hi! link TSPunctSpecial TransNormal
+hi! link TSPunctDelimiter Normal
+hi! link TSPunctBracket Normal
+hi! link TSPunctSpecial Normal
 hi! link TSRepeat Repeat
 hi! link TSString String
 hi! link TSStringRegex Regexp
 hi! link TSStringEscape String
 hi! link TSStringSpecial String
 hi! link TSSymbol Macro
-hi! link TSTag TransNormal
+hi! link TSTag Normal
 hi! link TSTagAttribute TSAttribute
-hi! link TSTagDelimiter TransNormal
-hi! link TSText TransNormal
+hi! link TSTagDelimiter Normal
+hi! link TSText Normal
 hi! link TSStrong Bold
 hi! link TSEmphasis Italic
 hi! link TSUnderline Underlined
 hi! link TSStrike Strikethrough
 hi! link TSTitle Title
-hi! link TSLiteral TransNormal
+hi! link TSLiteral Normal
 hi! link TSURI String
 hi! link TSMath Number
-hi! link TSTextReference TransNormal
-hi! link TSEnvironment TransNormal
+hi! link TSTextReference Normal
+hi! link TSEnvironment Normal
 hi! link TSEnvironmentName Namespace
-hi! link TSNote Comment
+hi! link TSNote NoteMsg
 hi! link TSWarning WarningMsg
 hi! link TSDanger ErrorMsg
 hi! link TSType Type
