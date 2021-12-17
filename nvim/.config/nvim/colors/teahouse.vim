@@ -5,29 +5,6 @@
 " Website:      https://github.com/vickaita/teahouse.vim
 " License:      MIT
 
-"function HSL(h, s, l)
-"  let a = a:s * min([a:l, 1 - a:l]) / 100
-"  "let f = (n, k = (n+h/30)%12) => l - a*max(min(k-3,9-k,1),-1)
-"  let k = (a:h / 30) % 12
-"  let r = a:l - a * max([min([k - 3, 9 - k, 1]), -1])
-"  let k = (8 + a:h / 30) % 12
-"  let g = a:l - a * max([min([k - 3, 9 - k, 1]), -1])
-"  let k = (4 + a:h / 30) % 12
-"  let b = a:l - a * max([min([k - 3, 9 - k, 1]), -1])
-"  return printf('#%02x%02x%02x', r, g, b)
-"endfunction
-
-"let g:test = HSL(44, 79, 95)
-""let s:oldlace             = '#fcf6e6' " hsl(44, 79%, 95%)
-
-" set background=light
-
-" hi clear
-
-" if exists('g:syntax_on')
-"   syntax reset
-" endif
-
 let g:colors_name = 'teahouse'
 
 " Function for creating a highlight group
@@ -112,8 +89,11 @@ let s:laurelgreen         = '#C5D6BC'
 let s:celticblue          = '#1967cc'
 let s:brightnavyblue      = '#2371D6'
 let s:azure               = '#2d7be0'
+let s:aero                = '#8FB1D5'
 
+let s:dark_cyan           = '#194A71'
 let s:cyan                = '#168dc0'
+let s:light_cyan          = '#88BFCA'
 
 let s:colors = {
 \  'black': s:darkpurple,
@@ -126,7 +106,7 @@ let s:colors = {
 \  'background': s:oldlace,
 \  'dark_blue': s:celticblue,
 \  'blue': s:brightnavyblue,
-\  'light_blue': s:azure,
+\  'light_blue': s:aero,
 \  'dark_green': s:celedongreen,
 \  'green': s:polishedpine,
 \  'light_green': s:laurelgreen,
@@ -142,8 +122,12 @@ let s:colors = {
 \  'dark_purple': s:palatinatepurple,
 \  'purple': s:maximumpurple,
 \  'light_purple': s:lilac,
+\  'dark_cyan': s:dark_cyan,
 \  'cyan': s:cyan,
+\  'light_cyan': s:light_cyan,
 \ }
+
+" TODO: light and dark cyan colors
 
 if has('nvim')
   let g:terminal_color_0 = s:colors['black']
@@ -195,74 +179,257 @@ endif
 " command and not a function, quotes shouldn't be used. To refer to a color,
 " simply use its name (e.g. "black").
 
-" UI Elements
+" Base fonts
+Hi Normal dark_grey background NONE
+Hi Bold black NONE bold
+Hi Italic dark_grey NONE italic
+Hi Strikethrough dark_grey NONE strikethrough
+Hi Underlined dark_grey NONE underline
+Hi InvertedNormal lighter_grey dark_grey NONE
+Hi InvertedBold lighter_grey dark_grey bold
+Hi InvertedItalic lighter_grey dark_grey italic
+Hi InvertedStrikethrough lighter_grey dark_grey strikethrough
+Hi InvertedUnderline lighter_grey dark_grey underline
 
-" Generic highlight groups
-Hi ColorColumn NONE lightest_grey NONE
+" == Code Elements ==
+
+" === Comment ===
 Hi Comment grey NONE italic
+Hi InvertedComment grey NONE italic
+
+" === Constant ===
+Hi Boolean purple NONE NONE
+Hi Character dark_green NONE NONE
+Hi Constant purple NONE NONE
+Hi Float cyan NONE NONE
+Hi Number cyan NONE NONE
+Hi Regexp dark_green NONE NONE
+Hi String dark_green NONE NONE
+Hi InvertedBoolean light_purple NONE NONE
+Hi InvertedCharacter light_green NONE NONE
+Hi InvertedConstant light_purple NONE NONE
+Hi InvertedFloat light_cyan NONE NONE
+Hi InvertedNumber light_cyan NONE NONE
+Hi InvertedRegexp light_green NONE NONE
+Hi InvertedString light_green NONE NONE
+
+" === Identifier ===
+Hi Builtin red NONE NONE
+Hi Function blue NONE italic
+Hi Identifier blue NONE NONE
+Hi Method blue NONE italic
+Hi Namespace blue NONE NONE
+Hi Parameter dark_grey NONE italic
+Hi ParameterReference red NONE bold,italic
+Hi InvertedBuiltin light_red NONE NONE
+Hi InvertedFunction light_blue NONE italic
+Hi InvertedIdentifier light_blue NONE NONE
+Hi InvertedMethod light_blue NONE italic
+Hi InvertedNamespace light_blue NONE NONE
+Hi InvertedParameter light_grey NONE italic
+Hi InvertedParameterReference light_red NONE bold,italic
+
+" === Statement ===
+Hi Conditional dark_grey NONE bold
+Hi Exception dark_grey NONE bold
+Hi Include dark_grey NONE bold
+Hi Keyword dark_grey NONE bold
+Hi Label dark_grey NONE bold
+Hi Operator dark_grey NONE NONE
+Hi Repeat dark_grey NONE bold
+Hi Statement dark_grey NONE bold
+Hi InvertedConditional lightest_grey NONE bold
+Hi InvertedException lightest_grey NONE bold
+Hi InvertedInclude lightest_grey NONE bold
+Hi InvertedKeyword lightest_grey NONE bold
+Hi InvertedLabel lightest_grey NONE bold
+Hi InvertedOperator lightest_grey NONE NONE
+Hi InvertedRepeat lightest_grey NONE bold
+Hi InvertedStatement lightest_grey NONE bold
+
+" === PreProc ===
+Hi Macro red NONE NONE
+Hi PreProc red NONE NONE
+Hi Define red NONE NONE
+Hi PreCondit red NONE NONE
+Hi InvertedMacro light_red NONE NONE
+Hi InvertedPreProc light_red NONE NONE
+Hi InvertedDefine light_red NONE NONE
+Hi InvertedPreCondit light_red NONE NONE
+
+" === Type ===
+Hi StorageClass purple NONE NONE
+Hi Structure purple NONE NONE
+Hi Type purple NONE NONE
+Hi Typedef purple NONE NONE
+Hi InvertedStorageClass light_purple NONE NONE
+Hi InvertedStructure light_purple NONE NONE
+Hi InvertedType light_purple NONE NONE
+Hi InvertedTypedef light_purple NONE NONE
+
+" === Special ===
+Hi Special black NONE NONE
+Hi SpecialChar black NONE NONE
+Hi Tag black NONE NONE
+Hi Delimiter black NONE NONE
+Hi SpecialComment black NONE NONE
+Hi Debug black NONE NONE
+Hi InvertedSpecial white NONE NONE
+Hi InvertedSpecialChar white NONE NONE
+Hi InvertedTag white NONE NONE
+Hi InvertedDelimiter white NONE NONE
+Hi InvertedSpecialComment white NONE NONE
+Hi InvertedDebug white NONE NONE
+
+" UI Elements
+Hi ColorColumn NONE lightest_grey NONE
 Hi Conceal NONE NONE NONE
-Hi Constant dark_grey NONE NONE
 Hi Cursor NONE light_grey NONE
 Hi CursorColumn NONE lightest_grey NONE
 Hi CursorLine NONE NONE NONE
 Hi CursorLineNR black NONE bold
+Hi LineNr dark_grey background NONE
+Hi FoldColumn black background NONE
+
+" Messaging
+
+" Generic highlight groups
 Hi Directory blue NONE bold
 Hi ErrorMsg red NONE bold
-Hi FoldColumn black background NONE
-Hi Identifier blue NONE NONE
 Hi Include black NONE bold
-Hi Keyword black NONE bold
-Hi LineNr dark_grey background NONE
-Hi Macro orange NONE NONE
 Hi MatchParen NONE NONE bold
 Hi MoreMsg black NONE NONE
 Hi NonText NONE NONE NONE
-Hi Normal dark_grey background NONE
 " Hi NormalFloat black lighter_grey NONE
 hi! link NormalFloat Pmenu
-Hi Bold black NONE bold
-Hi Number blue NONE NONE
-Hi Operator black NONE NONE
-Hi Pmenu lightest_grey dark_grey NONE
+Hi Pmenu lighter_grey dark_grey NONE
 Hi PmenuSel black yellow bold
-Hi PreProc red NONE NONE
 Hi Question black NONE NONE
-Hi Regexp dark_green NONE NONE
-Hi Search NONE light_yellow NONE
-Hi IncSearch NONE yellow NONE
-Hi Special black NONE NONE
+Hi Search black light_yellow NONE
+Hi IncSearch black yellow NONE
 Hi SpellBad red NONE bold,undercurl
 Hi SpellCap purple NONE undercurl
 Hi SpellLocal dark_green NONE undercurl
 Hi SpellRare purple NONE undercurl
 Hi StatusLine white dark_grey NONE
 Hi StatusLineNC black light_grey NONE
-Hi String dark_green NONE NONE
-Hi Structure purple NONE NONE
 Hi TabLine dark_grey lighter_grey NONE
 Hi TabLineFill black lighter_grey NONE
 Hi TabLineSel black background bold
 Hi Title black NONE bold
-Hi Todo grey NONE bold
-Hi Type purple NONE NONE
+Hi Todo purple NONE bold
 Hi VertSplit lighter_grey NONE NONE
 Hi Visual NONE light_yellow NONE
 Hi WarningMsg orange NONE bold
-Hi Underlined NONE NONE underline
 
-" hi! link Boolean Keyword
-Hi Boolean blue NONE NONE
-hi! link Character String
 hi! link Error ErrorMsg
 hi! link Folded Comment
-hi! link Label Keyword
 hi! link PmenuThumb PmenuSel
-hi! link PreCondit Macro
 hi! link SignColumn FoldColumn
 hi! link SpecialKey Number
-hi! link Statement Keyword
-hi! link StorageClass Keyword
 hi! link WildMenu PmenuSel
+
+" Custom
+
+" Treesitter highlight groups
+hi! link TSAttribute PreProc
+hi! link TSBoolean Boolean
+hi! link TSCharacter Character
+hi! link TSComment Comment
+hi! link TSConditional Conditional
+hi! link TSConstant Constant
+hi! link TSConstBuiltin PreProc
+hi! link TSConstMacro Constant
+hi! link TSConstructor Structure
+hi! link TSError Error
+hi! link TSException Exception
+hi! link TSField TransNormal
+hi! link TSFloat Float
+hi! link TSFunction Function
+hi! link TSFuncBuiltin Builtin
+hi! link TSFuncMacro Macro
+hi! link TSInclude Include
+hi! link TSKeyword Keyword
+hi! link TSKeywordFunction Keyword
+hi! link TSKeywordOperator Operator
+hi! link TSKeywordReturn Keyword
+hi! link TSLabel Label
+hi! link TSMethod Method
+hi! link TSNamespace Namespace
+" TSNone
+hi! link TSNumber Number
+hi! link TSOperator Operator
+hi! link TSParameter Parameter
+hi! link TSParameterReference ParameterReference
+hi! link TSProperty TSField
+hi! link TSPunctDelimiter TransNormal
+hi! link TSPunctBracket TransNormal
+hi! link TSPunctSpecial TransNormal
+hi! link TSRepeat Repeat
+hi! link TSString String
+hi! link TSStringRegex Regexp
+hi! link TSStringEscape String
+hi! link TSStringSpecial String
+hi! link TSSymbol Macro
+hi! link TSTag TransNormal
+hi! link TSTagAttribute TSAttribute
+hi! link TSTagDelimiter TransNormal
+hi! link TSText TransNormal
+hi! link TSStrong Bold
+hi! link TSEmphasis Italic
+hi! link TSUnderline Underlined
+hi! link TSStrike Strikethrough
+hi! link TSTitle Title
+hi! link TSLiteral TransNormal
+hi! link TSURI String
+hi! link TSMath Number
+hi! link TSTextReference TransNormal
+hi! link TSEnvironment TransNormal
+hi! link TSEnvironmentName Namespace
+hi! link TSNote Comment
+hi! link TSWarning WarningMsg
+hi! link TSDanger ErrorMsg
+hi! link TSType Type
+hi! link TSTypeBuiltin Type
+hi! link TSVariable Identifier
+hi! link TSVariableBuiltin Structure
+
+
+" Coc
+hi! link CocFloating NormalFloat
+Hi CocErrorFloat light_red dark_grey NONE
+Hi CocWarningFloat orange dark_grey NONE
+hi! link CocInfoFloat NormalFloat
+hi! link CocHintFloat NormalFloat
+
+Hi CocSem_keyword red green bold
+
+  " `hi default link CocSem_namespace Identifier`
+  " `hi default link CocSem_type Type`
+  " `hi default link CocSem_class Structure`
+  " `hi default link CocSem_enum Type`
+  " `hi default link CocSem_interface Type`
+  " `hi default link CocSem_struct Structure`
+  " `hi default link CocSem_typeParameter Type`
+  " `hi default link CocSem_parameter Identifier`
+  " `hi default link CocSem_variable Identifier`
+  " `hi default link CocSem_property Identifier`
+  " `hi default link CocSem_enumMember Constant`
+  " `hi default link CocSem_event Identifier`
+  " `hi default link CocSem_function Function`
+  " `hi default link CocSem_method Function`
+  " `hi default link CocSem_macro Macro`
+  " `hi default link CocSem_keyword Keyword`
+  " `hi default link CocSem_modifier StorageClass`
+  " `hi default link CocSem_comment Comment`
+  " `hi default link CocSem_string String`
+  " `hi default link CocSem_number Number`
+  " `hi default link CocSem_regexp Normal`
+  " `hi default link CocSem_operator Operator`
+
+
+
+
 
 " These highlight groups can be used for statuslines, for example when
 " displaying ALE warnings and errors.
@@ -402,8 +569,19 @@ hi! link rustFuncCall Identifier
 hi! link rustModPath Identifier
 
 " Python
-hi! link pythonOperator Keyword
-hi! link pythonType Type
+hi! link pythonBuiltin InvertedFunction
+hi! link pythonBuiltinObj InvertedPreProc
+hi! link pythonBuiltinType InvertedType
+hi! link pythonClass InvertedStructure
+hi! link pythonClassVar InvertedStructure
+hi! link pythonFunction InvertedFunction
+hi! link pythonInclude InvertedInclude
+hi! link pythonNumber InvertedNumber
+hi! link pythonOperator InvertedKeyword
+hi! link pythonQuotes InvertedString
+hi! link pythonStatement InvertedStatement
+hi! link pythonString InvertedString
+hi! link pythonType InvertedType
 
 " SASS
 hi! link sassClass cssClassName
@@ -416,21 +594,44 @@ hi! link shFunctionKey Keyword
 hi! link sqlKeyword Keyword
 
 " Typescript
-hi! link typescriptArrayMethod Identifier
-hi! link typescriptBraces Operator
-hi! link typescriptEndColons Operator
-hi! link typescriptExceptions Keyword
-hi! link typescriptFuncKeyword Keyword
-hi! link typescriptFunction Function
-hi! link typescriptGlobal Error
-hi! link typescriptIdentifier Identifier
-hi! link typescriptIdentifierName Identifier
-hi! link typescriptImport Include
-hi! link typescriptLogicSymbols Operator
-hi! link typescriptProp Identifier
-hi! link typescriptRegexpString Regexp
-hi! link typescriptTypeBracket typescriptType
-hi! link typescriptVariable Keyword
+hi! link typescriptAliasKeyword InvertedKeyword
+hi! link typescriptAliasDeclaration InvertedIdentifier
+hi! link typescriptArrayMethod InvertedIdentifier
+hi! link typescriptCall InvertedNormal
+hi! link typescriptClassKeyword InvertedKeyword
+hi! link typescriptConsoleMethod InvertedFunction
+hi! link typescriptBraces InvertedOperator
+hi! link typescriptBOM InvertedStructure
+hi! link typescriptBOMLocationMethod InvertedFunction
+hi! link typescriptDOMFormProp InvertedIdentifier
+hi! link typescriptEndColons InvertedOperator
+hi! link typescriptExceptions InvertedKeyword
+hi! link typescriptFuncKeyword InvertedKeyword
+hi! link typescriptFuncName InvertedFunction
+hi! link typescriptFuncType InvertedFunction
+hi! link typescriptFuncTypeArrow InvertedFunction
+hi! link typescriptFunction InvertedFunction
+hi! link typescriptGlobal InvertedError
+hi! link typescriptIdentifier InvertedIdentifier
+hi! link typescriptIdentifierName InvertedIdentifier
+hi! link typescriptInterfaceKeyword InvertedKeyword
+hi! link typescriptInterfaceName InvertedType
+hi! link typescriptInterfaceTypeParameter InvertedType
+hi! link typescriptImport InvertedInclude
+hi! link typescriptLogicSymbols InvertedOperator
+hi! link typescriptNumber InvertedNumber
+hi! link typescriptOperator InvertedOperator
+hi! link typescriptProp InvertedIdentifier
+hi! link typescriptParens InvertedNormal
+hi! link typescriptPredefinedType InvertedType
+hi! link typescriptRegexpString InvertedRegexp
+hi! link typescriptString InvertedString
+hi! link typescriptType InvertedType
+hi! link typescriptTypeBracket InvertedType
+hi! link typescriptTypeParameter InvertedType
+hi! link typescriptTypeReference InvertedType
+hi! link typescriptUnion InvertedOperator
+hi! link typescriptVariable InvertedKeyword
 
 " Vimscript
 hi! link VimCommentTitle Todo

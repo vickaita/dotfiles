@@ -52,7 +52,7 @@ return require('packer').startup(function(use)
     requires = { {'nvim-lua/plenary.nvim'} }
   }
   use 'clojure-vim/vim-jack-in'
-  use {'eraserhd/parinfer-rust', run = 'cargo build --release'}
+  -- use {'eraserhd/parinfer-rust', run = 'cargo build --release'} # TODO figure out how to run the build
   use 'honza/vim-snippets'
   use 'rktjmp/lush.nvim'
   use {
@@ -73,17 +73,18 @@ return require('packer').startup(function(use)
     config = function()
       require('nvim-treesitter.configs').setup {
         ensure_installed = "maintained",
-        highlight = { enabled = true },
-        incremental_selection = { enabled = true },
-        indent = { enabled = true }
+        highlight = { enable = true },
+        incremental_selection = { enable = true },
+        indent = { enable = true }
       }
     end
   }
+  use 'nvim-treesitter/playground'
   use {'Olical/conjure', tag = 'v4.22.1'}
   use 'preservim/tagbar'
   use 'radenling/vim-dispatch-neovim'
   use 'simnalamburt/vim-mundo'
-  use 'sheerun/vim-polyglot'
+  -- use 'sheerun/vim-polyglot'
   use 'tpope/vim-commentary'
   use 'tpope/vim-dadbod'
   use 'tpope/vim-dispatch'
@@ -109,6 +110,7 @@ return require('packer').startup(function(use)
   use 'gerw/vim-HiLinkTrace'
   use 'jnurmine/Zenburn'
   use 'lifepillar/vim-solarized8'
+  use 'morhetz/gruvbox'
   use 'vim-scripts/Wombat'
   use 'yorickpeterse/vim-paper'
 
