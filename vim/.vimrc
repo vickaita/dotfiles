@@ -83,6 +83,7 @@ autocmd BufNewFile,BufRead *.mdx set filetype=markdown
 autocmd FileType css        setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType html       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
+autocmd FileType json       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType markdown   setlocal textwidth=80 formatoptions+=t spell
 autocmd FileType ruby       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType typescript setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
