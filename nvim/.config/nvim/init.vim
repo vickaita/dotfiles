@@ -1,3 +1,7 @@
+" Edit this file
+command! EditVimConfig :edit ~/.config/nvim/init.vim
+command! EditLuaConfig :edit ~/.config/nvim/lua/plugins.lua
+
 lua require('plugins')
 
 " TODO: set the `.dotfiles` directory from the environment variable instead of
@@ -9,12 +13,6 @@ source ~/.dotfiles/shared/vim/init/ctags.vim
 source ~/.dotfiles/shared/vim/init/fzf.vim
 source ~/.dotfiles/shared/vim/init/nerdtree.vim
 source ~/.dotfiles/shared/vim/init/vimwiki.vim
-
-" Autopairs
-" let g:AutoPairsFlyMode = 0
-
-" Edit this file
-command! EditConfig :edit ~/.config/nvim/init.vim
 
 set shiftwidth=4 tabstop=4 softtabstop=4 autoindent expandtab
 

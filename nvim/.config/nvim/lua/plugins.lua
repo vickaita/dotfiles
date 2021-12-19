@@ -52,7 +52,7 @@ return require('packer').startup(function(use)
     requires = { {'nvim-lua/plenary.nvim'} }
   }
   use 'clojure-vim/vim-jack-in'
-  -- use {'eraserhd/parinfer-rust', run = 'cargo build --release'} # TODO figure out how to run the build
+  -- use {'eraserhd/parinfer-rust', run = 'cargo build --release'} # TODO: figure out how to run the build
   use 'honza/vim-snippets'
   use 'rktjmp/lush.nvim'
   use {

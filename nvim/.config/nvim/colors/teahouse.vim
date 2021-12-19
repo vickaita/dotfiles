@@ -192,6 +192,11 @@ Hi InvertedBold lighter_grey dark_grey bold
 Hi InvertedItalic lighter_grey dark_grey italic
 Hi InvertedStrikethrough lighter_grey dark_grey strikethrough
 Hi InvertedUnderline lighter_grey dark_grey underline
+Hi TransparentNormal dark_grey NONE NONE
+Hi TransparentBold black NONE bold
+Hi TransparentItalic dark_grey NONE italic
+Hi TransparentStrikethrough dark_grey NONE strikethrough
+Hi TransparentUnderline dark_grey NONE underline
 
 " == Code Elements ==
 
@@ -310,6 +315,7 @@ Hi NonText NONE NONE NONE
 " Hi NormalFloat black lighter_grey NONE
 hi! link NormalFloat Pmenu
 Hi Pmenu lighter_grey dark_grey NONE
+" Hi Pmenu dark_grey lighter_grey NONE
 Hi PmenuSel black yellow bold
 Hi Question black NONE NONE
 Hi Search black light_yellow NONE
@@ -405,16 +411,16 @@ Hi CocErrorFloat light_red dark_grey NONE
 Hi CocWarningFloat orange dark_grey NONE
 hi! link CocInfoFloat NormalFloat
 hi! link CocHintFloat NormalFloat
-Hi CocInfoSign orange NONE NONE
+Hi CocInfoSign dark_yellow NONE NONE
 Hi CocHintSign green NONE NONE
 Hi CocWarningSign orange NONE NONE
 Hi CocErrorSign red NONE NONE
-hi! link CocBold Bold
-hi! link CocItalic Italic
-hi! link CocUnderline Underline
-hi! link CocStrikeThrough Strikethrough
-hi! link CocMarkdownCode Normal
-hi! link CocMarkdownHeader Title
+hi! link CocBold TransparentBold
+hi! link CocItalic TransparentItalic
+hi! link CocUnderline TransparentUnderline
+hi! link CocStrikeThrough TransparentStrikethrough
+hi! link CocMarkdownCode TransparentNormal
+hi! link CocMarkdownHeader TransparentTitle
 hi! link CocMarkdownLink Link
 
 
