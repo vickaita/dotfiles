@@ -81,6 +81,7 @@ set shiftwidth=4 tabstop=4 softtabstop=4 autoindent expandtab
 autocmd BufNewFile,BufRead *.mdx set filetype=markdown
 
 autocmd FileType css        setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
+autocmd FileType elixir     setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType html       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
 autocmd FileType json       setlocal shiftwidth=2 tabstop=2 softtabstop=2 autoindent expandtab
