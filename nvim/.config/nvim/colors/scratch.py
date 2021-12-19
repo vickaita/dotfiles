@@ -11,6 +11,7 @@ class Foo:
     @classmethod
     def xyz(cls) -> str:
         # TODO: fix this
+        x = 1 and 2
         return cls.__name__
 
     def __init__(self, a: int, b: str):

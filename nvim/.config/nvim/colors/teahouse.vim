@@ -361,7 +361,7 @@ hi! link TSFuncMacro Macro
 hi! link TSInclude Include
 hi! link TSKeyword Keyword
 hi! link TSKeywordFunction Keyword
-hi! link TSKeywordOperator Operator
+hi! link TSKeywordOperator Keyword
 hi! link TSKeywordReturn Keyword
 hi! link TSLabel Label
 hi! link TSMethod Method
