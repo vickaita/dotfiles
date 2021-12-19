@@ -4,6 +4,10 @@
     "vim": "vint",
     "sh": "shellcheck"
   },
+  "diagnostic.errorSign":"▸",
+  "diagnostic.warningSign":"▸",
+  "diagnostic.hintSign": "☆",
+  "diagnostic.infoSign": "▹",
   "highlight.colorNames.enable": false,
   "languageserver": {
     "haskell": {

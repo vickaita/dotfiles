@@ -142,7 +142,7 @@ if has('nvim')
   let g:terminal_color_7 = s:colors['lightest_grey']
   let g:terminal_color_8 = s:colors['dark_grey']
   let g:terminal_color_9 = s:colors['red']
-  let g:terminal_color_10 = s:colors['dark_green']
+
   let g:terminal_color_11 = s:colors['yellow']
   let g:terminal_color_12 = s:colors['blue']
   let g:terminal_color_13 = s:colors['purple']
@@ -181,7 +181,7 @@ endif
 " command and not a function, quotes shouldn't be used. To refer to a color,
 " simply use its name (e.g. "black").
 
-" Base fonts
+" == Base fonts ==
 Hi Normal dark_grey background NONE
 Hi Bold black NONE bold
 Hi Italic dark_grey NONE italic
@@ -269,7 +269,7 @@ Hi InvertedStructure light_purple NONE NONE
 Hi InvertedType light_purple NONE NONE
 Hi InvertedTypedef light_purple NONE NONE
 
-" === Special ===
+" == Special ==
 Hi Special black NONE NONE
 Hi SpecialChar black NONE NONE
 Hi Tag black NONE NONE
@@ -283,14 +283,14 @@ Hi InvertedDelimiter white NONE NONE
 Hi InvertedSpecialComment white NONE NONE
 Hi InvertedDebug white NONE NONE
 
-" UI Elements
+" == UI Elements ==
 Hi ColorColumn NONE lightest_grey NONE
 Hi Conceal NONE NONE NONE
 Hi Cursor NONE light_grey NONE
 Hi CursorColumn NONE lightest_grey NONE
-Hi CursorLine NONE NONE NONE
-Hi CursorLineNR black NONE bold
-Hi LineNr dark_grey background NONE
+Hi CursorLine NONE lightest_grey NONE
+Hi CursorLineNR black NONE NONE
+Hi LineNr grey background NONE
 Hi FoldColumn black background NONE
 
 " Messaging
@@ -300,9 +300,11 @@ Hi MoreMsg black NONE NONE
 Hi Title black NONE bold
 Hi Todo red NONE bold
 Hi WarningMsg dark_orange NONE bold
+Hi InvertedTitle white NONE bold
 
 " Generic highlight groups
 Hi Directory blue NONE bold
+Hi Link blue NONE NONE
 Hi MatchParen NONE NONE bold
 Hi NonText NONE NONE NONE
 " Hi NormalFloat black lighter_grey NONE
@@ -403,6 +405,18 @@ Hi CocErrorFloat light_red dark_grey NONE
 Hi CocWarningFloat orange dark_grey NONE
 hi! link CocInfoFloat NormalFloat
 hi! link CocHintFloat NormalFloat
+Hi CocInfoSign orange NONE NONE
+Hi CocHintSign green NONE NONE
+Hi CocWarningSign orange NONE NONE
+Hi CocErrorSign red NONE NONE
+hi! link CocBold Bold
+hi! link CocItalic Italic
+hi! link CocUnderline Underline
+hi! link CocStrikeThrough Strikethrough
+hi! link CocMarkdownCode Normal
+hi! link CocMarkdownHeader Title
+hi! link CocMarkdownLink Link
+
 
 Hi CocSem_keyword red green bold
 
@@ -493,7 +507,7 @@ hi! link gitCommitSummary String
 " HTML
 Hi htmlTag black NONE bold
 hi! link htmlArg Identifier
-hi! link htmlLink Directory
+hi! link htmlLink Link
 hi! link htmlScriptTag htmlTag
 hi! link htmlSpecialTagName htmlTag
 hi! link htmlTagName htmlTag
@@ -648,7 +662,7 @@ Hi VimwikiHeader3 red NONE bold
 Hi VimwikiHeader4 red NONE bold
 Hi VimwikiHeader5 red NONE bold
 Hi VimwikiHeader6 red NONE bold
-Hi VimwikiLink blue NONE NONE
+hi! link VimwikiLink Link
 Hi VimwikiListTodo dark_green NONE NONE
 Hi VimwikiCode purple lightest_grey NONE
 Hi VimwikiPre purple NONE NONE

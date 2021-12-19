@@ -8,6 +8,11 @@ class Foo:
     x: int
     y: str
 
+    @classmethod
+    def xyz(cls) -> str:
+        # TODO: fix this
+        return cls.__name__
+
     def __init__(self, a: int, b: str):
         self.x = a
         self.y = b
@@ -16,6 +21,10 @@ class Foo:
     def calc():
         a = 5
         return 1 + a + 2
+
+    def banana(self, a: int, b: int) -> int:
+        str(self)
+        self.__repr__
 
 
 foo = Foo(3, "hello")
