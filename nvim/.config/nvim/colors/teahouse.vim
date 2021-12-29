@@ -183,20 +183,20 @@ endif
 
 " == Base fonts ==
 Hi Normal dark_grey background NONE
-Hi Bold black NONE bold
-Hi Italic dark_grey NONE italic
-Hi Strikethrough dark_grey NONE strikethrough
-Hi Underlined dark_grey NONE underline
+Hi Bold NONE NONE bold
+Hi Italic NONE NONE italic
+Hi Strikethrough NONE NONE strikethrough
+Hi Underlined NONE NONE underline
 Hi InvertedNormal lighter_grey dark_grey NONE
-Hi InvertedBold lighter_grey dark_grey bold
-Hi InvertedItalic lighter_grey dark_grey italic
-Hi InvertedStrikethrough lighter_grey dark_grey strikethrough
-Hi InvertedUnderline lighter_grey dark_grey underline
+" Hi InvertedBold lighter_grey dark_grey bold
+" Hi InvertedItalic lighter_grey dark_grey italic
+" Hi InvertedStrikethrough lighter_grey dark_grey strikethrough
+" Hi InvertedUnderline lighter_grey dark_grey underline
 Hi TransparentNormal dark_grey NONE NONE
-Hi TransparentBold black NONE bold
-Hi TransparentItalic dark_grey NONE italic
-Hi TransparentStrikethrough dark_grey NONE strikethrough
-Hi TransparentUnderline dark_grey NONE underline
+" Hi TransparentBold black NONE bold
+" Hi TransparentItalic dark_grey NONE italic
+" Hi TransparentStrikethrough dark_grey NONE strikethrough
+" Hi TransparentUnderline dark_grey NONE underline
 
 " == Code Elements ==
 
@@ -415,12 +415,12 @@ Hi CocInfoSign dark_yellow NONE NONE
 Hi CocHintSign green NONE NONE
 Hi CocWarningSign orange NONE NONE
 Hi CocErrorSign red NONE NONE
-hi! link CocBold TransparentBold
-hi! link CocItalic TransparentItalic
-hi! link CocUnderline TransparentUnderline
-hi! link CocStrikeThrough TransparentStrikethrough
-hi! link CocMarkdownCode TransparentNormal
-hi! link CocMarkdownHeader TransparentTitle
+hi! link CocBold Bold
+hi! link CocItalic Italic
+hi! link CocUnderline Underline
+hi! link CocStrikeThrough Strikethrough
+hi! link CocMarkdownCode Normal
+hi! link CocMarkdownHeader Title
 hi! link CocMarkdownLink Link
 
 
