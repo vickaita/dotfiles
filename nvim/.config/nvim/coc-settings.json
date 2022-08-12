@@ -40,7 +40,10 @@
     "Aita",
     "Frontmatter",
     "Vick",
+    "abcdefghijklmnopqrstuvwxyz",
     "celedongreen",
+    "esbuild",
+    "mixtape",
     "nord",
     "pylint",
     "pyright",
@@ -48,6 +51,7 @@
     "shellcheck",
     "spork",
     "struct",
+    "upsert",
     "yinmnblue"
   ]
 }

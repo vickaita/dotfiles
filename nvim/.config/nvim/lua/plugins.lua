@@ -6,7 +6,7 @@ end
 
 vim.g.coc_global_extensions = {
   'coc-calc',
-  'coc-conjure',       -- clojure
+  -- 'coc-conjure',       -- clojure
   'coc-css',
   'coc-diagnostic',
   'coc-eslint',
@@ -52,7 +52,9 @@ return require('packer').startup(function(use)
     requires = { {'nvim-lua/plenary.nvim'} }
   }
   use 'clojure-vim/vim-jack-in'
-  -- use {'eraserhd/parinfer-rust', run = 'cargo build --release'} # TODO: figure out how to run the build
+  -- use {'eraserhd/parinfer-rust', run = 'cargo build --release'}
+  use 'gpanders/nvim-parinfer'
+  use 'github/copilot.vim'
   use 'honza/vim-snippets'
   use 'rktjmp/lush.nvim'
   use {
@@ -80,7 +82,7 @@ return require('packer').startup(function(use)
     end
   }
   use 'nvim-treesitter/playground'
-  use {'Olical/conjure', tag = 'v4.22.1'}
+  use 'Olical/conjure'
   use 'preservim/tagbar'
   use 'radenling/vim-dispatch-neovim'
   use 'simnalamburt/vim-mundo'
@@ -93,6 +95,7 @@ return require('packer').startup(function(use)
   use 'tpope/vim-fugitive'
   use 'tpope/vim-markdown'
   use 'tpope/vim-repeat'
+  use 'tpope/vim-salve'
   use 'tpope/vim-surround'
   use 'vim-nerdtree/nerdtree'
   use 'vim-test/vim-test'
