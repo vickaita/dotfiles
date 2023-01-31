@@ -31,7 +31,6 @@ vim.g.coc_global_extensions = {
 
 return require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
-  use 'arcticicestudio/nord-vim'
   use {
     'lewis6991/gitsigns.nvim',
     requires = { 'nvim-lua/plenary.nvim' },
@@ -57,17 +56,17 @@ return require('packer').startup(function(use)
   use 'github/copilot.vim'
   use 'honza/vim-snippets'
   use 'rktjmp/lush.nvim'
-  use {
-    'lukas-reineke/indent-blankline.nvim',
-    config = require('indent_blankline').setup {
-      -- char = '¦',
-      char_highlight_list = {
-        'IndentLine'
-      },
-      enabled = false,
-      show_first_indent_level = false,
-    }
-  }
+  -- use {
+  --   'lukas-reineke/indent-blankline.nvim',
+  --   config = require('indent_blankline').setup {
+  --     -- char = '¦',
+  --     char_highlight_list = {
+  --       'IndentLine'
+  --     },
+  --     enabled = false,
+  --     show_first_indent_level = false,
+  --   }
+  -- }
   use {'neoclide/coc.nvim', branch = 'release'}
   use {
     'nvim-treesitter/nvim-treesitter',
@@ -110,6 +109,7 @@ return require('packer').startup(function(use)
   }
 
   -- Colorschemes
+  use 'arcticicestudio/nord-vim'
   use 'gerw/vim-HiLinkTrace'
   use 'jnurmine/Zenburn'
   use 'lifepillar/vim-solarized8'

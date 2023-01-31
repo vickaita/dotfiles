@@ -1,5 +1,5 @@
 " Vimwiki
-let g:vimwiki_list = [{'path': '~/vimwiki/'}]
+let g:vimwiki_list = [{'path': '~/wiki/'}]
 
 "" So that list completion will work with hard returns
 autocmd FileType vimwiki inoremap <silent><buffer> <CR> <C-]><Esc>:VimwikiReturn 3 5<CR>
