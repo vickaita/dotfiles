@@ -107,6 +107,7 @@ return require('packer').startup(function(use)
       }
     end
   }
+  use 'wuelnerdotexe/vim-astro'
 
   -- Colorschemes
   use 'arcticicestudio/nord-vim'
