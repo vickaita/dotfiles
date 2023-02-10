@@ -36,8 +36,8 @@ nmap <leader>f <Plug>(coc-format-selected)
 command! -nargs=0 Prettier :CocCommand prettier.formatFile
 
 " Organize imports
-autocmd FileType javascript command! -nargs=0 OrganizeImports :CocCommand tsserver.organizeImports
-autocmd FileType typescript command! -nargs=0 OrganizeImports :CocCommand tsserver.organizeImports
+autocmd FileType javascript command! -nargs=0 OrganizeImports :CocCommand editor.action.organizeImport
+autocmd FileType typescript command! -nargs=0 OrganizeImports :CocCommand editor.action.organizeImport
 autocmd FileType python command! -nargs=0 OrganizeImports :CocCommand pyright.organizeimports
 
 " Cleanup

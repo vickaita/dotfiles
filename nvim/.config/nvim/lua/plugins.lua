@@ -13,12 +13,12 @@ vim.g.coc_global_extensions = {
   'coc-elixir',
   'coc-highlight',
   'coc-html',
-  'coc-jedi',
+  'coc-jedi',          -- python
   'coc-jest',
   'coc-json',
-  'coc-lua',
+  -- 'coc-lua',
   'coc-prettier',
-  'coc-pyright',
+  'coc-pyright',       -- python
   'coc-sh',            -- bash
   'coc-solargraph',    -- ruby
   'coc-spell-checker',
@@ -30,6 +30,8 @@ vim.g.coc_global_extensions = {
 }
 
 return require('packer').startup(function(use)
+  -- snapshot_path = join_paths(stdpath 'cache', 'packer.nvim')
+
   use 'wbthomason/packer.nvim'
   use {
     'lewis6991/gitsigns.nvim',
@@ -73,7 +75,6 @@ return require('packer').startup(function(use)
     run = ':TSUpdate',
     config = function()
       require('nvim-treesitter.configs').setup {
-        ensure_installed = "maintained",
         highlight = { enable = true },
         incremental_selection = { enable = true },
         indent = { enable = true }
