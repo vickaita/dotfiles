@@ -3,6 +3,7 @@ DOTFILES=$HOME/.dotfiles
 source $DOTFILES/shared/shell/prompt.sh
 source $DOTFILES/shared/shell/history.sh
 source $DOTFILES/shared/shell/path.sh
+source $DOTFILES/shared/shell/ssh-agent.sh
 
 # Configure FZF integration
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
