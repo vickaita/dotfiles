@@ -30,7 +30,7 @@ vim.g.coc_global_extensions = {
 }
 
 return require('packer').startup(function(use)
-  -- snapshot_path = join_paths(stdpath 'cache', 'packer.nvim')
+  snapshot_path = fn.stdpath('cache')..'packer.nvim'
 
   use 'wbthomason/packer.nvim'
   use {
@@ -82,7 +82,7 @@ return require('packer').startup(function(use)
     end
   }
   use 'nvim-treesitter/playground'
-  use 'Olical/conjure'
+  -- use 'Olical/conjure'
   use 'preservim/tagbar'
   use 'radenling/vim-dispatch-neovim'
   use 'simnalamburt/vim-mundo'
