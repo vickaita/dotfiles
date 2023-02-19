@@ -2,6 +2,7 @@ set shiftwidth=4 tabstop=4 softtabstop=4 autoindent expandtab
 
 autocmd BufNewFile,BufRead *.mdx set filetype=markdown
 
+autocmd FileType astro           setlocal shiftwidth=2 tabstop=2 softtabstop=2
 autocmd FileType clojure         nnoremap <buffer> <C-j> :Eval<CR>
 autocmd FileType css             setlocal shiftwidth=2 tabstop=2 softtabstop=2
 autocmd FileType elixir          setlocal shiftwidth=2 tabstop=2 softtabstop=2

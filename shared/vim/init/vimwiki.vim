@@ -8,3 +8,7 @@ autocmd FileType vimwiki inoremap <silent><buffer> <S-CR> <Esc>:VimwikiReturn 2 
 "" Open tagbar automatically in a vimwiki file
 " autocmd FileType vimwiki nested :call tagbar#autoopen(0)
 
+
+"" Fix the tab completion for vimwiki with copilot
+autocmd FileType vimwiki imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
+autocmd FileType vimwiki let g:copilot_no_tab_map = v:true
