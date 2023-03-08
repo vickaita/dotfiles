@@ -43,17 +43,35 @@ autocmd FileType python command! -nargs=0 OrganizeImports :CocCommand pyright.or
 " Cleanup
 nmap <leader>c :Prettier<CR>OrganizeImports<CR>
 
-" Run jest for current project
+" Jest support
+" ============
+
+"" Run jest for current project
 command! -nargs=0 Jest :call CocAction('runCommand', 'jest.projectTest')
 
-" Run jest for current file
+"" Run jest for current file
 command! -nargs=0 JestCurrent :call  CocAction('runCommand', 'jest.fileTest', ['%'])
 
-" Run jest for current test
+"" Run jest for current test
 nnoremap <leader>te :call CocAction('runCommand', 'jest.singleTest')<CR>
 
-" Init jest in current cwd, require global jest command exists
+"" Init jest in current cwd, require global jest command exists
 command! JestInit :call CocAction('runCommand', 'jest.init')
 
+" Vitest support
+" ==============
+
+"" Run Vitest for current project
+command! -nargs=0 Vitest :call CocAction('runCommand', 'vitest.projectTest')
+
+" Run Vitest for current file
+command! -nargs=0 VitestCurrent :call  CocAction('runCommand', 'vitest.fileTest', ['%'])
+
+" Run Vitest for single (nearest) test
+nnoremap <leader>te :call CocAction('runCommand', 'vitest.singleTest')<CR>
+
+
+" Code action
+" ===========
 vmap <leader>a <Plug>(coc-codeaction-selected)
 nmap <leader>a <Plug>(coc-codeaction-selected)

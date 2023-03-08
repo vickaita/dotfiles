@@ -26,6 +26,7 @@ vim.g.coc_global_extensions = {
   'coc-tsserver',
   'coc-rls',           -- rust
   'coc-vimlsp',
+  '@yaegassy/coc-vitest',
   'coc-yaml',
 }
 
@@ -104,7 +105,7 @@ return require('packer').startup(function(use)
     'windwp/nvim-autopairs',
     config = function()
       require('nvim-autopairs').setup {
-        disable_filetype = { 'TelescopePrompt', 'vim' }
+        disable_filetype = { 'TelescopePrompt', 'vim', 'astro' }
       }
     end
   }
