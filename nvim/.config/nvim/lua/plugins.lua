@@ -101,14 +101,14 @@ return require('packer').startup(function(use)
   use 'vim-nerdtree/nerdtree'
   use 'vim-test/vim-test'
   use 'vimwiki/vimwiki'
-  use {
-    'windwp/nvim-autopairs',
-    config = function()
-      require('nvim-autopairs').setup {
-        disable_filetype = { 'TelescopePrompt', 'vim', 'astro' }
-      }
-    end
-  }
+  -- use {
+  --   'windwp/nvim-autopairs',
+  --   config = function()
+  --     require('nvim-autopairs').setup {
+  --       disable_filetype = { 'TelescopePrompt', 'vim', 'astro' }
+  --     }
+  --   end
+  -- }
   use 'wuelnerdotexe/vim-astro'
 
   -- Colorschemes
