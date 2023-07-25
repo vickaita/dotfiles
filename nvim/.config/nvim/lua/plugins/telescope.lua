@@ -20,15 +20,14 @@ return {
       require("telescope").load_extension("undo")
     end,
     keys = {
-      -- add a keymap to browse plugin files
-      -- stylua: ignore
       {
         "<leader>fu",
         function()
           require("telescope").extensions.undo.undo()
         end,
-        desc = "Undo history",
+        desc = "Undo History",
       },
+      { "<leader>fm", "<cmd>Telescope marks<cr>", desc = "Find Marks" },
     },
   },
 }
