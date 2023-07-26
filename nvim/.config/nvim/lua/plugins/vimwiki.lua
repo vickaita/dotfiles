@@ -1,4 +1,5 @@
-vim.g.vimwiki_list = { { path = "~/wiki/" } }
+-- set vimwiki path from an environment variable with a fallback of "~/wiki/"
+vim.g.vimwiki_list = { { path = vim.env.VIMWIKI_PATH or "~/wiki/" } }
 
 return {
   {
