@@ -3,11 +3,7 @@ return {
     "nvim-neotest/neotest",
     optional = true,
     dependencies = {
-      -- The latest version of neotest-jest is broken, so we use a fork that
-      -- has a fix for monorepos in it. See https://github.com/nvim-neotest/neotest-jest/issues/60
-      -- for more info.
-      -- "nvim-neotest/neotest-jest",
-      { "guivazcabral/neotest-jest", commit = "fb49a6f" },
+      "nvim-neotest/neotest-jest",
       "nvim-neotest/neotest-python",
     },
     opts = {

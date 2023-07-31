@@ -15,6 +15,7 @@ return {
               },
             },
           },
+          ["core.looking-glass"] = {},
         },
       })
     end,
