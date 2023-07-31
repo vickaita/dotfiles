@@ -2,3 +2,5 @@ nvim/.config/coc/
 nvim/.config/iterm2/
 nvim/.config/github-copilot/
 nvim/.config/nvim/plugin/
+nvim/.config/configstore/
+nvim/.config/simple-update-notifier/

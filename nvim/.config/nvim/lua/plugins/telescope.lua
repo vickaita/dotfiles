@@ -18,7 +18,7 @@ return {
         },
       })
       require("telescope").load_extension("undo")
-      require("telescope").extensions.notify.notify()
+      require("telescope").load_extension("notify")
     end,
     keys = {
       {
