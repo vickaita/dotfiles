@@ -4,6 +4,6 @@
 
 -- set textwidth to 80 in vimwiki files
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "wiki" },
+  pattern = { "vimwiki", "wiki" },
   command = "setlocal textwidth=80 shiftwidth=4 tabstop=4",
 })
