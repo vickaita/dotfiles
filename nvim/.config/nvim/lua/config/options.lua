@@ -6,7 +6,7 @@ vim.opt.colorcolumn = "81"
 vim.opt.conceallevel = 0
 
 -- enable automatic text wrapping
-vim.o.formatoptions = vim.o.formatoptions .. "ta"
+vim.o.formatoptions = vim.o.formatoptions .. "t"
 vim.opt.textwidth = 80
 
 vim.opt.listchars = { tab = "→ ", trail = "⋅" }
