@@ -4,11 +4,13 @@
 
 vim.opt.colorcolumn = "81"
 vim.opt.conceallevel = 0
-vim.opt.listchars = { tab = "▸ ", trail = "•" }
+
+-- enable automatic text wrapping
+vim.o.formatoptions = vim.o.formatoptions .. "ta"
+vim.opt.textwidth = 80
+
+vim.opt.listchars = { tab = "→ ", trail = "⋅" }
 
 -- don't use relative line numbers by default
 vim.opt.number = true
 vim.opt.relativenumber = false
-
--- don't show tabs by default, but it can be toggled with <leader>ut
-vim.opt.showtabline = 0
