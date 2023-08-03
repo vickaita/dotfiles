@@ -1,4 +1,5 @@
 return {
+  { import = "lazyvim.plugins.extras.lang.python" },
   {
     "williamboman/mason.nvim",
     opts = function(_, opts)
