@@ -17,3 +17,9 @@ vim.keymap.del({ "n", "x" }, "gw")
 
 -- Add some new keymaps
 -- --------------------
+
+vim.keymap.set({ "n", "x" }, "<leader>ci", function()
+  if vim.lsp.buf.server_ready() then
+    vim.diagnostic.open_float()
+  end
+end, { desc = "Show diagnostics" })
