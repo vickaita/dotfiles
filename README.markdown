@@ -2,13 +2,10 @@
 
 My dotfiles for use across Linux and Mac OS systems.
 
-## Prerequisites
-
-Must have GNU Stow installed.
-
 ## Instructions
 
-From within this directory run:
+Run `./setup.sh` to install necessary software. Then use `stow` from within this
+directory to install the desired configurations:
 
 ```
 stow <module>
