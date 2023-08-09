@@ -7,3 +7,8 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = { "vimwiki", "wiki" },
   command = "setlocal textwidth=80 shiftwidth=4 tabstop=4",
 })
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "bash", "sh" },
+  command = "setlocal shiftwidth=4 tabstop=4",
+})
