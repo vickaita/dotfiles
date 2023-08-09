@@ -13,5 +13,8 @@ return {
         end,
       })
     end,
+    keys = {
+      { "<leader>ghB", "<cmd>Git blame<cr>", desc = "Blame File" },
+    },
   },
 }
