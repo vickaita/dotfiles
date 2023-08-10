@@ -2,10 +2,12 @@ return {
   { import = "lazyvim.plugins.extras.lang.python" },
   {
     "williamboman/mason.nvim",
-    opts = function(_, opts)
-      table.insert(opts.ensure_installed, "isort")
-      table.insert(opts.ensure_installed, "black")
-    end,
+    opts = {
+      ensure_installed = {
+        "isort",
+        "black",
+      },
+    },
   },
   {
     "jose-elias-alvarez/null-ls.nvim",
