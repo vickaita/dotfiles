@@ -17,6 +17,8 @@ source "$DOTFILES"/shared/shell/github-copilot.sh
 source "$DOTFILES"/shared/shell/rust.sh
 source "$DOTFILES"/shared/shell/direnv.sh
 source "$DOTFILES"/shared/shell/fzf.sh
+source "$DOTFILES"/shared/shell/pyenv.sh
+source "$DOTFILES"/shared/shell/nvm.sh
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.

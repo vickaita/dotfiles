@@ -32,7 +32,12 @@ install_mac() {
         jq \
         lazygit \
         neovim \
+        nvm \
+        pyenv \
         ripgrep \
+        shellcheck \
+        shellharden \
+        shfmt \
         stow \
         tmux \
         tree \
@@ -61,7 +66,12 @@ install_ubuntu() {
         jq \
         lazygit \
         neovim \
+        nvm \
+        pyenv \
         ripgrep \
+        shellcheck \
+        shellharden \
+        shfmt \
         stow \
         tmux \
         tree \
