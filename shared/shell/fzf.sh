@@ -1,14 +1,13 @@
 # Check and source the appropriate fzf configuration
-case "$0" in
+case "$CURRENT_SHELL" in
 *bash*)
-    echo "confiugring fzf for bash"
     [ -f "$HOME"/.fzf.bash ] && source "$HOME"/.fzf.bash
     ;;
 *zsh*)
-    echo "confiugring fzf for zsh"
     [ -f "$HOME"/.fzf.zsh ] && source "$HOME"/.fzf.zsh
     ;;
+# Add more cases if needed for other shells
 *)
-    echo "Unknown shell for fzf setup: $0"
+    echo "Unknown shell for fzf setup: $CURRENT_SHELL"
     ;;
 esac

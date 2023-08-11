@@ -1,4 +1,6 @@
-DOTFILES="$HOME"/.dotfiles
+export DOTFILES="$HOME"/.dotfiles
+
+export CURRENT_SHELL="zsh"
 
 source "$DOTFILES"/shared/shell/prompt.sh
 source "$DOTFILES"/shared/shell/history.sh
@@ -9,6 +11,8 @@ source "$DOTFILES"/shared/shell/direnv.sh
 source "$DOTFILES"/shared/shell/fzf.sh
 source "$DOTFILES"/shared/shell/pyenv.sh
 source "$DOTFILES"/shared/shell/nvm.sh
+
+plugins=(docker docker-compose)
 
 # Configure Git completion
 autoload -Uz compinit && compinit

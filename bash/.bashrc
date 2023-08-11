@@ -8,7 +8,9 @@ case $- in
 *) return ;;
 esac
 
-DOTFILES="$HOME"/.dotfiles
+export DOTFILES="$HOME"/.dotfiles
+
+export CURRENT_SHELL="bash"
 
 source "$DOTFILES"/shared/shell/prompt.sh
 source "$DOTFILES"/shared/shell/history.sh
