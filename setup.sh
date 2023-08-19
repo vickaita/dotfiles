@@ -31,6 +31,7 @@ install_mac() {
         htop \
         jq \
         lazygit \
+        lesspipe \
         neovim \
         nvm \
         pyenv \
@@ -65,6 +66,7 @@ install_ubuntu() {
         htop \
         jq \
         lazygit \
+        lesspipe \
         neovim \
         nvm \
         pyenv \
