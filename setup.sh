@@ -3,6 +3,35 @@
 # Identify the OS
 OS="$(uname)"
 
+COMMON_PACKAGES=(
+    bat
+    curl
+    direnv
+    fzf
+    git
+    glances
+    htop
+    jq
+    lazygit
+    lesspipe
+    neovim
+    nvm
+    pyenv
+    ripgrep
+    shellcheck
+    shellharden
+    shfmt
+    stow
+    tmux
+    tree
+    vim
+    wget
+)
+
+MAC_SPECIFIC_PACKAGES=(fd)
+
+UBUNTU_SPECIFIC_PACKAGES=(fd-find)
+
 install_mac() {
     echo "Installing tools for MacOS..."
 
@@ -20,30 +49,7 @@ install_mac() {
 
     # Update Homebrew and install tools
     brew update
-    brew install \
-        bat \
-        curl \
-        direnv \
-        fd \
-        fzf \
-        git \
-        glances \
-        htop \
-        jq \
-        lazygit \
-        lesspipe \
-        neovim \
-        nvm \
-        pyenv \
-        ripgrep \
-        shellcheck \
-        shellharden \
-        shfmt \
-        stow \
-        tmux \
-        tree \
-        vim \
-        wget
+    brew install "${COMMON_PACKAGES[@]}" "${MAC_SPECIFIC_PACKAGES[@]}"
 
     echo "MacOS tools installation complete!"
 }
@@ -54,31 +60,8 @@ install_ubuntu() {
     # Update and upgrade packages
     sudo apt update && sudo apt upgrade -y
 
-    # Install tools (updated to match MacOS toolset, but you might need to verify exact package names on Ubuntu)
-    sudo apt install -y \
-        bat \
-        curl \
-        direnv \
-        fd-find \
-        fzf \
-        git \
-        glances \
-        htop \
-        jq \
-        lazygit \
-        lesspipe \
-        neovim \
-        nvm \
-        pyenv \
-        ripgrep \
-        shellcheck \
-        shellharden \
-        shfmt \
-        stow \
-        tmux \
-        tree \
-        vim \
-        wget
+    # Install tools
+    sudo apt install -y "${COMMON_PACKAGES[@]}" "${UBUNTU_SPECIFIC_PACKAGES[@]}"
 
     echo "Ubuntu tools installation complete!"
 }
