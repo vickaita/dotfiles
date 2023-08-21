@@ -23,3 +23,9 @@ autoload -Uz compinit && compinit
 if [ -e /home/vickaita/.nix-profile/etc/profile.d/nix.sh ]; then
     source /home/vickaita/.nix-profile/etc/profile.d/nix.sh;
 fi
+
+# Source local configuration
+if [[ -f ~/.zshrc.local ]]; then
+    source ~/.zshrc.local
+fi
+

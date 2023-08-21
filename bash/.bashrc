@@ -125,3 +125,8 @@ if ! shopt -oq posix; then
         . /etc/bash_completion
     fi
 fi
+
+# Source local configuration
+if [[ -f ~/.bashrc.local ]]; then
+    source ~/.bashrc.local
+fi
