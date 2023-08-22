@@ -1,10 +1,8 @@
-# pyenv_setup.sh
-
 # Check if pyenv command exists
 if command -v pyenv >/dev/null 2>&1; then
     # PYENV_ROOT might be defined if you've installed pyenv using other methods
     # or have it placed somewhere else. You can remove the if block if you're sure.
-    if [ "$PYENV_ROOT" = "" ]; then
+    if [[ "$PYENV_ROOT" = "" ]]; then
         export PYENV_ROOT="$HOME/.pyenv"
     fi
 

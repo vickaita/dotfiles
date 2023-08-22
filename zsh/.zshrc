@@ -4,7 +4,6 @@ export CURRENT_SHELL="zsh"
 
 source "$DOTFILES"/shared/shell/prompt.sh
 source "$DOTFILES"/shared/shell/history.sh
-source "$DOTFILES"/shared/shell/path.sh
 source "$DOTFILES"/shared/shell/github-copilot.sh
 source "$DOTFILES"/shared/shell/rust.sh
 source "$DOTFILES"/shared/shell/direnv.sh
