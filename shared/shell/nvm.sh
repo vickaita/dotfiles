@@ -1,7 +1,7 @@
 # nvm_setup.sh
 
 # Default location for installed Node versions
-if [[ "$NVIM_DIR" == "" ]]; then
+if [[ -z "$NVIM_DIR" ]]; then
     export NVM_DIR="$HOME/.nvm"
 fi
 

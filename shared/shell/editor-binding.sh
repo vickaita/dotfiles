@@ -1,4 +1,4 @@
-EDITOR=nvim
+export EDITOR=nvim
 
 if [[ $CURRENT_SHELL == "zsh" ]]; then
     autoload -Uz edit-command-line

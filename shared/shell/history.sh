@@ -1,8 +1,8 @@
-export HISTSIZE=1000000
-export HISTFILESIZE=20000000
+export HISTSIZE=10000
+export HISTFILESIZE=500000
 export HISTTIMEFORMAT="[%F %T]"
 
-if [ -n "$ZSH_VERSION" ]; then
+if [[ "$CURRENT_SHELL" == "zsh" ]]; then
     export HISTFILE=~/.zsh_history
     export SAVEHIST=$HISTSIZE
 
@@ -16,7 +16,6 @@ if [ -n "$ZSH_VERSION" ]; then
     # set), ‘setopt’ shows all options whose settings are changed from the
     # default.
 
-
     # If this is set, zsh sessions will append their history list to the
     # history file, rather than replace it. Thus, multiple parallel zsh
     # sessions will all have the new entries from their history lists added to
@@ -24,6 +23,7 @@ if [ -n "$ZSH_VERSION" ]; then
     # periodically re-written to trim it when the number of lines grows 20%
     # beyond the value specified by $SAVEHIST (see also the HIST_SAVE_BY_COPY
     # option).
+    # NOTE: Diabled because INC_APPEND_HISTORY_TIME is set instead.
     # APPEND_HISTORY <D>
 
     # Perform textual history expansion, csh-style, treating the character ‘!’
@@ -34,7 +34,6 @@ if [ -n "$ZSH_VERSION" ]; then
     # the duration (in seconds) to the history file. The format of this
     # prefixed data is: `: <beginning time>:<elapsed seconds>;<command>`.
     setopt EXTENDED_HISTORY # <C>
-
 
     # Add ‘|’ to output redirections in the history. This allows history
     # references to clobber files even when CLOBBER is unset.
@@ -137,6 +136,7 @@ if [ -n "$ZSH_VERSION" ]; then
     # periodically re-written to trim it when the number of lines grows 20%
     # beyond the value specified by $SAVEHIST (see also the HIST_SAVE_BY_COPY
     # option).
+    # NOTE: Diabled because INC_APPEND_HISTORY_TIME is set instead.
     # INC_APPEND_HISTORY
 
     # This option is a variant of INC_APPEND_HISTORY in which, where possible,
@@ -167,9 +167,10 @@ if [ -n "$ZSH_VERSION" ]; then
     # you may wish to turn SHARE_HISTORY off, INC_APPEND_HISTORY or
     # INC_APPEND_HISTORY_TIME (see above) on, and then manually import commands
     # whenever you need them using ‘fc -RI’.
+    # NOTE: Diabled because INC_APPEND_HISTORY_TIME is set instead.
     # SHARE_HISTORY <K>
 
-elif [ -n "$BASH_VERSION" ]; then
+elif [[ "$CURRENT_SHELL" == "bash" ]]; then
     export HISTFILE=~/.bash_history
 
     HISTCONTROL=ignoreboth
@@ -177,5 +178,3 @@ elif [ -n "$BASH_VERSION" ]; then
     # append to the history file, don't overwrite it
     shopt -s histappend
 fi
-
-
