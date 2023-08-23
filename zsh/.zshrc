@@ -2,6 +2,7 @@ export DOTFILES="$HOME"/.dotfiles
 
 export CURRENT_SHELL="zsh"
 
+source "$DOTFILES"/shared/shell/utils.sh
 source "$DOTFILES"/shared/shell/prompt.sh
 source "$DOTFILES"/shared/shell/history.sh
 source "$DOTFILES"/shared/shell/rust.sh

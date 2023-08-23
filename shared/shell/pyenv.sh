@@ -6,7 +6,7 @@ if command -v pyenv >/dev/null 2>&1; then
         export PYENV_ROOT="$HOME/.pyenv"
     fi
 
-    export PATH="$PYENV_ROOT/bin:$PATH"
+    prepend_to_path "$PYENV_ROOT/bin"
 
     # Initialize pyenv. The `--path` option is recommended since pyenv v2.0.0
     # However, older versions might not recognize it, so we conditionally apply it.
