@@ -49,8 +49,9 @@ require("lazy").setup({
     -- { import = "lazyvim.plugins.extras.util.project" },
 
     -- Disable some of the plugins from LazyVim
-    { "lukas-reineke/indent-blankline.nvim", enabled = false },
+    { "akinsho/bufferline.nvim", enabled = false },
     { "echasnovski/mini.indentscope", enabled = false },
+    { "lukas-reineke/indent-blankline.nvim", enabled = false },
 
     -- import/override with your plugins
     { import = "plugins" },

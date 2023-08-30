@@ -3,6 +3,7 @@ local Util = require("lazyvim.util")
 return {
   {
     "akinsho/bufferline.nvim",
+    enabled = false,
     keys = {
       {
         "<leader>ut",
