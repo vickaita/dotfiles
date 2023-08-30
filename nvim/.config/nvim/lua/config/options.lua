@@ -3,7 +3,7 @@
 -- Add any additional options here
 
 -- don't sync with clipboard by default
-vim.opt.clipboard = "unnamed"
+vim.opt.clipboard = ""
 
 vim.opt.colorcolumn = "81"
 vim.opt.conceallevel = 0
