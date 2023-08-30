@@ -1,3 +1,9 @@
+local colorscheme = os.getenv("NEOVIM_COLORSCHEME") or "duskfox"
+
+if colorscheme == "solarized8_flat" then
+  vim.o.background = "light"
+end
+
 return {
   { "EdenEast/nightfox.nvim" },
   { "catppuccin/nvim" },
@@ -12,7 +18,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "duskfox",
+      colorscheme = colorscheme,
     },
   },
 }
