@@ -8,6 +8,12 @@ vim.api.nvim_create_autocmd("FileType", {
   command = "setlocal shiftwidth=4 tabstop=4",
 })
 
+-- gitcommit
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "gitcommit" },
+  command = "setlocal spell shiftwidth=4 tabstop=8 expandtab softtabstop=4",
+})
+
 -- Make
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "make", "Makefile" },
