@@ -6,10 +6,14 @@
 -- --------------------------------------------
 
 -- LazyVim adds these keymaps for moving between windows, but I don't use them
--- vim.keymap.del({ "n" }, "<C-h>")
--- vim.keymap.del({ "n" }, "<C-j>")
--- vim.keymap.del({ "n" }, "<C-k>")
--- vim.keymap.del({ "n" }, "<C-l>")
+vim.keymap.del({ "n" }, "<C-h>")
+vim.keymap.del({ "n" }, "<C-j>")
+vim.keymap.del({ "n" }, "<C-k>")
+vim.keymap.del({ "n" }, "<C-l>")
+
+-- LazyVim adds these keymaps for moving between buffers, but I don't use them
+vim.keymap.del({ "n" }, "<S-h>")
+vim.keymap.del({ "n" }, "<S-l>")
 
 -- Add some new keymaps
 -- --------------------
