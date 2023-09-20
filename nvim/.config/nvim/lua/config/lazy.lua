@@ -51,6 +51,7 @@ require("lazy").setup({
     -- Disable some of the plugins from LazyVim
     { "akinsho/bufferline.nvim", enabled = false },
     { "echasnovski/mini.indentscope", enabled = false },
+    { "folke/flash.nvim", enabled = false },
     { "lukas-reineke/indent-blankline.nvim", enabled = false },
 
     -- import/override with your plugins
