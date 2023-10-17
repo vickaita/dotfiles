@@ -66,6 +66,54 @@ install_ubuntu() {
     echo "Ubuntu tools installation complete!"
 }
 
+# Check and manage SSH keys
+function manage_ssh_keys() {
+    local key_dir="$HOME/.ssh"
+    local default_key_rsa="$key_dir/id_rsa"
+    local default_key_ed25519="$key_dir/id_ed25519"
+
+    echo "Checking for existing SSH keys..."
+
+    # Check for existing keys in the default location
+    local keys_found=false
+    for key in "$key_dir"/*.pub; do
+        if [[ -e "$key" ]]; then
+            keys_found=true
+            echo "Key: $(basename "$key")"
+        fi
+    done
+
+    if [[ "$keys_found" == false ]]; then
+        echo "No SSH public keys found in the default location."
+    fi
+
+    # Prompt the user for action
+    read -pr "Would you like to create a new SSH key? (y/n): " choice
+
+    case $choice in
+    [Yy]*)
+        # Ask for type of key
+        echo "Which type of key would you like to create?"
+        select key_type in "Ed25519" "RSA"; do
+            case $key_type in
+            RSA)
+                ssh-keygen -t rsa -b 4096 -f "$default_key_rsa"
+                break
+                ;;
+            Ed25519)
+                ssh-keygen -t ed25519 -f "$default_key_ed25519"
+                break
+                ;;
+            esac
+        done
+        echo "New SSH key created!"
+        ;;
+    *)
+        echo "Skipping SSH key creation."
+        ;;
+    esac
+}
+
 # Main
 if [ "$OS" = "Darwin" ]; then
     install_mac
@@ -81,3 +129,5 @@ else
     echo "Unsupported OS."
     exit 1
 fi
+
+manage_ssh_keys
