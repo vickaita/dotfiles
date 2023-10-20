@@ -22,19 +22,35 @@ return {
     },
   },
   {
-    "jose-elias-alvarez/null-ls.nvim",
-    opts = function(_, opts)
-      local nls = require("null-ls")
-      table.insert(opts.sources, nls.builtins.formatting.shellharden)
-      table.insert(
-        opts.sources,
-        nls.builtins.formatting.shfmt.with({
-          extra_args = { "--indent", "4" },
-        })
-      )
-      table.insert(opts.sources, nls.builtins.diagnostics.shellcheck)
-    end,
+    "stevearc/conform.nvim",
+    opts = {
+      formatters_by_ft = {
+        sh = { "shellharden", "shfmt" },
+      },
+    },
   },
+  {
+    "mfussenegger/nvim-lint",
+    opts = {
+      linters_by_ft = {
+        sh = { "shellcheck" },
+      },
+    },
+  },
+  -- {
+  --   "jose-elias-alvarez/none-ls.nvim",
+  --   opts = function(_, opts)
+  --     local nls = require("null-ls")
+  --     table.insert(opts.sources, nls.builtins.formatting.shellharden)
+  --     table.insert(
+  --       opts.sources,
+  --       nls.builtins.formatting.shfmt.with({
+  --         extra_args = { "--indent", "4" },
+  --       })
+  --     )
+  --     table.insert(opts.sources, nls.builtins.diagnostics.shellcheck)
+  --   end,
+  -- },
   {
     "nvim-treesitter/nvim-treesitter",
     opts = {
