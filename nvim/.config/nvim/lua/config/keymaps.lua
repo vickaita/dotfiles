@@ -14,12 +14,3 @@ vim.keymap.del({ "n" }, "<C-l>")
 -- LazyVim adds these keymaps for moving between buffers, but I don't use them
 vim.keymap.del({ "n" }, "<S-h>")
 vim.keymap.del({ "n" }, "<S-l>")
-
--- Add some new keymaps
--- --------------------
-
-vim.keymap.set({ "n", "x" }, "<leader>ci", function()
-  if vim.lsp.buf.server_ready() then
-    vim.diagnostic.open_float()
-  end
-end, { desc = "Show diagnostics" })
