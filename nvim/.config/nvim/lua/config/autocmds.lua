@@ -14,10 +14,22 @@ vim.api.nvim_create_autocmd("FileType", {
   command = "setlocal spell shiftwidth=4 tabstop=8 expandtab softtabstop=4",
 })
 
+-- JavaScript/TypeScript
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "javascript", "typescript" },
+  command = "setlocal textwidth=80 shiftwidth=2 tabstop=2",
+})
+
 -- Make
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "make", "Makefile" },
   command = "setlocal noexpandtab tabstop=8 shiftwidth=8",
+})
+
+-- Python
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "python" },
+  command = "setlocal textwidth=79 shiftwidth=4 tabstop=4",
 })
 
 -- Vimwiki
