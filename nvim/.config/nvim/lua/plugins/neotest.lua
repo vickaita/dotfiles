@@ -5,6 +5,7 @@ return {
     dependencies = {
       "nvim-neotest/neotest-jest",
       "nvim-neotest/neotest-python",
+      "marilari88/neotest-vitest",
     },
     opts = {
       adapters = {
@@ -13,6 +14,9 @@ return {
         },
         ["neotest-python"] = {
           runner = "pytest",
+        },
+        ["neotest-vitest"] = {
+          command = "vitest",
         },
       },
       status = {
