@@ -10,7 +10,6 @@ source "$DOTFILES"/shared/shell/direnv.sh
 source "$DOTFILES"/shared/shell/fzf.sh
 source "$DOTFILES"/shared/shell/pyenv.sh
 source "$DOTFILES"/shared/shell/nvm.sh
-source "$DOTFILES"/shared/shell/github-copilot.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
 source "$DOTFILES"/shared/shell/init_lesspipe.sh
 
