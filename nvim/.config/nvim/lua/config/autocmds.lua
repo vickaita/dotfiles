@@ -41,6 +41,10 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Automatically set the colorcolumn based on textwidth
 vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
   callback = function()
-    vim.o.colorcolumn = tostring(vim.o.textwidth + 1)
+    -- Try to set the colorcolumn automatically based on textwidth, but only if
+    -- textwidth is already set to a value greater than 0
+    if vim.o.textwidth > 0 then
+      vim.o.colorcolumn = tostring(vim.o.textwidth + 1)
+    end
   end,
 })
