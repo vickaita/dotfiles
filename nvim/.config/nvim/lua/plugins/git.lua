@@ -16,5 +16,6 @@ return {
     keys = {
       { "<leader>ghB", "<cmd>Git blame<cr>", desc = "Blame File" },
     },
+    lazy = false,
   },
 }
