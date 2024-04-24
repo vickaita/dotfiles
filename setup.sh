@@ -28,7 +28,7 @@ COMMON_PACKAGES=(
 	wget
 )
 
-MAC_SPECIFIC_PACKAGES=(fd, gh)
+MAC_SPECIFIC_PACKAGES=(fd gh)
 
 # TODO: Add gh for Ubuntu; I think this might require a PPA
 # https://github.com/cli/cli#installation
