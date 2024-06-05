@@ -6,4 +6,12 @@ return {
       formatters_by_ft = { python = { "ruff_fix", "isort", "black" } },
     },
   },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    opts = function(_, opts)
+      vim.list_extend(opts.ensure_installed, {
+        "python",
+      })
+    end,
+  },
 }
