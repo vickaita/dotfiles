@@ -6,21 +6,22 @@ if colorscheme:match("light") or colorscheme:match("solarized") then
 end
 
 return {
-  { "EdenEast/nightfox.nvim" },
-  { "catppuccin/nvim" },
-  { "ellisonleao/gruvbox.nvim" },
-  { "embark-theme/vim" },
-  { "folke/tokyonight.nvim", lazy = false, priority = 1000, opts = {} },
-  { "ishan9299/nvim-solarized-lua" },
-  { "lifepillar/vim-solarized8" },
-  { "rafamadriz/neon" },
-  { "sainnhe/everforest" },
-  { "sainnhe/sonokai" },
-
   {
-    "LazyVim/LazyVim",
-    opts = {
-      colorscheme = colorscheme,
-    },
+    "EdenEast/nightfox.nvim",
+    lazy = false, -- make sure we load this during startup
+    priority = 1000, -- make sure to load this before all the other plugins
+    config = function()
+      -- load the colorscheme here
+      vim.cmd([[colorscheme duskfox]])
+    end,
   },
+  -- { "catppuccin/nvim" },
+  -- { "ellisonleao/gruvbox.nvim" },
+  -- { "embark-theme/vim" },
+  -- { "folke/tokyonight.nvim", lazy = false, priority = 1000, opts = {} },
+  -- { "ishan9299/nvim-solarized-lua" },
+  -- { "lifepillar/vim-solarized8" },
+  -- { "rafamadriz/neon" },
+  -- { "sainnhe/everforest" },
+  -- { "sainnhe/sonokai" },
 }
