@@ -1,6 +1,8 @@
-export DOTFILES="$HOME"/.dotfiles
+export DOTFILES="$HOME/.dotfiles"
 
 export CURRENT_SHELL="zsh"
+
+source "$DOTFILES"/zsh/keybindings.zsh
 
 source "$DOTFILES"/shared/shell/utils.sh
 source "$DOTFILES"/shared/shell/prompt.sh
@@ -12,20 +14,31 @@ source "$DOTFILES"/shared/shell/pyenv.sh
 source "$DOTFILES"/shared/shell/nvm.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
 source "$DOTFILES"/shared/shell/init_lesspipe.sh
-source "$DOTFILES/zsh/keybindings.zsh"
-
-plugins=(docker docker-compose)
 
 # Configure Git completion
 autoload -Uz compinit && compinit
 
-# added by Nix installer
-if [ -e /home/vickaita/.nix-profile/etc/profile.d/nix.sh ]; then
-    source /home/vickaita/.nix-profile/etc/profile.d/nix.sh;
+# Source local configuration
+if [[ -f "$HOME/.zshrc.local" ]]; then
+    source "$HOME/.zshrc.local"
 fi
 
-# Source local configuration
-if [[ -f ~/.zshrc.local ]]; then
-    source ~/.zshrc.local
-fi
+# Warn if any important sourced files are missing
+for file in \
+    "$DOTFILES/shared/shell/utils.sh" \
+    "$DOTFILES/shared/shell/prompt.sh" \
+    "$DOTFILES/shared/shell/history.sh" \
+    "$DOTFILES/shared/shell/rust.sh" \
+    "$DOTFILES/shared/shell/direnv.sh" \
+    "$DOTFILES/shared/shell/fzf.sh" \
+    "$DOTFILES/shared/shell/pyenv.sh" \
+    "$DOTFILES/shared/shell/nvm.sh" \
+    "$DOTFILES/shared/shell/editor-binding.sh" \
+    "$DOTFILES/shared/shell/init_lesspipe.sh" \
+    "$DOTFILES/zsh/keybindings.zsh"
+    do
+    if [ ! -f "$file" ]; then
+        echo "Warning: $file not found!"
+    fi
+done
 
