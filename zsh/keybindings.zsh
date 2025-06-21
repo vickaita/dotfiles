@@ -1,50 +1,23 @@
-bindkey "^@" set-mark-command
-bindkey "^A" beginning-of-line
-bindkey "^B" backward-char
-bindkey "^D" delete-char-or-list
-bindkey "^E" end-of-line
-bindkey "^F" forward-char
-bindkey "^G" send-break
-bindkey "^H" backward-delete-char
-bindkey "^I" fzf-completion
-bindkey "^J" accept-line
-bindkey "^K" kill-line
-bindkey "^L" clear-screen
-bindkey "^M" accept-line
-bindkey "^N" down-line-or-history
-bindkey "^O" accept-line-and-down-history
-bindkey "^P" up-line-or-history
-bindkey "^Q" push-line
-bindkey "^R" fzf-history-widget
-bindkey "^S" history-incremental-search-forward
-bindkey "^T" fzf-file-widget
-bindkey "^U" kill-whole-line
-bindkey "^V" quoted-insert
-bindkey "^W" backward-kill-word
-bindkey "^X^B" vi-match-bracket
-bindkey "^X^E" edit-command-line
-bindkey "^X^F" vi-find-next-char
-bindkey "^X^J" vi-join
-bindkey "^X^K" kill-buffer
-bindkey "^X^N" infer-next-history
-bindkey "^X^O" overwrite-mode
-bindkey "^X^R" _read_comp
-bindkey "^X^U" undo
-bindkey "^X^V" vi-cmd-mode
-bindkey "^X^X" exchange-point-and-mark
-bindkey "^X*" expand-word
-bindkey "^X=" what-cursor-position
-bindkey "^X?" _complete_debug
-bindkey "^XC" _correct_filename
-bindkey "^XG" list-expand
-bindkey "^Xa" _expand_alias
-bindkey "^Xc" _correct_word
-bindkey "^Xd" _list_expansions
-bindkey "^Xe" _expand_word
-bindkey "^Xg" list-expand
-bindkey "^Xh" _complete_help
-bindkey "^Xm" _most_recent_file
-bindkey "^Xn" _next_tags
-bindkey "^Xr" history-incremental-search-backward
-bindkey "^Xs" history-incremental-search-forward
-bindkey "^Xt" _complete_tag
+# Use emacs-style keymap (default for zsh unless overridden)
+bindkey -e
+
+# Core cursor movement and editing
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+bindkey '^B' backward-char
+bindkey '^F' forward-char
+bindkey '^P' up-line-or-history
+bindkey '^N' down-line-or-history
+bindkey '^H' backward-delete-char
+bindkey '^D' delete-char
+bindkey '^K' kill-line
+bindkey '^U' kill-whole-line
+bindkey '^W' backward-kill-word
+bindkey '^Y' yank
+bindkey '^R' history-incremental-search-backward
+bindkey '^S' history-incremental-search-forward  # NOTE: may be blocked by terminal flow control
+
+# Accepting/clearing
+bindkey '^M' accept-line     # Enter
+bindkey '^J' accept-line     # Ctrl-J also acts as Enter
+bindkey '^L' clear-screen
