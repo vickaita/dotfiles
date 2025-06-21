@@ -5,13 +5,18 @@ git_prompt_info() {
     fi
     local ref
     ref=$(git --no-optional-locks symbolic-ref --short HEAD 2>/dev/null) ||
-        "$(git --no-optional-locks rev-parse --short HEAD 2>/dev/null)" ||
-        return 0
-    echo "$ref"
+        ref=$(git --no-optional-locks rev-parse --short HEAD 2>/dev/null) ||
+        return 1
+    [[ -n "$ref" ]] && echo "$ref"
 }
 
 if ! typeset -f __git_ps1 >/dev/null; then
-    source "$DOTFILES"/shared/shell/git-prompt.sh
+    if [[ -f "$DOTFILES/shared/shell/git-prompt.sh" ]]; then
+        source "$DOTFILES/shared/shell/git-prompt.sh"
+    else
+        echo "Warning: git-prompt.sh not found" >&2
+        return 1
+    fi
 fi
 
 GIT_PS1_SHOWDIRTYSTATE=1
