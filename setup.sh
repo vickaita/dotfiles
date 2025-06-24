@@ -43,6 +43,7 @@ COMMON_PACKAGES=(
     stow
     tmux
     tree
+    uv
     vim
     wget
 )
