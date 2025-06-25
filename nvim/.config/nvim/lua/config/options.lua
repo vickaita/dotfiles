@@ -8,6 +8,14 @@ vim.opt.conceallevel = 0
 vim.o.formatoptions = vim.o.formatoptions .. "t"
 vim.opt.textwidth = 80
 
+-- configure line wrapping
+-- only configures line wrapping, but you need to `set wrap`
+-- to enable it in the current buffer; by default, it is off
+-- and only configured for certain file types, see autocmds.lua
+vim.opt.linebreak = true
+vim.opt.breakindent = true
+vim.opt.showbreak = "↳ "
+
 vim.opt.listchars = { tab = "→ ", trail = "⋅" }
 
 -- don't use relative line numbers by default

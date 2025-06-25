@@ -100,6 +100,11 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown", "text", "gitcommit", "rst", "asciidoc" },
+  command = "setlocal wrap"
+})
+
+vim.api.nvim_create_autocmd("FileType", {
   pattern = { "rst" },
   command = "setlocal spell textwidth=79 shiftwidth=3 tabstop=3 expandtab softtabstop=3",
 })
