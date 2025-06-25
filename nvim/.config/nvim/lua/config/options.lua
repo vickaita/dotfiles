@@ -13,6 +13,3 @@ vim.opt.listchars = { tab = "→ ", trail = "⋅" }
 -- don't use relative line numbers by default
 vim.opt.number = true
 vim.opt.relativenumber = false
-
--- turn off animations
-vim.g.snacks_animate = false
