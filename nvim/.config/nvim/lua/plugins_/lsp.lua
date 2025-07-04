@@ -10,11 +10,12 @@ return {
 	      "stylua",
 	      "shfmt",
 	    },
+	  },
   },
-     {
-	     "williamboman/mason-lspconfig.nvim",
-	     config = function() end
-     },
+  {
+	  "williamboman/mason-lspconfig.nvim",
+	  config = function() end
+  },
   -- ---@param opts MasonSettings | {ensure_installed: string[]}
   -- config = function(_, opts)
   --   require("mason").setup(opts)
@@ -38,14 +39,13 @@ return {
   --     end
   --   end)
   -- end,
-},
-{
-   "neovim/nvim-lspconfig",
-   dependencies = {
-     "williamboman/mason.nvim",
-     "williamboman/mason-lspconfig.nvim"
-   },
-}
+  {
+     "neovim/nvim-lspconfig",
+     dependencies = {
+       "williamboman/mason.nvim",
+       "williamboman/mason-lspconfig.nvim"
+     },
+  },
 -- 	{
 --   "neovim/nvim-lspconfig",
 --   --event = "LazyFile",
