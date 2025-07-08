@@ -1,3 +1,7 @@
+if vim.g.vscode then
+  return {}
+end
+
 local colorscheme = os.getenv("NEOVIM_COLORSCHEME") or "duskfox"
 
 -- check to see if the colorscheme contains the word "light" or "solarized"
