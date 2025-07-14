@@ -3,22 +3,19 @@ if vim.g.vscode then
 end
 
 return {
-
   -- Setup Mason first
   {
     "williamboman/mason.nvim",
     cmd = "Mason",
     build = ":MasonUpdate",
     opts = {
-	    ensure_installed = {
-	"stylua",
-      },
+      ensure_installed = { "stylua" },
       ui = {
-	icons = {
-	  server_installed = "✓",
-	  server_pending = "➜",
-	  server_uninstalled = "✗",
-	},
+        icons = {
+          server_installed = "✓",
+          server_pending = "➜",
+          server_uninstalled = "✗",
+        },
       },
     },
   },
@@ -93,9 +90,11 @@ return {
   {
     "neovim/nvim-lspconfig",
     dependencies = {
+      -- "folke/neodev.nvim",
       "mason.nvim",
       "mason-lspconfig.nvim",
     },
+    opts_extend = { "servers" },
     opts = {
       -- this gets merged by language-specific files
       servers = {},
@@ -106,8 +105,17 @@ return {
         "force",
         {},
         vim.lsp.protocol.make_client_capabilities(),
-	require("blink.cmp").get_lsp_capabilities() or {}
+        require("blink.cmp").get_lsp_capabilities() or {}
       )
+
+      -- Customize diagnostic signs
+      vim.fn.sign_define("DiagnosticSignError", { text = "", texthl = "DiagnosticSignError" })
+      vim.fn.sign_define("DiagnosticSignWarn", { text = "", texthl = "DiagnosticSignWarn" })
+      vim.fn.sign_define("DiagnosticSignInfo", { text = "", texthl = "DiagnosticSignInfo" })
+      vim.fn.sign_define("DiagnosticSignHint", { text = "", texthl = "DiagnosticSignHint" })
+
+      -- always reserve two sign columns
+      vim.o.signcolumn = "yes:2"
 
       -- setup each LSP server
       local lspconfig = require("lspconfig")
@@ -117,5 +125,4 @@ return {
       end
     end,
   },
-
 }

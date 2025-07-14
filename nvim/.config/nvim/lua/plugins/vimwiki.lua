@@ -3,7 +3,14 @@ if vim.g.vscode then
 end
 
 -- set vimwiki path from an environment variable with a fallback of "~/wiki/"
-vim.g.vimwiki_list = { { path = vim.env.VIMWIKI_PATH or "~/wiki/" } }
+vim.g.vimwiki_list = {
+  {
+    path = vim.env.VIMWIKI_PATH or "~/wiki/",
+    syntax = "markdown",
+    ext = ".md",
+    diary_rel_path = "",
+  },
+}
 
 return {
   {
@@ -20,5 +27,12 @@ return {
       { "<leader>vdy", "<cmd>VimwikiMakeYesterdayDiaryNote<cr>", desc = "Vimwiki yesterday diary note" },
       { "<leader>vdt", "<cmd>VimwikiMakeTomorrowDiaryNote<cr>", desc = "Vimwiki tomorrow diary note" },
     },
+  },
+  {
+    "williamboman/mason.nvim",
+    opts = function(_, opts)
+      opts.ensure_installed = opts.ensure_installed or {}
+      vim.list_extend(opts.ensure_installed, { "markdown-oxide" })
+    end,
   },
 }

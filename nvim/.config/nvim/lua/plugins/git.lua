@@ -40,7 +40,12 @@ return {
         delete = { text = "" },
         topdelete = { text = "" },
         changedelete = { text = "▎" },
+        untracked = { text = "▎" },
       },
+      -- bump this above your LSP priority
+      sign_priority = 100,
+      -- ensure that space is always reserved for the signs
+      signcolumn = true,
       on_attach = function(buffer)
         local gs = package.loaded.gitsigns
 
@@ -48,7 +53,7 @@ return {
           vim.keymap.set(mode, l, r, { buffer = buffer, desc = desc })
         end
 
-      -- stylua: ignore start
+        -- stylua: ignore start
         map("n", "]h", function()
           if vim.wo.diff then
             vim.cmd.normal({ "]c", bang = true })
