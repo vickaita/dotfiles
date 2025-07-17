@@ -43,7 +43,7 @@ return {
         untracked = { text = "▎" },
       },
       -- bump this above your LSP priority
-      sign_priority = 100,
+      sign_priority = 1,
       -- ensure that space is always reserved for the signs
       signcolumn = true,
       on_attach = function(buffer)

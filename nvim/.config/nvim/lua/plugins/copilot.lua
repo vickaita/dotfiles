@@ -30,6 +30,7 @@ return {
     "CopilotC-Nvim/CopilotChat.nvim",
     branch = "main",
     cmd = "CopilotChat",
+    dependencies = { "ibhagwan/fzf-lua" },
     opts = function()
       local user = vim.env.USER or "User"
       user = user:sub(1, 1):upper() .. user:sub(2)
@@ -38,6 +39,7 @@ return {
         question_header = "  " .. user .. " ",
         answer_header = "  Copilot ",
         window = {
+          layout = "vertical",
           width = 0.4,
         },
       }
@@ -94,6 +96,9 @@ return {
           vim.opt_local.number = false
         end,
       })
+
+      -- Enable fzf-lua integration for copilot-chat pickers
+      require('fzf-lua').register_ui_select()
 
       chat.setup(opts)
     end,
