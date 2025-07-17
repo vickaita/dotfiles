@@ -17,6 +17,7 @@ vim.opt.breakindent = true
 vim.opt.showbreak = "↳ "
 
 vim.opt.listchars = { tab = "→ ", trail = "⋅" }
+vim.opt.list = true
 
 -- don't use relative line numbers by default
 vim.opt.number = true
