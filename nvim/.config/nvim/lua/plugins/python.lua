@@ -1,5 +1,8 @@
+if vim.g.vscode then
+  return {}
+end
+
 return {
-  { import = "lazyvim.plugins.extras.lang.python" },
   {
     "stevearc/conform.nvim",
     opts = {
@@ -7,11 +10,30 @@ return {
     },
   },
   {
-    "nvim-treesitter/nvim-treesitter",
-    opts = function(_, opts)
-      vim.list_extend(opts.ensure_installed, {
-        "python",
-      })
-    end,
+    "williamboman/mason.nvim",
+    opts = {
+      ensure_installed = {
+        "black",
+        "isort",
+        "ruff",
+        "ruff_fix",
+      },
+    },
   },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    opts = {
+      ensure_installed = {
+        "pyright",
+      },
+    },
+  },
+  -- {
+  --   "nvim-treesitter/nvim-treesitter",
+  --   opts = function(_, opts)
+  --     vim.list_extend(opts.ensure_installed, {
+  --       "python",
+  --     })
+  --   end,
+  -- },
 }
