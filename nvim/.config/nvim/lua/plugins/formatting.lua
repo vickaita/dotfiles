@@ -28,6 +28,20 @@ return {
       mode = "",
       desc = "Toggle format on save",
     },
+    {
+      "<leader>un",
+      function()
+        if not vim.opt.number:get() then
+          vim.opt.number = true
+          vim.opt.relativenumber = false
+        elseif vim.opt.relativenumber:get() then
+          vim.opt.relativenumber = false
+        else
+          vim.opt.relativenumber = true
+        end
+      end,
+      desc = "Toggle relative/regular line numbers",
+    },
   },
   opts = {
     format_on_save = function(bufnr)
