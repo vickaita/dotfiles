@@ -9,25 +9,21 @@ return {
     end,
     keys = {
       {
-        "<leader>m",
-        desc = "+split/join",
-      },
-      {
-        "<leader>mm",
+        "<leader>ct",
         function()
           require("treesj").toggle()
         end,
-        desc = "Toggle Split",
+        desc = "Toggle Split/Join",
       },
       {
-        "<leader>mj",
+        "<leader>cj",
         function()
           require("treesj").join()
         end,
         desc = "Join",
       },
       {
-        "<leader>ms",
+        "<leader>cs",
         function()
           require("treesj").split()
         end,
