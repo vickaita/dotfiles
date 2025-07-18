@@ -64,7 +64,7 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Configuration & Data
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "json", "jsonc" },
-  command = "setlocal shiftwidth=2 tabstop=2 expandtab softtabstop=2",
+  command = "setlocal shiftwidth=2 tabstop=2 expandtab softtabstop=2 conceallevel=0",
 })
 
 vim.api.nvim_create_autocmd("FileType", {
