@@ -17,6 +17,10 @@ return {
       { "<leader>fs", "<cmd>FzfLua lsp_document_symbols<cr>", desc = "Document symbols" },
       { "<leader>fw", "<cmd>FzfLua lsp_workspace_symbols<cr>", desc = "Workspace symbols" },
     },
+    config = function(_, opts)
+      require("fzf-lua").setup(opts)
+      require("fzf-lua").register_ui_select()
+    end,
     opts = {
       winopts = {
         height = 0.85,

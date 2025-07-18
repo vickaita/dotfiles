@@ -2,30 +2,41 @@ if vim.g.vscode then
   return {}
 end
 
-local colorscheme = os.getenv("NEOVIM_COLORSCHEME") or "duskfox"
+local default = "catppuccin"
+local scheme  = (os.getenv("NEOVIM_COLORSCHEME") or default):lower()
 
--- check to see if the colorscheme contains the word "light" or "solarized"
-if colorscheme:match("light") or colorscheme:match("solarized") then
-  vim.o.background = "light"
+local themes = {
+  { slug = "EdenEast/nightfox.nvim",      pat = "fox"         },
+  { slug = "catppuccin/nvim",             pat = "catppuccin"  },
+  { slug = "ellisonleao/gruvbox.nvim",    pat = "gruvbox"     },
+  { slug = "embark-theme/vim",            pat = "embark"      },
+  { slug = "folke/tokyonight.nvim",       pat = "tokyonight"  },
+  { slug = "ishan9299/nvim-solarized-lua",pat = "solarized"   },
+  { slug = "lifepillar/vim-solarized8",   pat = "solarized"   },
+  { slug = "rafamadriz/neon",             pat = "neon"        },
+  { slug = "sainnhe/everforest",          pat = "everforest"  },
+  { slug = "sainnhe/sonokai",             pat = "sonokai"     },
+}
+
+local result = {}
+
+for _, t in ipairs(themes) do
+  table.insert(result, {
+    t.slug,
+    lazy     = not scheme:match(t.pat),
+    priority = 1000,
+    config   = function()
+      if scheme:match(t.pat) then
+        if scheme:match("%f[%a]light%f[^%a]") then
+          vim.o.background = "light"
+        end
+        local ok, err = pcall(vim.cmd, "colorscheme " .. scheme)
+        if not ok then
+          vim.notify("Colorscheme "..scheme.." not found: "..err, vim.log.levels.WARN)
+        end
+      end
+    end,
+  })
 end
 
-return {
-  {
-    "EdenEast/nightfox.nvim",
-    lazy = false, -- make sure we load this during startup
-    priority = 1000, -- make sure to load this before all the other plugins
-    config = function()
-      -- load the colorscheme here
-      vim.cmd([[colorscheme duskfox]])
-    end,
-  },
-  { "catppuccin/nvim" },
-  { "ellisonleao/gruvbox.nvim" },
-  { "embark-theme/vim" },
-  { "folke/tokyonight.nvim", lazy = false, priority = 1000, opts = {} },
-  { "ishan9299/nvim-solarized-lua" },
-  { "lifepillar/vim-solarized8" },
-  { "rafamadriz/neon" },
-  { "sainnhe/everforest" },
-  { "sainnhe/sonokai" },
-}
+return result

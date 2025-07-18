@@ -97,9 +97,6 @@ return {
         end,
       })
 
-      -- Enable fzf-lua integration for copilot-chat pickers
-      require('fzf-lua').register_ui_select()
-
       chat.setup(opts)
     end,
   },

@@ -1,4 +1,33 @@
+if vim.g.vscode then
+  return {}
+end
+
+-- set vimwiki path from an environment variable with a fallback of "~/wiki/"
+vim.g.vimwiki_list = {
+  {
+    path = vim.env.VIMWIKI_PATH or "~/wiki/",
+    syntax = "markdown",
+    ext = ".md",
+    diary_rel_path = "",
+  },
+}
+
 return {
+  {
+    "vimwiki/vimwiki",
+    dependencies = { "folke/which-key.nvim" },
+    ft = { "vimwiki" },
+    keys = {
+      { "<leader>v", desc = "+vimwiki" },
+      { "<leader>vd", desc = "+diary" },
+      { "<leader>vw", "<cmd>VimwikiIndex<cr>", desc = "Vimwiki index" },
+      { "<leader>vdi", "<cmd>VimwikiDiaryIndex<cr>", desc = "Vimwiki diary index" },
+      { "<leader>vdg", "<cmd>VimwikiDiaryGenerateLinks<cr>", desc = "Vimwiki diary generate links" },
+      { "<leader>vdd", "<cmd>VimwikiMakeDiaryNote<cr>", desc = "Vimwiki current date diary note" },
+      { "<leader>vdy", "<cmd>VimwikiMakeYesterdayDiaryNote<cr>", desc = "Vimwiki yesterday diary note" },
+      { "<leader>vdt", "<cmd>VimwikiMakeTomorrowDiaryNote<cr>", desc = "Vimwiki tomorrow diary note" },
+    },
+  },
   {
     "MeanderingProgrammer/markdown.nvim",
     name = "render-markdown",
@@ -14,17 +43,7 @@ return {
         -- Highlight settings
         highlights = {
           heading = {
-            -- Background colors for headers
-            -- backgrounds = { "RenderMarkdownH1Bg", "RenderMarkdownH2Bg" },
-            -- Foreground colors for headers
-            foregrounds = {
-              "RenderMarkdownH1",
-              "RenderMarkdownH2",
-              "RenderMarkdownH3",
-              "RenderMarkdownH4",
-              "RenderMarkdownH5",
-              "RenderMarkdownH6",
-            },
+            backgrounds = {},
           },
           -- Code block highlighting
           code = "RenderMarkdownCode",
@@ -32,7 +51,9 @@ return {
           bullet = "RenderMarkdownBullet",
         },
         heading = {
-          enabled = false,
+          sign = true,
+          width = "block",
+          -- min_width = 40,
         },
         -- Code block settings
         code = {
@@ -45,25 +66,105 @@ return {
           -- Border around code blocks
           border = "thin",
         },
-        -- Checkbox settings
-        checkbox = {
-          enabled = false,
-          -- Custom checkboxes
-          custom = {
-            todo = { raw = "[-]", rendered = "󰥔 ", highlight = "RenderMarkdownTodo" },
-          },
-        },
         -- Bullet point settings
         bullet = {
           -- Enable bullet point rendering
-          enabled = false,
+          enabled = true,
           -- Different icons for different levels
           -- icons = { "●", "○", "◆", "◇" },
           icons = { "∙" },
         },
+        -- Wiki link configuration for vimwiki
+        link = {
+          wiki = {
+            icon = "󱗖 ",
+            body = function()
+              return nil
+            end,
+          },
+        },
+        -- Checkbox configuration
+        checkbox = {
+          enabled = true,
+          bullet = true, -- Preserve bullet points with checkboxes
+          -- Custom checkboxes for different states
+          unchecked = { icon = "[ ]", highlight = "RenderMarkdownUnchecked" },
+          checked = { icon = "[✖︎]", highlight = "RenderMarkdownDone" },
+          custom = {
+            todo = { raw = "[-]", rendered = "[⁃]", highlight = "RenderMarkdownInProgress" },
+          },
+        },
       })
     end,
-    ft = { "markdown", "md" },
+    ft = { "markdown", "md", "vimwiki" },
+  },
+  {
+    "jakewvincent/mkdnflow.nvim",
+    ft = { "markdown", "md", "vimwiki" },
+    config = function()
+      require("mkdnflow").setup({
+        -- Links and paths
+        links = {
+          style = "markdown",
+          name_is_source = false,
+          conceal = false,
+          context = 0,
+          implicit_extension = nil,
+          transform_implicit = false,
+          transform_explicit = function(text)
+            text = text:gsub(" ", "-")
+            text = text:lower()
+            return text
+          end,
+        },
+        -- To-do lists
+        to_do = {
+          symbols = { " ", "-", "X" }, -- [ ], [-], [X]
+          update_parents = true,
+          not_started = " ",
+          in_progress = "-",
+          complete = "X",
+        },
+        -- Mappings
+        mappings = {
+          MkdnEnter = { { "n", "v" }, "<CR>" },
+          MkdnTab = false,
+          MkdnSTab = false,
+          MkdnNextLink = { "n", "<Tab>" },
+          MkdnPrevLink = { "n", "<S-Tab>" },
+          MkdnNextHeading = { "n", "]]" },
+          MkdnPrevHeading = { "n", "[[" },
+          MkdnGoBack = { "n", "<BS>" },
+          MkdnGoForward = { "n", "<Del>" },
+          MkdnCreateLink = false,
+          MkdnCreateLinkFromClipboard = { { "n", "v" }, "<leader>p" },
+          MkdnFollowLink = { "n", "<CR>" },
+          MkdnDestroyLink = { "n", "<M-CR>" },
+          MkdnTagSpan = { "v", "<M-CR>" },
+          MkdnMoveSource = { "n", "<F2>" },
+          MkdnYankAnchorLink = { "n", "yaa" },
+          MkdnYankFileAnchorLink = { "n", "yfa" },
+          MkdnIncreaseHeading = { "n", "+" },
+          MkdnDecreaseHeading = { "n", "-" },
+          MkdnToggleToDo = { { "n", "v" }, "<C-Space>" },
+          MkdnNewListItem = false,
+          MkdnNewListItemBelowInsert = { "n", "o" },
+          MkdnNewListItemAboveInsert = { "n", "O" },
+          MkdnExtendList = false,
+          MkdnUpdateNumbering = { "n", "<leader>nn" },
+          MkdnTableNextCell = { "i", "<Tab>" },
+          MkdnTablePrevCell = { "i", "<S-Tab>" },
+          MkdnTableNextRow = false,
+          MkdnTablePrevRow = { "i", "<M-CR>" },
+          MkdnTableNewRowBelow = { "n", "<leader>ir" },
+          MkdnTableNewRowAbove = { "n", "<leader>iR" },
+          MkdnTableNewColAfter = { "n", "<leader>ic" },
+          MkdnTableNewColBefore = { "n", "<leader>iC" },
+          MkdnFoldSection = { "n", "<leader>f" },
+          MkdnUnfoldSection = { "n", "<leader>F" },
+        },
+      })
+    end,
   },
   {
     "nvim-treesitter/nvim-treesitter",
@@ -107,6 +208,8 @@ return {
           })
         end,
       }
+      -- Disable ltex-ls as it's causing Java XML parsing errors
+      opts.servers.ltex = false
     end,
   },
 }
