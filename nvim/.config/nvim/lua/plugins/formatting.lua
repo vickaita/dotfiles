@@ -16,7 +16,7 @@ return {
       desc = "Format buffer",
     },
     {
-      "<leader>uf",
+      "<leader>wf",
       function()
         vim.g.disable_autoformat = not vim.g.disable_autoformat
         if vim.g.disable_autoformat then
