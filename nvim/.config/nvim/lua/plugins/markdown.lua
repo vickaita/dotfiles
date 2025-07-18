@@ -40,20 +40,10 @@ return {
           -- Only conceal when cursor is not on the line
           only_when_cursor_is_off_line = true,
         },
-        -- Highlight settings
-        highlights = {
-          heading = {
-            backgrounds = {},
-          },
-          -- Code block highlighting
-          code = "RenderMarkdownCode",
-          -- Bullet point highlighting
-          bullet = "RenderMarkdownBullet",
-        },
         heading = {
           sign = true,
           width = "block",
-          -- min_width = 40,
+          min_width = 81,
         },
         -- Code block settings
         code = {
@@ -107,7 +97,7 @@ return {
         links = {
           style = "markdown",
           name_is_source = false,
-          conceal = false,
+          conceal = true,
           context = 0,
           implicit_extension = nil,
           transform_implicit = false,
