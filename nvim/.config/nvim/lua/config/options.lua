@@ -3,6 +3,7 @@ vim.opt.clipboard = ""
 
 vim.opt.colorcolumn = "81"
 vim.opt.conceallevel = 0
+vim.opt.mouse = "a"
 
 -- enable automatic text wrapping
 vim.o.formatoptions = vim.o.formatoptions .. "t"

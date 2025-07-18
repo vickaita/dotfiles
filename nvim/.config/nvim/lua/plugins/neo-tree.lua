@@ -25,6 +25,16 @@ return {
           width = 30,
         },
       },
+      window = {
+        position = "left",
+        width = 30,
+        mapping_options = {
+          noremap = true,
+          nowait = true,
+        },
+      },
+      -- Enable mouse support
+      enable_mouse_support = true,
     },
     config = function(_, opts)
       require("neo-tree").setup(opts)
