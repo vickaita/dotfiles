@@ -8,7 +8,7 @@ return {
   cmd = { "ConformInfo" },
   keys = {
     {
-      "<leader>f",
+      "<leader>cf",
       function()
         require("conform").format({ async = true })
       end,
@@ -40,6 +40,29 @@ return {
         lsp_format = "fallback",
       }
     end,
-    formatters_by_ft = {},
+    formatters_by_ft = {
+      lua = { "stylua" },
+      python = { "isort", "black" },
+      javascript = { "biome", "prettier", stop_after_first = true },
+      typescript = { "biome", "prettier", stop_after_first = true },
+      javascriptreact = { "biome", "prettier", stop_after_first = true },
+      typescriptreact = { "biome", "prettier", stop_after_first = true },
+      vue = { "prettier" },
+      css = { "prettier" },
+      scss = { "prettier" },
+      less = { "prettier" },
+      html = { "prettier" },
+      json = { "biome", "prettier", stop_after_first = true },
+      jsonc = { "biome", "prettier", stop_after_first = true },
+      yaml = { "prettier" },
+      markdown = { "prettier" },
+      graphql = { "prettier" },
+      handlebars = { "prettier" },
+      go = { "goimports", "gofmt" },
+      rust = { "rustfmt" },
+      sh = { "shfmt" },
+      bash = { "shfmt" },
+      zsh = { "shfmt" },
+    },
   },
 }
