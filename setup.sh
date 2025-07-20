@@ -49,6 +49,7 @@ COMMON_PACKAGES=(
 )
 
 MAC_SPECIFIC_PACKAGES=(fd gh pyenv nvm)
+MAC_CASK_PACKAGES=(ghostty)
 UBUNTU_SPECIFIC_PACKAGES=(fd-find)
 
 # Check if a package is installed (cross-platform)
@@ -59,6 +60,12 @@ is_package_installed() {
     elif [[ "$OS" = "Linux" ]]; then
         dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"
     fi
+}
+
+# Check if a cask is installed (macOS only)
+is_cask_installed() {
+    local cask="$1"
+    brew list --cask | grep -q "^${cask}$" 2>/dev/null
 }
 
 # Install packages only if not already installed
@@ -84,6 +91,27 @@ install_packages() {
         fi
     else
         log_info "All packages are already installed"
+    fi
+}
+
+# Install cask packages only if not already installed (macOS only)
+install_casks() {
+    local casks=("$@")
+    local to_install=()
+
+    for cask in "${casks[@]}"; do
+        if ! is_cask_installed "$cask"; then
+            to_install+=("$cask")
+        else
+            log_info "$cask is already installed, skipping"
+        fi
+    done
+
+    if [[ ${#to_install[@]} -gt 0 ]]; then
+        log_info "Installing casks: ${to_install[*]}"
+        brew install --cask "${to_install[@]}"
+    else
+        log_info "All casks are already installed"
     fi
 }
 
@@ -118,6 +146,11 @@ install_mac() {
 
     # Install packages
     install_packages "${COMMON_PACKAGES[@]}" "${MAC_SPECIFIC_PACKAGES[@]}"
+
+    # Install cask packages
+    if [[ ${#MAC_CASK_PACKAGES[@]} -gt 0 ]]; then
+        install_casks "${MAC_CASK_PACKAGES[@]}"
+    fi
 
     log_info "macOS tools installation complete!"
 }
@@ -288,11 +321,11 @@ function setup_config_directory() {
     local config_dir="$HOME/.config"
 
     if [ ! -d "$config_dir" ]; then
-        echo "Creating ~/.config directory..."
+        echo "Creating $config_dir directory..."
         mkdir -p "$config_dir"
-        echo "~/.config directory created!"
+        echo "$config_dir directory created!"
     else
-        echo "~/.config directory already exists."
+        echo "$config_dir directory already exists."
     fi
 }
 

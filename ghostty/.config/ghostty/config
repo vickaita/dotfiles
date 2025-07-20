@@ -1,0 +1,21 @@
+font-family = Monaco Nerd Font Mono
+font-size = 15
+
+# Theme - uses built-in catppuccin-mocha theme
+theme = catppuccin-mocha
+
+# Option key configuration
+# Left option key acts as meta (Alt)
+macos-option-as-alt = left
+
+# Cursor configuration
+cursor-style = block
+cursor-style-blink = false
+
+# Window settings
+window-padding-x = 8
+window-padding-y = 8
+
+# Other settings
+# scrollback-limit = 10000
+# confirm-close-surface = false
