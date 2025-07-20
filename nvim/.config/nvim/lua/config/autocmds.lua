@@ -34,16 +34,6 @@ vim.api.nvim_create_autocmd("FileType", {
   command = "setlocal textwidth=80 shiftwidth=4 tabstop=4",
 })
 
--- Automatically set the colorcolumn based on textwidth
-vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
-  callback = function()
-    -- Try to set the colorcolumn automatically based on textwidth, but only if
-    -- textwidth is already set to a value greater than 0
-    if vim.opt.textwidth:get() > 0 then
-      vim.opt_local.colorcolumn = tostring(vim.opt.textwidth:get() + 1)
-    end
-  end,
-})
 
 -- Web Development
 vim.api.nvim_create_autocmd("FileType", {

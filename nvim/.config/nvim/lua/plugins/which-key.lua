@@ -29,7 +29,7 @@ return {
           { "<leader>vd", group = "diary" },
           { "<leader>w", group = "workspace" },
           { "<leader>x", group = "diagnostics" },
-          { "<leader>a", group = "ai" },
+          { "<leader>a", group = "ai", icon = "󰚩" },
           { "<leader>i", group = "insert" },
           { "<leader>m", group = "split/join" },
           { "<leader>n", group = "numbering" },
