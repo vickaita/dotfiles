@@ -28,12 +28,12 @@ vim.api.nvim_create_autocmd("FileType", {
   command = "setlocal textwidth=79 shiftwidth=4 tabstop=4 expandtab softtabstop=4",
 })
 
+
 -- Vimwiki
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "vimwiki", "wiki" },
   command = "setlocal textwidth=80 shiftwidth=4 tabstop=4",
 })
-
 
 -- Web Development
 vim.api.nvim_create_autocmd("FileType", {
@@ -86,12 +86,12 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Documentation & Markup
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "markdown", "md" },
-  command = "setlocal spell textwidth=80 shiftwidth=4 tabstop=4 expandtab softtabstop=4",
+  command = "setlocal spell textwidth=80 shiftwidth=4 tabstop=4 expandtab softtabstop=4 colorcolumn=",
 })
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "markdown", "text", "gitcommit", "rst", "asciidoc" },
-  command = "setlocal wrap"
+  command = "setlocal wrap",
 })
 
 vim.api.nvim_create_autocmd("FileType", {
