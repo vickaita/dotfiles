@@ -25,10 +25,34 @@ return {
           { "<leader>s", group = "search" },
           { "<leader>t", group = "test" },
           { "<leader>u", group = "ui" },
-          { "<leader>un", function() require("util.ui").toggle_line_numbers() end, desc = "Toggle relative/regular line numbers" },
-          { "<leader>ur", function() require("util.ui").toggle_vertical_ruler() end, desc = "Toggle vertical ruler" },
-          { "<leader>uw", function() require("util.ui").toggle_text_wrap() end, desc = "Toggle overflow text wrapping" },
-          { "<leader>uh", function() require("util.ui").toggle_overflow_highlighting() end, desc = "Toggle overflow text highlighting" },
+          {
+            "<leader>un",
+            function()
+              require("util.ui").toggle_line_numbers()
+            end,
+            desc = "Toggle relative/regular line numbers",
+          },
+          {
+            "<leader>ur",
+            function()
+              require("util.ui").toggle_vertical_ruler()
+            end,
+            desc = "Toggle vertical ruler",
+          },
+          {
+            "<leader>uw",
+            function()
+              require("util.ui").toggle_text_wrap()
+            end,
+            desc = "Toggle overflow text wrapping",
+          },
+          {
+            "<leader>uh",
+            function()
+              require("util.ui").toggle_overflow_highlighting()
+            end,
+            desc = "Toggle overflow text highlighting",
+          },
           { "<leader>v", group = "vimwiki" },
           { "<leader>vd", group = "diary" },
           { "<leader>w", group = "workspace" },
