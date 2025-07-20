@@ -41,9 +41,11 @@ return {
           only_when_cursor_is_off_line = true,
         },
         heading = {
+          backgrounds = {},
+          icons = { "♔ ", "♛ ", "♜ ", "♝ ", "♞ ", "♟ " },
+          -- icons = { "󰇊 ", "󰇋 ", "󰇌 ", "󰇍 ", "󰇎 ", "󰇏 " },
+          position = "inline",
           sign = true,
-          width = "block",
-          min_width = 81,
         },
         -- Code block settings
         code = {
@@ -55,6 +57,8 @@ return {
           min_width = 60,
           -- Border around code blocks
           border = "thin",
+          left_pad = 4,
+          right_pad = 4,
         },
         -- Bullet point settings
         bullet = {
