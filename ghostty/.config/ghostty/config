@@ -9,10 +9,11 @@ theme = catppuccin-mocha
 macos-option-as-alt = left
 
 # Cursor configuration
-cursor-style = block
-cursor-style-blink = false
+adjust-cursor-thickness = 200%
 cursor-invert-fg-bg = true
-shell-integration-features = no-cursor
+# cursor-style = bar
+cursor-style-blink = false
+# shell-integration-features = no-cursor
 
 # Window settings
 window-padding-x = 8
