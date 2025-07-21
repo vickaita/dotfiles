@@ -56,7 +56,7 @@ return {
           -- Minimum width for code blocks
           min_width = 60,
           -- Border around code blocks
-          border = "thin",
+          border = "thick",
           left_pad = 4,
           right_pad = 4,
         },
