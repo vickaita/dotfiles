@@ -66,7 +66,7 @@ return {
           enabled = true,
           -- Different icons for different levels
           -- icons = { "●", "○", "◆", "◇" },
-          icons = { "∙" },
+          icons = { "•" },
         },
         -- Wiki link configuration for vimwiki
         link = {
