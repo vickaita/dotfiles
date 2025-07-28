@@ -26,5 +26,8 @@ scrollback-limit = 100000
 clipboard-trim-trailing-spaces = true
 clipboard-paste-protection = true
 
+# Keybinds
+keybind = shift+enter=text:\n
+
 # Other settings
 # confirm-close-surface = false
