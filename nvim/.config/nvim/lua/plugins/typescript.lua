@@ -16,7 +16,9 @@ return {
     "neovim/nvim-lspconfig",
     opts = {
       servers = {
-        ts_ls = {},
+        vtsls = {},
+        -- Disable ts_ls to avoid conflicts
+        ts_ls = false,
       },
     },
   },
@@ -31,7 +33,7 @@ return {
   {
     "williamboman/mason-lspconfig.nvim",
     opts = {
-      ensure_installed = { "ts_ls", "biome" },
+      ensure_installed = { "vtsls", "biome" },
     },
   },
 }
