@@ -38,7 +38,7 @@ return {
   -- 4) lua_ls settings in nvim-lspconfig
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "folke/neodev.nvim" },
+    dependencies = { "folke/lazydev.nvim" },
     opts = function(_, opts)
       -- ensure the top-level `servers` table exists
       opts.servers = opts.servers or {}

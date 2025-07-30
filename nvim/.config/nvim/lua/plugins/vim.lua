@@ -1,16 +1,11 @@
 return {
   {
-    "folke/neodev.nvim",
-    -- lazy.nvim will call `require("neodev").setup(opts)` for you
+    "folke/lazydev.nvim",
+    ft = "lua",
     opts = {
       library = {
-        enabled = true,
-        runtime = true,
-        types = true,
-        plugins = true,
+        { path = "luvit-meta/library", words = { "vim%.uv" } },
       },
-      lspconfig = true,
-      pathStrict = true,
     },
   },
   {
