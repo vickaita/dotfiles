@@ -77,6 +77,7 @@ return {
         map("n", "<leader>ghp", gs.preview_hunk_inline, "Preview Hunk Inline")
         map("n", "<leader>gb", function() gs.blame_line({ full = true }) end, "Blame Line")
         map("n", "<leader>gB", function() gs.blame() end, "Blame Buffer")
+        map("n", "<leader>ub", gs.toggle_current_line_blame, "Toggle current line blame")
         map("n", "<leader>ghd", gs.diffthis, "Diff This")
         map("n", "<leader>ghD", function() gs.diffthis("~") end, "Diff This ~")
         map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", "GitSigns Select Hunk")
