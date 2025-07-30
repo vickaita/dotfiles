@@ -42,10 +42,20 @@ return {
         },
         heading = {
           backgrounds = {},
-          icons = { "♔ ", "♛ ", "♜ ", "♝ ", "♞ ", "♟ " },
+          -- icons = { "♔ ", "♛ ", "♜ ", "♝ ", "♞ ", "♟ " },
           -- icons = { "󰇊 ", "󰇋 ", "󰇌 ", "󰇍 ", "󰇎 ", "󰇏 " },
+          icons = {
+            "󰫎 ",
+            "󰫎󰫎 ",
+            "󰫎󰫎󰫎 ",
+            "󰫎󰫎󰫎󰫎 ",
+            "󰫎󰫎󰫎󰫎󰫎 ",
+            "󰫎󰫎󰫎󰫎󰫎󰫎 ",
+          },
+          -- icons = { "󰫎 " },
           position = "inline",
           sign = true,
+          signs = { "♔ ", "♛ ", "♜ ", "♝ ", "♞ ", "♟ " },
         },
         -- Code block settings
         code = {
@@ -54,11 +64,11 @@ return {
           -- Width of the code block
           width = "block",
           -- Minimum width for code blocks
-          min_width = 60,
+          min_width = 80,
           -- Border around code blocks
           border = "thick",
-          left_pad = 4,
-          right_pad = 4,
+          -- left_pad = 4,
+          -- right_pad = 4,
         },
         -- Bullet point settings
         bullet = {
