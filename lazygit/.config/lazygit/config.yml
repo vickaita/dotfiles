@@ -1,0 +1,14 @@
+gui:
+  # Show command log after operations like commits to see pre-commit hooks
+  showCommandLog: true
+  # Keep the command log open for a reasonable time
+  commandLogSize: 8
+
+git:
+  # Show output of git commands
+  allBranchesLogCmd: 'git log --graph --all --color=always --abbrev-commit --decorate --date=relative  --pretty=medium {{branchName}} --'
+  
+# Uncomment to enable if you want to see more verbose git output
+# os:
+#   editCommand: 'nvim'
+#   editCommandTemplate: '{{editor}} {{filename}}'
