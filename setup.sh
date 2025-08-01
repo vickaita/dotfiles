@@ -42,10 +42,12 @@ COMMON_PACKAGES=(
     shfmt
     stow
     tmux
+    tmuxinator
     tree
     uv
     vim
     wget
+    zellij
 )
 
 MAC_SPECIFIC_PACKAGES=(fd gh pyenv nvm)
