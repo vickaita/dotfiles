@@ -1,0 +1,22 @@
+# ~/.config/tmuxinator/dev.yml
+
+name: dev
+root: ~/
+
+windows:
+  - editor:
+      layout: main-vertical
+      panes:
+        - nvim .
+        - # side pane for tests/commands
+  - server:
+      layout: even-horizontal  
+      panes:
+        - # dev server
+        - # logs or monitoring
+  - git:
+      panes:
+        - lazygit
+  - shell:
+      panes:
+        - # general commands

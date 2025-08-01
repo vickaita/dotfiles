@@ -1,0 +1,19 @@
+# ~/.config/tmuxinator/dotfiles.yml
+
+name: dotfiles
+root: ~/.dotfiles
+
+windows:
+  - editor:
+      layout: main-horizontal
+      panes:
+        - nvim
+        - # empty pane for commands
+  - git:
+      layout: even-horizontal
+      panes:
+        - lazygit
+        - # empty pane for git commands
+  - shell:
+      panes:
+        - # general shell work
