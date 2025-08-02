@@ -43,6 +43,7 @@ COMMON_PACKAGES=(
     stow
     tmux
     tmuxinator
+    tpm
     tree
     uv
     vim
