@@ -37,6 +37,7 @@ COMMON_PACKAGES=(
     lesspipe
     neovim
     ripgrep
+    # ruby  # TODO: Add ruby to ensure ERB is available for template processing
     shellcheck
     shellharden
     shfmt
@@ -332,6 +333,40 @@ function setup_config_directory() {
     fi
 }
 
+# Process ERB template with environment variables
+process_erb_template() {
+    local template_file="$1"
+    local output_file="$2"
+    
+    if command -v erb >/dev/null 2>&1; then
+        erb "$template_file" > "$output_file"
+    else
+        log_warn "ERB not available, copying template as-is"
+        cp "$template_file" "$output_file"
+    fi
+}
+
+# Setup gitconfig.local from ERB template if it doesn't exist
+setup_gitconfig_local() {
+    local gitconfig_local="$HOME/.gitconfig.local"
+    local template_file="$(dirname "$0")/templates/.gitconfig.local.erb"
+    
+    if [[ ! -f "$gitconfig_local" ]]; then
+        if [[ -f "$template_file" ]]; then
+            log_info "Creating ~/.gitconfig.local from ERB template..."
+            process_erb_template "$template_file" "$gitconfig_local"
+            
+            if [[ -z "${GIT_EMAIL:-}" ]]; then
+                log_warn "Set GIT_EMAIL environment variable or edit ~/.gitconfig.local manually"
+            fi
+        else
+            log_warn "Template file not found at $template_file"
+        fi
+    else
+        log_info "~/.gitconfig.local already exists, skipping"
+    fi
+}
+
 # Main function
 main() {
     log_info "Starting system setup..."
@@ -356,6 +391,7 @@ main() {
 
     # Common post-installation tasks
     setup_config_directory
+    setup_gitconfig_local
     install_zsh_nvm
     manage_ssh_keys
 

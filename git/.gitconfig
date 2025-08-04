@@ -6,3 +6,5 @@
 	editor = nvim
 [init]
 	defaultBranch = main
+[include]
+	path = ~/.gitconfig.local

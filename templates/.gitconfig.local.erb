@@ -1,0 +1,33 @@
+# Machine-specific git configuration
+# This file is generated from templates/.gitconfig.local.erb
+
+[user]
+<% if ENV['GIT_EMAIL'] %>
+	email = <%= ENV['GIT_EMAIL'] %>
+<% else %>
+	# Set your email for this machine
+	# email = your.work@company.com
+	# email = your.personal@gmail.com
+<% end %>
+
+<% if ENV['GIT_SIGNING_KEY'] %>
+[user]
+	signingkey = <%= ENV['GIT_SIGNING_KEY'] %>
+[commit]
+	gpgsign = true
+<% end %>
+
+[core]
+<% if ENV['GIT_EXCLUDES_FILE'] %>
+	excludesfile = <%= ENV['GIT_EXCLUDES_FILE'] %>
+<% else %>
+	# Machine-specific excludes file (optional)
+	# excludesfile = ~/.gitignore_global_work  
+	# excludesfile = ~/.gitignore_global
+<% end %>
+
+<% if ENV['GIT_EDITOR'] %>
+	editor = <%= ENV['GIT_EDITOR'] %>
+<% end %>
+
+# Add any other machine-specific git configuration here
