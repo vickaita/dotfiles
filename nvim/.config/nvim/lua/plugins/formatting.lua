@@ -55,7 +55,6 @@ return {
       json = { "biome", "prettier", stop_after_first = true },
       jsonc = { "biome", "prettier", stop_after_first = true },
       yaml = { "prettier" },
-      markdown = { "prettier" },
       graphql = { "prettier" },
       handlebars = { "prettier" },
       go = { "goimports", "gofmt" },
