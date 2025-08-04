@@ -192,26 +192,31 @@ return {
     "neovim/nvim-lspconfig",
     opts = function(_, opts)
       opts.servers = opts.servers or {}
-      opts.servers.markdown_oxide = {
-        capabilities = {
-          workspace = {
-            didChangeWatchedFiles = {
-              dynamicRegistration = true,
-            },
-          },
-        },
-        on_attach = function(client, bufnr)
-          -- Refresh codelens on TextChanged and InsertLeave events
-          vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave", "CursorHold", "LspAttach" }, {
-            buffer = bufnr,
-            callback = function()
-              if client.supports_method("textDocument/codeLens") then
-                vim.lsp.codelens.refresh()
-              end
-            end,
-          })
+      opts.servers.markdown_oxide = {}
+      
+      -- Create autocmd to register markdown-oxide commands when LSP attaches
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(event)
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
+          if client and client.name == "markdown_oxide" then            
+            vim.api.nvim_create_user_command("Daily", function(args)
+              vim.lsp.buf.execute_command { command = "jump", arguments = { args.args } }
+            end, { desc = "Open daily note", nargs = "*" })
+
+            vim.api.nvim_create_user_command("Today", function()
+              vim.lsp.buf.execute_command { command = "jump", arguments = { "today" } }
+            end, { desc = "Jump to today's daily note" })
+
+            vim.api.nvim_create_user_command("Tomorrow", function()
+              vim.lsp.buf.execute_command { command = "jump", arguments = { "tomorrow" } }
+            end, { desc = "Jump to tomorrow's daily note" })
+
+            vim.api.nvim_create_user_command("Yesterday", function()
+              vim.lsp.buf.execute_command { command = "jump", arguments = { "yesterday" } }
+            end, { desc = "Jump to yesterday's daily note" })
+          end
         end,
-      }
+      })
       -- Disable ltex-ls as it's causing Java XML parsing errors
       opts.servers.ltex = false
     end,
