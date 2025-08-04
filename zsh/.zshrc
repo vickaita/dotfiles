@@ -4,6 +4,7 @@ export CURRENT_SHELL="zsh"
 
 source "$DOTFILES"/zsh/keybindings.zsh
 
+source "$DOTFILES"/shared/shell/homebrew.sh
 source "$DOTFILES"/shared/shell/utils.sh
 source "$DOTFILES"/shared/shell/prompt.sh
 source "$DOTFILES"/shared/shell/history.sh
@@ -25,6 +26,7 @@ fi
 
 # Warn if any important sourced files are missing
 for file in \
+    "$DOTFILES/shared/shell/homebrew.sh" \
     "$DOTFILES/shared/shell/utils.sh" \
     "$DOTFILES/shared/shell/prompt.sh" \
     "$DOTFILES/shared/shell/history.sh" \
