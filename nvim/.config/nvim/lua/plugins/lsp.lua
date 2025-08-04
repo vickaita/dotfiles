@@ -28,6 +28,9 @@ return {
     opts = {
       ensure_installed = {}, -- start empty, language files will add to this
     },
+    config = function(_, opts)
+      require("mason-lspconfig").setup(opts)
+    end,
   },
 
   -- Integrate LSP with completion
