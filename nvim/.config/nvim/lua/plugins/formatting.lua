@@ -16,7 +16,7 @@ return {
       desc = "Format buffer",
     },
     {
-      "<leader>wf",
+      "<leader>uf",
       function()
         vim.g.disable_autoformat = not vim.g.disable_autoformat
         if vim.g.disable_autoformat then
@@ -35,6 +35,13 @@ return {
       if vim.g.disable_autoformat then
         return
       end
+
+      -- Check for project-specific disable setting via neoconf
+      local ok, neoconf = pcall(require, "neoconf")
+      if ok and neoconf.get("custom.disable_autoformat") then
+        return
+      end
+
       return {
         timeout_ms = 500,
         lsp_format = "fallback",
