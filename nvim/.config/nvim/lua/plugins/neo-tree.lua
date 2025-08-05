@@ -39,13 +39,22 @@ return {
     config = function(_, opts)
       require("neo-tree").setup(opts)
       
-      -- Open neo-tree by default
+      -- Open neo-tree by default if configured via neoconf
       vim.api.nvim_create_autocmd("VimEnter", {
         callback = function()
           if vim.fn.argc() == 0 then
-            vim.schedule(function()
-              vim.cmd("Neotree show")
-            end)
+            -- Check neoconf setting, default to false (hidden)
+            local ok, neoconf = pcall(require, "neoconf")
+            local auto_open = false
+            if ok then
+              auto_open = neoconf.get("custom.file_explorer_auto_open", false)
+            end
+            
+            if auto_open then
+              vim.schedule(function()
+                vim.cmd("Neotree show")
+              end)
+            end
           end
         end,
       })

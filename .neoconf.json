@@ -1,5 +1,6 @@
 {
 	"custom": {
-		"disable_autoformat": false
+		"disable_autoformat": false,
+		"file_explorer_auto_open": false
 	}
 }
