@@ -337,63 +337,154 @@ function setup_config_directory() {
 process_erb_template() {
     local template_file="$1"
     local output_file="$2"
-    
+
     if command -v erb >/dev/null 2>&1; then
-        erb "$template_file" > "$output_file"
+        erb "$template_file" >"$output_file"
     else
         log_warn "ERB not available, copying template as-is"
         cp "$template_file" "$output_file"
     fi
 }
 
-# Setup gitconfig.local from ERB template if it doesn't exist
-setup_gitconfig_local() {
-    local gitconfig_local="$HOME/.gitconfig.local"
-    local template_file="$(dirname "$0")/templates/.gitconfig.local.erb"
-    
-    if [[ ! -f "$gitconfig_local" ]]; then
-        if [[ -f "$template_file" ]]; then
-            log_info "Creating ~/.gitconfig.local from ERB template..."
-            process_erb_template "$template_file" "$gitconfig_local"
-            
-            if [[ -z "${GIT_EMAIL:-}" ]]; then
-                log_warn "Set GIT_EMAIL environment variable or edit ~/.gitconfig.local manually"
-            fi
-        else
-            log_warn "Template file not found at $template_file"
-        fi
-    else
-        log_info "~/.gitconfig.local already exists, skipping"
+# Create local configuration files from ERB templates
+create_local_configs() {
+    local templates_dir="$(dirname "$0")/templates"
+
+    if [[ ! -d "$templates_dir" ]]; then
+        log_warn "Templates directory not found at $templates_dir"
+        return
     fi
+
+    log_info "Processing configuration templates from $templates_dir..."
+
+    # Find all .erb files in templates directory
+    while IFS= read -r -d '' template_file; do
+        local template_name
+        template_name="$(basename "$template_file")"
+
+        # Remove .erb extension to get target filename
+        local target_name="${template_name%.erb}"
+        local target_path="$HOME/$target_name"
+
+        # Check if target file already exists
+        if [[ -f "$target_path" ]]; then
+            log_info "$target_name already exists at $target_path, skipping"
+            continue
+        fi
+
+        log_info "Creating $target_name from ERB template..."
+        process_erb_template "$template_file" "$target_path"
+
+        # Special handling for gitconfig.local
+        if [[ "$target_name" == ".gitconfig.local" ]] && [[ -z "${GIT_EMAIL:-}" ]]; then
+            log_warn "Set GIT_EMAIL environment variable or edit ~/.gitconfig.local manually"
+        fi
+
+    done < <(find "$templates_dir" -name "*.erb" -type f -print0)
+
+    log_info "Template processing complete!"
+}
+
+# Stow all configuration directories
+stow_configs() {
+    local dotfiles_dir
+    dotfiles_dir="$(dirname "$(realpath "$0")")"
+
+    # List of directories to stow
+    local stow_dirs=(
+        "bash"
+        "ghostty"
+        "htop"
+        "npm"
+        "nvim"
+        "prettier"
+        "tmux"
+        "vim"
+        "zsh"
+    )
+
+    log_info "Stowing configuration files from $dotfiles_dir..."
+
+    for dir_name in "${stow_dirs[@]}"; do
+        local dir_path="$dotfiles_dir/$dir_name"
+
+        # Check if directory exists
+        if [[ ! -d "$dir_path" ]]; then
+            log_warn "Directory $dir_name not found, skipping"
+            continue
+        fi
+
+        # Check if stow would conflict
+        if stow -n -d "$dotfiles_dir" -t "$HOME" "$dir_name" 2>/dev/null; then
+            log_info "Stowing $dir_name..."
+            stow -d "$dotfiles_dir" -t "$HOME" "$dir_name"
+        else
+            log_warn "Conflicts detected for $dir_name, skipping. Run 'stow -d $dotfiles_dir -t $HOME $dir_name' manually to see details."
+        fi
+    done
+
+    log_info "Stowing complete!"
 }
 
 # Main function
 main() {
     log_info "Starting system setup..."
 
-    case "$OS" in
-    Darwin)
-        install_mac
-        ;;
-    Linux)
-        if grep -q 'Ubuntu' /etc/os-release 2>/dev/null; then
-            install_ubuntu
-        else
-            log_error "Unsupported Linux distribution. This script currently supports Ubuntu."
+    # Package installation
+    if [[ "${SKIP_PACKAGES:-false}" != "true" ]]; then
+        case "$OS" in
+        Darwin)
+            log_info "Detected macOS"
+            install_mac
+            ;;
+        Linux)
+            if grep -q 'Ubuntu' /etc/os-release 2>/dev/null; then
+                log_info "Detected Ubuntu"
+                install_ubuntu
+            else
+                log_error "Unsupported Linux distribution. This script currently supports Ubuntu."
+                exit 1
+            fi
+            ;;
+        *)
+            log_error "Unsupported OS: $OS"
             exit 1
-        fi
-        ;;
-    *)
-        log_error "Unsupported OS: $OS"
-        exit 1
-        ;;
-    esac
+            ;;
+        esac
+    else
+        log_info "Skipping package installation (--skip-packages)"
+    fi
 
     # Common post-installation tasks
-    setup_config_directory
-    setup_gitconfig_local
-    install_zsh_nvm
-    manage_ssh_keys
+    if [[ "${SKIP_CONFIGS:-false}" != "true" ]]; then
+        setup_config_directory
+    else
+        log_info "Skipping config directory setup (--skip-configs)"
+    fi
+
+    if [[ "${SKIP_TEMPLATES:-false}" != "true" ]]; then
+        create_local_configs
+    else
+        log_info "Skipping template processing (--skip-templates)"
+    fi
+
+    if [[ "${SKIP_ZSH_NVM:-false}" != "true" ]]; then
+        install_zsh_nvm
+    else
+        log_info "Skipping zsh-nvm installation (--skip-zsh-nvm)"
+    fi
+
+    if [[ "${SKIP_SSH:-false}" != "true" ]]; then
+        manage_ssh_keys
+    else
+        log_info "Skipping SSH key management (--skip-ssh)"
+    fi
+
+    if [[ "${SKIP_STOW:-false}" != "true" ]]; then
+        stow_configs
+    else
+        log_info "Skipping stowing configuration files (--skip-stow)"
+    fi
 
     log_info "Setup complete! 🎉"
 }
@@ -409,12 +500,42 @@ while [[ $# -gt 0 ]]; do
         export UPDATE_APT=true
         shift
         ;;
+    --skip-packages)
+        export SKIP_PACKAGES=true
+        shift
+        ;;
+    --skip-configs)
+        export SKIP_CONFIGS=true
+        shift
+        ;;
+    --skip-templates)
+        export SKIP_TEMPLATES=true
+        shift
+        ;;
+    --skip-zsh-nvm)
+        export SKIP_ZSH_NVM=true
+        shift
+        ;;
+    --skip-ssh)
+        export SKIP_SSH=true
+        shift
+        ;;
+    --skip-stow)
+        export SKIP_STOW=true
+        shift
+        ;;
     --help)
         echo "Usage: $0 [options]"
         echo "Options:"
-        echo "  --update-brew    Update Homebrew before installing packages"
-        echo "  --update-apt     Update APT packages before installing"
-        echo "  --help          Show this help message"
+        echo "  --update-brew      Update Homebrew before installing packages"
+        echo "  --update-apt       Update APT packages before installing"
+        echo "  --skip-packages    Skip package installation"
+        echo "  --skip-configs     Skip config directory setup"
+        echo "  --skip-templates   Skip template processing"
+        echo "  --skip-zsh-nvm     Skip zsh-nvm installation"
+        echo "  --skip-ssh         Skip SSH key management"
+        echo "  --skip-stow        Skip stowing configuration files"
+        echo "  --help            Show this help message"
         exit 0
         ;;
     *)
