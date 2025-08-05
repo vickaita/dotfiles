@@ -47,29 +47,43 @@ return {
         lsp_format = "fallback",
       }
     end,
-    formatters_by_ft = {
-      lua = { "stylua" },
-      python = { "isort", "black" },
-      javascript = { "biome", "prettier", stop_after_first = true },
-      typescript = { "biome", "prettier", stop_after_first = true },
-      javascriptreact = { "biome", "prettier", stop_after_first = true },
-      typescriptreact = { "biome", "prettier", stop_after_first = true },
-      vue = { "prettier" },
-      css = { "prettier" },
-      scss = { "prettier" },
-      less = { "prettier" },
-      html = { "prettier" },
-      json = { "biome", "prettier", stop_after_first = true },
-      jsonc = { "biome", "prettier", stop_after_first = true },
-      yaml = { "prettier" },
-      markdown = { "prettier" },
-      graphql = { "prettier" },
-      handlebars = { "prettier" },
-      go = { "goimports", "gofmt" },
-      rust = { "rustfmt" },
-      sh = { "shfmt" },
-      bash = { "shfmt" },
-      zsh = { "shfmt" },
-    },
+    formatters_by_ft = (function()
+      -- Helper function to check if biome.json exists in current working
+      -- directory
+      local function has_biome_config()
+        local cwd = vim.fn.getcwd()
+        local biome_config = cwd .. "/biome.json"
+        return vim.uv.fs_stat(biome_config) ~= nil
+      end
+
+      -- Choose formatters based on whether biome config exists
+      local js_formatters = has_biome_config() and { "biome", "prettier", stop_after_first = true } or { "prettier" }
+      local json_formatters = has_biome_config() and { "biome", "prettier", stop_after_first = true } or { "prettier" }
+
+      return {
+        lua = { "stylua" },
+        python = { "isort", "black" },
+        javascript = js_formatters,
+        typescript = js_formatters,
+        javascriptreact = js_formatters,
+        typescriptreact = js_formatters,
+        vue = { "prettier" },
+        css = { "prettier" },
+        scss = { "prettier" },
+        less = { "prettier" },
+        html = { "prettier" },
+        json = json_formatters,
+        jsonc = json_formatters,
+        yaml = { "prettier" },
+        markdown = { "prettier" },
+        graphql = { "prettier" },
+        handlebars = { "prettier" },
+        go = { "goimports", "gofmt" },
+        rust = { "rustfmt" },
+        sh = { "shfmt" },
+        bash = { "shfmt" },
+        zsh = { "shfmt" },
+      }
+    end)(),
   },
 }
