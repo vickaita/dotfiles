@@ -26,32 +26,89 @@ return {
           { "<leader>t", group = "test", icon = "󰙨" },
           { "<leader>u", group = "ui" },
           {
+            "<leader>uf",
+            desc = function()
+              local disabled = vim.g.disable_autoformat or false
+              return disabled and "Enable format on save" or "Disable format on save"
+            end,
+            icon = function()
+              local disabled = vim.g.disable_autoformat or false
+              if disabled then
+                return { icon = "", color = "red" }
+              else
+                return { icon = "", color = "green" }
+              end
+            end,
+          },
+          {
             "<leader>un",
             function()
               require("util.ui").toggle_line_numbers()
             end,
-            desc = "Toggle relative/regular line numbers",
+            desc = function()
+              if not vim.opt.number:get() then
+                return "Enable line numbers"
+              elseif vim.opt.relativenumber:get() then
+                return "Switch to regular line numbers"
+              else
+                return "Switch to relative line numbers"
+              end
+            end,
+            icon = function()
+              if not vim.opt.number:get() then
+                return { icon = "", color = "red" }
+              else
+                return { icon = "", color = "green" }
+              end
+            end,
           },
           {
             "<leader>ur",
             function()
               require("util.ui").toggle_vertical_ruler()
             end,
-            desc = "Toggle vertical ruler",
+            desc = function()
+              return vim.opt.colorcolumn:get()[1] and "Hide vertical ruler" or "Show vertical ruler"
+            end,
+            icon = function()
+              if vim.opt.colorcolumn:get()[1] then
+                return { icon = "", color = "green" }
+              else
+                return { icon = "", color = "red" }
+              end
+            end,
           },
           {
             "<leader>uw",
             function()
               require("util.ui").toggle_text_wrap()
             end,
-            desc = "Toggle overflow text wrapping",
+            desc = function()
+              return vim.opt.wrap:get() and "Disable text wrapping" or "Enable text wrapping"
+            end,
+            icon = function()
+              if vim.opt.wrap:get() then
+                return { icon = "", color = "green" }
+              else
+                return { icon = "", color = "red" }
+              end
+            end,
           },
           {
             "<leader>uh",
             function()
               require("util.ui").toggle_overflow_highlighting()
             end,
-            desc = "Toggle overflow text highlighting",
+            desc = function()
+              return vim.w.overflow_match and "Disable overflow highlighting" or "Enable overflow highlighting"
+            end,
+            icon = function()
+              if vim.w.overflow_match then
+                return { icon = "", color = "green" }
+              else
+                return { icon = "", color = "red" }
+              end
+            end,
           },
           { "<leader>v", group = "vimwiki" },
           { "<leader>vd", group = "diary" },
