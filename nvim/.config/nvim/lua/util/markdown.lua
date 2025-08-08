@@ -45,8 +45,7 @@ local function detect_status(line)
   end
 
   -- Match both bullet points and numbered lists
-  local ch = line:match("^[%s]*" .. config.bullet_pattern .. " +%[(.)%]") or 
-             line:match("^[%s]*%d+%. +%[(.)%]")
+  local ch = line:match("^[%s]*" .. config.bullet_pattern .. " +%[(.)%]") or line:match("^[%s]*%d+%. +%[(.)%]")
   if ch == "x" or ch == "X" then
     return "done"
   end
@@ -114,8 +113,7 @@ local function parse_markdown_items(lines, buffer_id)
   -- Fallback to indentation-based parsing
   local items = {}
   for idx, line in ipairs(lines) do
-    local bullet_match = line:match("^(%s*)" .. config.bullet_pattern .. " +") or 
-                        line:match("^(%s*)%d+%. +")
+    local bullet_match = line:match("^(%s*)" .. config.bullet_pattern .. " +") or line:match("^(%s*)%d+%. +")
     if bullet_match then
       table.insert(items, {
         start = idx,
@@ -333,14 +331,15 @@ function M.process_lines(lines, buffer_id)
             i = item.er + 1
           else
             -- Double-check via text scan for safety
-            local parent_indent = (lines[item.sr + 1] or ""):match("^(%s*)" .. config.bullet_pattern .. " +") or
-                                  (lines[item.sr + 1] or ""):match("^(%s*)%d+%. +") or ""
+            local parent_indent = (lines[item.sr + 1] or ""):match("^(%s*)" .. config.bullet_pattern .. " +")
+              or (lines[item.sr + 1] or ""):match("^(%s*)%d+%. +")
+              or ""
             local parent_indent_len = #parent_indent
             local has_incomplete_text = false
             for r = item.sr + 1, item.er do
               local l = lines[r + 1] or ""
-              local ind, ch = l:match("^(%s*)" .. config.bullet_pattern .. " +%[(.)%]") or
-                              l:match("^(%s*)%d+%. +%[(.)%]")
+              local ind, ch = l:match("^(%s*)" .. config.bullet_pattern .. " +%[(.)%]")
+                or l:match("^(%s*)%d+%. +%[(.)%]")
               if ind and #ind > parent_indent_len and (ch == " " or ch == "-") then
                 has_incomplete_text = true
                 break
@@ -368,16 +367,14 @@ function M.process_lines(lines, buffer_id)
     local i = 1
     while i <= #lines do
       local line = lines[i]
-      local ind = line:match("^(%s*)" .. config.bullet_pattern .. " +%[[xX]%]") or
-                  line:match("^(%s*)%d+%. +%[[xX]%]")
+      local ind = line:match("^(%s*)" .. config.bullet_pattern .. " +%[[xX]%]") or line:match("^(%s*)%d+%. +%[[xX]%]")
       if ind then
         local base = #ind
         local has_incomplete = false
         local j = i + 1
         while j <= #lines do
           local lj = lines[j]
-          local lj_bullet_ind = lj:match("^(%s*)" .. config.bullet_pattern .. " +") or
-                                lj:match("^(%s*)%d+%. +")
+          local lj_bullet_ind = lj:match("^(%s*)" .. config.bullet_pattern .. " +") or lj:match("^(%s*)%d+%. +")
           if lj_bullet_ind then
             local lj_ind = #lj_bullet_ind
             if lj_ind <= base then
@@ -530,7 +527,7 @@ local function remove_completed_lines(lines, buffer_id)
       parent.has_incomplete_desc = has_incomplete
     end
   end
-  
+
   -- Compute removal ranges - only remove completed items with no incomplete descendants
   local remove_ranges = {}
   for _, item in ipairs(items) do
@@ -552,10 +549,10 @@ local function remove_completed_lines(lines, buffer_id)
   local to_remove = {}
   for _, range in ipairs(remove_ranges) do
     for line_idx = range.s, range.e do
-      to_remove[line_idx + 1] = true  -- Convert to 1-based for array access
+      to_remove[line_idx + 1] = true -- Convert to 1-based for array access
     end
   end
-  
+
   local out = {}
   for i, line in ipairs(lines) do
     if not to_remove[i] then
@@ -668,11 +665,15 @@ function M.carry_over_today(buffer_id)
   local newpath = dir .. "/" .. today .. ".md"
   if vim.loop.fs_stat(newpath) then
     vim.cmd("edit " .. vim.fn.fnameescape(newpath))
-    vim.notify("Opened existing today's note", vim.log.levels.INFO)
     return true
   end
 
   local lines = vim.api.nvim_buf_get_lines(buffer_id, 0, -1, false)
+
+  -- Update date header if present
+  if lines and #lines > 0 and lines[1]:match("^# %d%d%d%d%-%d%d%-%d%d$") then
+    lines[1] = "# " .. today
+  end
 
   local ok, write_err = pcall(function()
     vim.fn.writefile(lines, newpath)
@@ -689,7 +690,6 @@ function M.carry_over_today(buffer_id)
   end
 
   vim.cmd("edit " .. vim.fn.fnameescape(newpath))
-  vim.notify("Created today's note from current", vim.log.levels.INFO)
   return true
 end
 
@@ -711,7 +711,6 @@ function M.normalize_checkboxes(buffer_id)
   local processed = update_checkboxes_lines(lines, buffer_id)
 
   vim.api.nvim_buf_set_lines(buffer_id, 0, -1, false, processed)
-  vim.notify("Normalized checkboxes", vim.log.levels.INFO)
   return true
 end
 
@@ -732,27 +731,39 @@ function M.remove_completed(buffer_id)
   local lines = vim.api.nvim_buf_get_lines(buffer_id, 0, -1, false)
   local processed = remove_completed_lines(lines, buffer_id)
   vim.api.nvim_buf_set_lines(buffer_id, 0, -1, false, processed)
-  vim.notify("Removed completed subtrees", vim.log.levels.INFO)
   return true
 end
 
 --- Carry over current note to today, normalize checkboxes, then remove completed subtrees.
 --
 -- Steps:
--- 1. `carry_over_today()`
--- 2. `normalize_checkboxes()`
--- 3. `remove_completed()`
+-- 1. `compare_daily_changes()` - Add changes section to current file
+-- 2. `carry_over_today()` - Create new file for today
+-- 3. `remove_changes_sections()` - Remove changes sections from new file
+-- 4. `normalize_checkboxes()` - Update checkbox states in new file
+-- 5. `remove_completed()` - Remove completed items from new file
 --
 -- @param buffer_id number|nil
 -- @return boolean -- success
 function M.carry_over_and_process(buffer_id)
   buffer_id = buffer_id or 0
 
+  -- First, add changes comparison to the current file before carrying over
+  if not M.compare_daily_changes(buffer_id) then
+    vim.notify("Warning: Could not add changes section to current file", vim.log.levels.WARN)
+    -- Continue anyway - this shouldn't block the carry over process
+  end
+
   if not M.carry_over_today(buffer_id) then
     return false
   end
 
   -- After carry_over_today, the new buffer is opened (buffer 0)
+  -- Remove any changes sections that were copied over
+  if not M.remove_changes_sections(0) then
+    return false
+  end
+
   if not M.normalize_checkboxes(0) then
     return false
   end
@@ -760,6 +771,430 @@ function M.carry_over_and_process(buffer_id)
   if not M.remove_completed(0) then
     return false
   end
+
+  return true
+end
+
+--- Remove all "Changes since" sections from document
+-- @param lines table -- document lines
+-- @return table -- document lines without changes sections
+local function remove_changes_sections(lines)
+  if not lines or #lines == 0 then
+    return lines
+  end
+
+  local updated_lines = {}
+  local i = 1
+
+  while i <= #lines do
+    local line = lines[i]
+
+    -- Check if this line is a "Changes since" header
+    if line:match("^## Changes since ") then
+      -- Skip this section entirely - find the end
+      local section_end = #lines -- Default to end of document
+
+      -- Look for the next heading at any level
+      for j = i + 1, #lines do
+        local next_line = lines[j]
+        if next_line:match("^#+ ") then
+          section_end = j - 1
+          break
+        end
+      end
+
+      -- Skip past the entire changes section
+      i = section_end + 1
+    else
+      -- Keep this line
+      table.insert(updated_lines, line)
+      i = i + 1
+    end
+  end
+
+  return updated_lines
+end
+
+--- Remove all "Changes since" sections from the current buffer
+-- @param buffer_id number|nil
+-- @return boolean -- success
+function M.remove_changes_sections(buffer_id)
+  buffer_id = buffer_id or 0
+  local valid, err = validate_markdown_buffer(buffer_id)
+  if not valid then
+    vim.notify("RemoveChangesSections: " .. err, vim.log.levels.ERROR)
+    return false
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(buffer_id, 0, -1, false)
+  local processed = remove_changes_sections(lines)
+  vim.api.nvim_buf_set_lines(buffer_id, 0, -1, false, processed)
+  return true
+end
+
+--- Parse date from filename in YYYY-MM-DD.md format
+-- @param filename string
+-- @return number, number, number|nil -- year, month, day or nil if invalid
+local function parse_date_from_filename(filename)
+  if not filename then
+    return nil
+  end
+  local y, m, d = filename:match(config.date_pattern)
+  if y and m and d then
+    return tonumber(y), tonumber(m), tonumber(d)
+  end
+  return nil
+end
+
+--- Subtract days from a date string
+-- @param date_string string in YYYY-MM-DD format
+-- @param days number of days to subtract
+-- @return string|nil -- new date in YYYY-MM-DD format or nil if invalid
+local function subtract_days(date_string, days)
+  local y, m, d = date_string:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)$")
+  if not y or not m or not d then
+    return nil
+  end
+
+  local time = os.time({ year = tonumber(y), month = tonumber(m), day = tonumber(d) })
+  local new_time = time - (days * 24 * 60 * 60)
+  local new_date = os.date("*t", new_time)
+
+  return string.format("%04d-%02d-%02d", new_date.year, new_date.month, new_date.day)
+end
+
+--- Find the most recent previous date file that exists
+-- @param current_file string -- current filename (YYYY-MM-DD.md)
+-- @param dir string -- directory path
+-- @return string|nil -- previous filename or nil if not found
+local function get_previous_date_file(current_file, dir)
+  local y, m, d = parse_date_from_filename(current_file)
+  if not y or not m or not d then
+    return nil
+  end
+
+  local current_date = string.format("%04d-%02d-%02d", y, m, d)
+
+  -- Check up to 14 days back to handle weekends and gaps
+  for i = 1, 14 do
+    local prev_date = subtract_days(current_date, i)
+    if not prev_date then
+      break
+    end
+
+    local prev_file = prev_date .. ".md"
+    local prev_path = dir .. "/" .. prev_file
+
+    if vim.loop.fs_stat(prev_path) then
+      return prev_file, prev_path
+    end
+  end
+
+  return nil
+end
+
+--- Extract checkbox items with their full text content
+-- @param lines string[]
+-- @param buffer_id number|nil
+-- @return table[] -- array of {text, status, indent} items
+local function extract_checkbox_items(lines, buffer_id)
+  if not lines then
+    return {}
+  end
+
+  local items = {}
+  for idx, line in ipairs(lines) do
+    local status = detect_status(line)
+    if status then
+      local indent = #(line:match("^(%s*)") or "")
+      -- Extract the text content after the checkbox
+      local text = line:match("%[.%]%s*(.*)") or ""
+      table.insert(items, {
+        text = text,
+        status = status,
+        indent = indent,
+        line_num = idx,
+        full_line = line,
+      })
+    end
+  end
+
+  return items
+end
+
+--- Compare current and previous items to find changes and additions
+-- @param current_items table[]
+-- @param previous_items table[]
+-- @return table[] -- changes with type: "new", "status_change", or "new_with_status"
+local function find_changes(current_items, previous_items)
+  if not current_items then
+    return {}
+  end
+
+  if not previous_items or #previous_items == 0 then
+    -- All current items are new
+    local changes = {}
+    for _, item in ipairs(current_items) do
+      if item.text and item.text ~= "" then
+        table.insert(changes, {
+          text = item.text,
+          status = item.status,
+          indent = item.indent,
+          type = "new",
+          change_type = "added",
+        })
+      end
+    end
+    return changes
+  end
+
+  local changes = {}
+  local prev_items_map = {}
+
+  -- Create a map of previous item texts to their status
+  for _, prev_item in ipairs(previous_items) do
+    if prev_item.text and prev_item.text ~= "" then
+      prev_items_map[prev_item.text:lower()] = prev_item
+    end
+  end
+
+  -- Check each current item
+  for _, curr_item in ipairs(current_items) do
+    if curr_item.text and curr_item.text ~= "" then
+      local normalized_text = curr_item.text:lower()
+      local prev_item = prev_items_map[normalized_text]
+
+      if not prev_item then
+        -- This is a new item
+        table.insert(changes, {
+          text = curr_item.text,
+          status = curr_item.status,
+          indent = curr_item.indent,
+          type = "new",
+          change_type = "added",
+        })
+      elseif prev_item.status ~= curr_item.status then
+        -- This item exists but status changed
+        table.insert(changes, {
+          text = curr_item.text,
+          status = curr_item.status,
+          prev_status = prev_item.status,
+          indent = curr_item.indent,
+          type = "status_change",
+          change_type = "status_changed",
+        })
+      end
+    end
+  end
+
+  return changes
+end
+
+--- Get action description based on status change
+-- @param from_status string|nil
+-- @param to_status string
+-- @return string
+local function get_action_description(from_status, to_status)
+  if not from_status then
+    -- New item
+    if to_status == "done" then
+      return "Added and completed"
+    elseif to_status == "progress" then
+      return "Added and started"
+    else
+      return "Added"
+    end
+  else
+    -- Status change
+    if from_status == "todo" and to_status == "progress" then
+      return "Started"
+    elseif from_status == "todo" and to_status == "done" then
+      return "Completed"
+    elseif from_status == "progress" and to_status == "done" then
+      return "Completed"
+    elseif from_status == "progress" and to_status == "todo" then
+      return "Reset to todo"
+    elseif from_status == "done" and to_status == "todo" then
+      return "Reopened"
+    elseif from_status == "done" and to_status == "progress" then
+      return "Reopened and started"
+    else
+      return "Changed"
+    end
+  end
+end
+
+--- Find existing changes section in document
+-- @param lines table -- document lines
+-- @param previous_date string -- the previous date to look for
+-- @return number|nil, number|nil -- start_line, end_line (1-based) or nil if not found
+local function find_changes_section(lines, previous_date)
+  if not lines or not previous_date then
+    return nil, nil
+  end
+
+  local section_header = "## Changes since " .. previous_date
+  local start_line = nil
+  local end_line = nil
+
+  -- Find the start of the changes section
+  for i, line in ipairs(lines) do
+    if line == section_header then
+      start_line = i
+      break
+    end
+  end
+
+  if not start_line then
+    return nil, nil
+  end
+
+  -- Find the end of the changes section (next heading at any level or end of document)
+  end_line = #lines -- Default to end of document
+  for i = start_line + 1, #lines do
+    local line = lines[i]
+    if line:match("^#+ ") then
+      end_line = i - 1
+      break
+    end
+  end
+
+  return start_line, end_line
+end
+
+--- Update document with changes section (replace existing or append new)
+-- @param lines table -- current document lines
+-- @param new_section_lines table -- new section content
+-- @param previous_date string -- previous date for section matching
+-- @return table -- updated document lines
+local function update_changes_section(lines, new_section_lines, previous_date)
+  if not lines or not new_section_lines then
+    return lines or {}
+  end
+
+  local start_line, end_line = find_changes_section(lines, previous_date)
+
+  if start_line and end_line then
+    -- Replace existing section
+    local updated_lines = {}
+
+    -- Add lines before the changes section
+    for i = 1, start_line - 1 do
+      table.insert(updated_lines, lines[i])
+    end
+
+    -- Add new section content
+    for _, line in ipairs(new_section_lines) do
+      table.insert(updated_lines, line)
+    end
+
+    -- Add blank line separation if there's content after the changes section
+    if end_line + 1 <= #lines then
+      table.insert(updated_lines, "")
+    end
+
+    -- Add lines after the changes section
+    for i = end_line + 1, #lines do
+      table.insert(updated_lines, lines[i])
+    end
+
+    return updated_lines
+  else
+    -- Append new section at the end
+    local updated_lines = {}
+
+    -- Copy all existing lines
+    for _, line in ipairs(lines) do
+      table.insert(updated_lines, line)
+    end
+
+    -- Add blank line before new section if document doesn't end with blank line
+    if #updated_lines > 0 and updated_lines[#updated_lines] ~= "" then
+      table.insert(updated_lines, "")
+    end
+
+    -- Add new section
+    for _, line in ipairs(new_section_lines) do
+      table.insert(updated_lines, line)
+    end
+
+    return updated_lines
+  end
+end
+
+--- Format the changes output for document insertion
+-- @param changes table[]
+-- @param previous_date string|nil
+-- @return table -- lines to insert
+local function format_changes_section(changes, previous_date)
+  local lines = {}
+  table.insert(lines, "## Changes since " .. (previous_date or "previous day"))
+  table.insert(lines, "")
+
+  if not changes or #changes == 0 then
+    table.insert(lines, "No changes found since " .. (previous_date or "previous day"))
+  else
+    for _, change in ipairs(changes) do
+      local prefix = string.rep("  ", math.floor(change.indent / 2)) -- Convert spaces to readable indentation
+      local action = get_action_description(change.prev_status, change.status)
+      table.insert(lines, prefix .. "- " .. action .. " " .. change.text)
+    end
+  end
+
+  return lines
+end
+
+--- Compare the current daily file with the previous day's file
+-- @param buffer_id number|nil
+-- @return boolean -- success
+function M.compare_daily_changes(buffer_id)
+  buffer_id = buffer_id or 0
+  local valid, err = validate_markdown_buffer(buffer_id)
+  if not valid then
+    vim.notify("CompareDaily: " .. err, vim.log.levels.ERROR)
+    return false
+  end
+
+  local bufname = vim.api.nvim_buf_get_name(buffer_id)
+  local fname = vim.fn.fnamemodify(bufname, ":t")
+  local dir = vim.fn.fnamemodify(bufname, ":h")
+
+  -- Validate filename format
+  local y, m, d = parse_date_from_filename(fname)
+  if not y then
+    vim.notify("Filename must be YYYY-MM-DD.md to compare daily changes", vim.log.levels.WARN)
+    return false
+  end
+
+  -- Find previous day's file
+  local prev_fname, prev_path = get_previous_date_file(fname, dir)
+  if not prev_fname then
+    vim.notify("No previous daily file found to compare against", vim.log.levels.WARN)
+    return false
+  end
+
+  -- Read current file content
+  local current_lines = vim.api.nvim_buf_get_lines(buffer_id, 0, -1, false)
+  local current_items = extract_checkbox_items(current_lines, buffer_id)
+
+  -- Read previous file content
+  local prev_lines = vim.fn.readfile(prev_path)
+  local previous_items = extract_checkbox_items(prev_lines, nil)
+
+  -- Find changes (new items and status changes)
+  local changes = find_changes(current_items, previous_items)
+
+  -- Get dates for section headers
+  local prev_date = prev_fname:match("^(.-)%.md$") or prev_fname
+
+  -- Format new section content
+  local new_section_lines = format_changes_section(changes, prev_date)
+
+  -- Update the document with the new section
+  local updated_lines = update_changes_section(current_lines, new_section_lines, prev_date)
+
+  -- Replace buffer content with updated lines
+  vim.api.nvim_buf_set_lines(buffer_id, 0, -1, false, updated_lines)
 
   return true
 end

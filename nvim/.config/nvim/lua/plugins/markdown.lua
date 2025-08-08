@@ -238,6 +238,13 @@ return {
             end, {
               desc = "CarryOver then UpdateCheckboxes and RemoveCompletedCheckboxes",
             })
+
+            -- Compare daily changes
+            vim.api.nvim_create_user_command("CompareDaily", function()
+              require("util.markdown").compare_daily_changes()
+            end, {
+              desc = "Compare current day with previous day and show new items",
+            })
           end
         end,
       })
