@@ -78,7 +78,7 @@ return {
         },
       })
     end,
-    ft = { "markdown", "md", "vimwiki" },
+    ft = { "markdown", "md" },
   },
   {
     "jakewvincent/mkdnflow.nvim",
@@ -101,11 +101,11 @@ return {
         },
         -- To-do lists
         to_do = {
-          symbols = { " ", "-", "X" }, -- [ ], [-], [X]
+          symbols = { " ", "-", "x" }, -- [ ], [-], [x]
           update_parents = true,
           not_started = " ",
           in_progress = "-",
-          complete = "X",
+          complete = "x",
         },
         -- Mappings
         mappings = {
@@ -192,6 +192,26 @@ return {
             vim.api.nvim_create_user_command("Yesterday", function()
               vim.lsp.buf.execute_command({ command = "jump", arguments = { "yesterday" } })
             end, { desc = "Jump to yesterday's daily note" })
+
+            -- Create today's note by copying current file unchanged
+            vim.api.nvim_create_user_command("CarryOver", function()
+              require("util.markdown").carry_over_today()
+            end, { desc = "Create today's note by copying current buffer" })
+
+            -- Update current buffer's checkboxes in-place
+            vim.api.nvim_create_user_command("UpdateCheckboxes", function()
+              require("util.markdown").normalize_checkboxes()
+            end, { desc = "Normalize checkbox symbols based on descendants; no deletions" })
+
+            -- Remove completed subtrees in-place
+            vim.api.nvim_create_user_command("RemoveCompletedCheckboxes", function()
+              require("util.markdown").remove_completed()
+            end, { desc = "Remove all checkbox subtrees rooted at completed items" })
+
+            -- Carry Over and then Update + Remove
+            vim.api.nvim_create_user_command("CarryOverAndUpdate", function()
+              require("util.markdown").carry_over_and_process()
+            end, { desc = "CarryOver then UpdateCheckboxes and RemoveCompletedCheckboxes" })
           end
         end,
       })
