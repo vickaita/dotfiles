@@ -13,6 +13,7 @@ adjust-cursor-thickness = 200%
 cursor-invert-fg-bg = true
 # cursor-style = bar
 cursor-style-blink = false
+mouse-hide-while-typing = true
 # shell-integration-features = no-cursor
 
 # Window settings
