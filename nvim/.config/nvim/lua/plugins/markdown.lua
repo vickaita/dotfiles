@@ -2,36 +2,14 @@ if vim.g.vscode then
   return {}
 end
 
--- set vimwiki path from an environment variable with a fallback of "~/wiki/"
-vim.g.vimwiki_list = {
-  {
-    path = vim.env.VIMWIKI_PATH or "~/wiki/",
-    syntax = "markdown",
-    ext = ".md",
-    diary_rel_path = "",
-  },
-}
-
 return {
-  {
-    "vimwiki/vimwiki",
-    dependencies = { "folke/which-key.nvim" },
-    ft = { "vimwiki" },
-    keys = {
-      { "<leader>v", desc = "+vimwiki" },
-      { "<leader>vd", desc = "+diary" },
-      { "<leader>vw", "<cmd>VimwikiIndex<cr>", desc = "Vimwiki index" },
-      { "<leader>vdi", "<cmd>VimwikiDiaryIndex<cr>", desc = "Vimwiki diary index" },
-      { "<leader>vdg", "<cmd>VimwikiDiaryGenerateLinks<cr>", desc = "Vimwiki diary generate links" },
-      { "<leader>vdd", "<cmd>VimwikiMakeDiaryNote<cr>", desc = "Vimwiki current date diary note" },
-      { "<leader>vdy", "<cmd>VimwikiMakeYesterdayDiaryNote<cr>", desc = "Vimwiki yesterday diary note" },
-      { "<leader>vdt", "<cmd>VimwikiMakeTomorrowDiaryNote<cr>", desc = "Vimwiki tomorrow diary note" },
-    },
-  },
   {
     "MeanderingProgrammer/markdown.nvim",
     name = "render-markdown",
-    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-tree/nvim-web-devicons",
+    },
     config = function()
       require("render-markdown").setup({
         -- Enable concealment for markdown syntax
@@ -44,6 +22,7 @@ return {
           backgrounds = {},
           -- icons = { "♔ ", "♛ ", "♜ ", "♝ ", "♞ ", "♟ " },
           -- icons = { "󰇊 ", "󰇋 ", "󰇌 ", "󰇍 ", "󰇎 ", "󰇏 " },
+          -- icons = { "󰫎 " },
           icons = {
             "󰫎 ",
             "󰫎󰫎 ",
@@ -52,10 +31,9 @@ return {
             "󰫎󰫎󰫎󰫎󰫎 ",
             "󰫎󰫎󰫎󰫎󰫎󰫎 ",
           },
-          -- icons = { "󰫎 " },
           position = "inline",
           sign = true,
-          signs = { "♔ ", "♛ ", "♜ ", "♝ ", "♞ ", "♟ " },
+          signs = { "♔", "♛", "♜", "♝", "♞", "♟" },
         },
         -- Code block settings
         code = {
@@ -104,7 +82,7 @@ return {
   },
   {
     "jakewvincent/mkdnflow.nvim",
-    ft = { "markdown", "md", "vimwiki" },
+    ft = { "markdown", "md" },
     config = function()
       require("mkdnflow").setup({
         -- Links and paths
@@ -193,26 +171,26 @@ return {
     opts = function(_, opts)
       opts.servers = opts.servers or {}
       opts.servers.markdown_oxide = {}
-      
+
       -- Create autocmd to register markdown-oxide commands when LSP attaches
       vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(event)
           local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client and client.name == "markdown_oxide" then            
+          if client and client.name == "markdown_oxide" then
             vim.api.nvim_create_user_command("Daily", function(args)
-              vim.lsp.buf.execute_command { command = "jump", arguments = { args.args } }
+              vim.lsp.buf.execute_command({ command = "jump", arguments = { args.args } })
             end, { desc = "Open daily note", nargs = "*" })
 
             vim.api.nvim_create_user_command("Today", function()
-              vim.lsp.buf.execute_command { command = "jump", arguments = { "today" } }
+              vim.lsp.buf.execute_command({ command = "jump", arguments = { "today" } })
             end, { desc = "Jump to today's daily note" })
 
             vim.api.nvim_create_user_command("Tomorrow", function()
-              vim.lsp.buf.execute_command { command = "jump", arguments = { "tomorrow" } }
+              vim.lsp.buf.execute_command({ command = "jump", arguments = { "tomorrow" } })
             end, { desc = "Jump to tomorrow's daily note" })
 
             vim.api.nvim_create_user_command("Yesterday", function()
-              vim.lsp.buf.execute_command { command = "jump", arguments = { "yesterday" } }
+              vim.lsp.buf.execute_command({ command = "jump", arguments = { "yesterday" } })
             end, { desc = "Jump to yesterday's daily note" })
           end
         end,
