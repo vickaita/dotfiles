@@ -73,7 +73,11 @@ return {
           unchecked = { icon = "[ ]", highlight = "RenderMarkdownUnchecked" },
           checked = { icon = "[✖︎]", highlight = "RenderMarkdownDone" },
           custom = {
-            todo = { raw = "[-]", rendered = "[⁃]", highlight = "RenderMarkdownInProgress" },
+            todo = {
+              raw = "[-]",
+              rendered = "[⁃]",
+              highlight = "RenderMarkdownInProgress",
+            },
           },
         },
       })
@@ -178,19 +182,35 @@ return {
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client.name == "markdown_oxide" then
             vim.api.nvim_create_user_command("Daily", function(args)
-              vim.lsp.buf.execute_command({ command = "jump", arguments = { args.args } })
+              client:exec_cmd({
+                command = "jump",
+                title = "Jump to daily note",
+                arguments = { args.args },
+              }, { bufnr = event.buf })
             end, { desc = "Open daily note", nargs = "*" })
 
             vim.api.nvim_create_user_command("Today", function()
-              vim.lsp.buf.execute_command({ command = "jump", arguments = { "today" } })
+              client:exec_cmd({
+                command = "jump",
+                title = "Jump to today",
+                arguments = { "today" },
+              }, { bufnr = event.buf })
             end, { desc = "Jump to today's daily note" })
 
             vim.api.nvim_create_user_command("Tomorrow", function()
-              vim.lsp.buf.execute_command({ command = "jump", arguments = { "tomorrow" } })
+              client:exec_cmd({
+                command = "jump",
+                title = "Jump to tomorrow",
+                arguments = { "tomorrow" },
+              }, { bufnr = event.buf })
             end, { desc = "Jump to tomorrow's daily note" })
 
             vim.api.nvim_create_user_command("Yesterday", function()
-              vim.lsp.buf.execute_command({ command = "jump", arguments = { "yesterday" } })
+              client:exec_cmd({
+                command = "jump",
+                title = "Jump to yesterday",
+                arguments = { "yesterday" },
+              }, { bufnr = event.buf })
             end, { desc = "Jump to yesterday's daily note" })
 
             -- Create today's note by copying current file unchanged
@@ -201,17 +221,23 @@ return {
             -- Update current buffer's checkboxes in-place
             vim.api.nvim_create_user_command("UpdateCheckboxes", function()
               require("util.markdown").normalize_checkboxes()
-            end, { desc = "Normalize checkbox symbols based on descendants; no deletions" })
+            end, {
+              desc = "Normalize checkbox symbols based on descendants; no deletions",
+            })
 
             -- Remove completed subtrees in-place
             vim.api.nvim_create_user_command("RemoveCompletedCheckboxes", function()
               require("util.markdown").remove_completed()
-            end, { desc = "Remove all checkbox subtrees rooted at completed items" })
+            end, {
+              desc = "Remove all checkbox subtrees rooted at completed items",
+            })
 
             -- Carry Over and then Update + Remove
             vim.api.nvim_create_user_command("CarryOverAndUpdate", function()
               require("util.markdown").carry_over_and_process()
-            end, { desc = "CarryOver then UpdateCheckboxes and RemoveCompletedCheckboxes" })
+            end, {
+              desc = "CarryOver then UpdateCheckboxes and RemoveCompletedCheckboxes",
+            })
           end
         end,
       })
