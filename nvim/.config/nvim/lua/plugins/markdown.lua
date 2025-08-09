@@ -42,7 +42,7 @@ return {
           -- Width of the code block
           width = "block",
           -- Minimum width for code blocks
-          min_width = 80,
+          min_width = vim.bo.textwidth > 0 and vim.bo.textwidth or 80,
           -- Border around code blocks
           border = "thick",
           -- left_pad = 4,
@@ -79,6 +79,9 @@ return {
               highlight = "RenderMarkdownInProgress",
             },
           },
+        },
+        dash = {
+          width = vim.bo.textwidth > 0 and vim.bo.textwidth or 80,
         },
       })
     end,
