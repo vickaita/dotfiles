@@ -82,6 +82,9 @@ return {
         },
         dash = {
           width = vim.bo.textwidth > 0 and vim.bo.textwidth or 80,
+          -- icon = "≈",
+          -- icon = "=",
+          icon = "-",
         },
       })
     end,
