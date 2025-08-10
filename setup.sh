@@ -35,6 +35,7 @@ COMMON_PACKAGES=(
     jq
     lazygit
     lesspipe
+    lynx
     neovim
     ripgrep
     # ruby  # TODO: Add ruby to ensure ERB is available for template processing
@@ -48,6 +49,7 @@ COMMON_PACKAGES=(
     tree
     uv
     vim
+    w3m
     wget
     zellij
 )
