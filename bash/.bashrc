@@ -20,7 +20,7 @@ source "$DOTFILES"/shared/shell/rust.sh
 source "$DOTFILES"/shared/shell/direnv.sh
 source "$DOTFILES"/shared/shell/fzf.sh
 source "$DOTFILES"/shared/shell/pyenv.sh
-source "$DOTFILES"/shared/shell/nvm.sh
+source "$DOTFILES"/shared/shell/fnm.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
 source "$DOTFILES"/shared/shell/init_lesspipe.sh
 source "$DOTFILES"/shared/shell/claude.sh

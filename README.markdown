@@ -20,8 +20,8 @@ stow nvim
 ## Shell Performance
 
 The shell configurations are optimized for fast startup:
-- **Zsh startup**: ~8ms (98.9% faster than before optimization)
-- **NVM lazy loading**: Only loads when you use `node`/`npm`/`nvm`/`npx`
+- **Zsh startup**: ~8ms (98.9% faster than before optimization)  
+- **FNM (Fast Node Manager)**: Rust-based Node.js version manager, 40x faster than NVM
 - **Smart completion caching**: Rebuilds only when needed (every 24 hours or when cache is missing)
 
 ### Rebuilding Completions

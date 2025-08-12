@@ -12,7 +12,7 @@ source "$DOTFILES"/shared/shell/rust.sh
 source "$DOTFILES"/shared/shell/direnv.sh
 source "$DOTFILES"/shared/shell/fzf.sh
 source "$DOTFILES"/shared/shell/pyenv.sh
-source "$DOTFILES"/shared/shell/nvm.sh
+source "$DOTFILES"/shared/shell/fnm.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
 source "$DOTFILES"/shared/shell/init_lesspipe.sh
 source "$DOTFILES"/shared/shell/claude.sh
@@ -27,7 +27,7 @@ for file in \
     "$DOTFILES/shared/shell/direnv.sh" \
     "$DOTFILES/shared/shell/fzf.sh" \
     "$DOTFILES/shared/shell/pyenv.sh" \
-    "$DOTFILES/shared/shell/nvm.sh" \
+    "$DOTFILES/shared/shell/fnm.sh" \
     "$DOTFILES/shared/shell/editor-binding.sh" \
     "$DOTFILES/shared/shell/init_lesspipe.sh" \
     "$DOTFILES/shared/shell/claude.sh" \

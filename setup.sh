@@ -54,7 +54,7 @@ COMMON_PACKAGES=(
     zellij
 )
 
-MAC_SPECIFIC_PACKAGES=(fd gh pyenv nvm)
+MAC_SPECIFIC_PACKAGES=(fd gh pyenv fnm)
 MAC_CASK_PACKAGES=(ghostty)
 UBUNTU_SPECIFIC_PACKAGES=(fd-find)
 
@@ -174,22 +174,22 @@ install_ubuntu() {
     install_packages "${COMMON_PACKAGES[@]}" "${UBUNTU_SPECIFIC_PACKAGES[@]}"
 
     # Handle special packages
-    install_nvm_ubuntu
+    install_fnm_ubuntu
     install_pyenv_ubuntu
     install_gh_ubuntu
 
     log_info "Ubuntu tools installation complete!"
 }
 
-# Install nvm (Node Version Manager) - Ubuntu only (macOS uses Homebrew)
-install_nvm_ubuntu() {
-    if command -v nvm >/dev/null 2>&1; then
-        log_info "nvm is already installed"
+# Install fnm (Fast Node Manager) - Ubuntu only (macOS uses Homebrew)
+install_fnm_ubuntu() {
+    if command -v fnm >/dev/null 2>&1; then
+        log_info "fnm is already installed"
         return
     fi
 
-    log_info "Installing nvm via script..."
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+    log_info "Installing fnm via script..."
+    curl -fsSL https://fnm.vercel.app/install | bash
 }
 
 # Install pyenv - platform specific
@@ -293,33 +293,6 @@ create_ssh_key() {
     done
 }
 
-# Install zsh-nvm plugin with improved idempotency
-install_zsh_nvm() {
-    local ZSH_NVM_DIR="$HOME/.zsh-nvm"
-    # Specify the commit to pin zsh-nvm to a specific version
-    local ZSH_NVM_COMMIT="745291dcf20686ec421935f1c3f8f3a2918dd106"
-
-    if [[ ! -d "$ZSH_NVM_DIR" ]]; then
-        log_info "Cloning zsh-nvm repository..."
-        git clone https://github.com/lukechilds/zsh-nvm.git "$ZSH_NVM_DIR"
-        cd "$ZSH_NVM_DIR"
-        git checkout "$ZSH_NVM_COMMIT"
-        cd - >/dev/null
-    else
-        cd "$ZSH_NVM_DIR"
-        local current_commit
-        current_commit=$(git rev-parse HEAD)
-
-        if [[ "$current_commit" != "$ZSH_NVM_COMMIT" ]]; then
-            log_info "Updating zsh-nvm to pinned commit..."
-            git fetch
-            git checkout "$ZSH_NVM_COMMIT"
-        else
-            log_info "zsh-nvm is already at the correct commit"
-        fi
-        cd - >/dev/null
-    fi
-}
 
 # Create ~/.config directory if it doesn't exist; this prevents issues with stow
 # creating a symlink to the config directory in the first stowed config
@@ -470,11 +443,6 @@ main() {
         log_info "Skipping template processing (--skip-templates)"
     fi
 
-    if [[ "${SKIP_ZSH_NVM:-false}" != "true" ]]; then
-        install_zsh_nvm
-    else
-        log_info "Skipping zsh-nvm installation (--skip-zsh-nvm)"
-    fi
 
     if [[ "${SKIP_SSH:-false}" != "true" ]]; then
         manage_ssh_keys
@@ -514,10 +482,6 @@ while [[ $# -gt 0 ]]; do
         export SKIP_TEMPLATES=true
         shift
         ;;
-    --skip-zsh-nvm)
-        export SKIP_ZSH_NVM=true
-        shift
-        ;;
     --skip-ssh)
         export SKIP_SSH=true
         shift
@@ -534,7 +498,6 @@ while [[ $# -gt 0 ]]; do
         echo "  --skip-packages    Skip package installation"
         echo "  --skip-configs     Skip config directory setup"
         echo "  --skip-templates   Skip template processing"
-        echo "  --skip-zsh-nvm     Skip zsh-nvm installation"
         echo "  --skip-ssh         Skip SSH key management"
         echo "  --skip-stow        Skip stowing configuration files"
         echo "  --help            Show this help message"
