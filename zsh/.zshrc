@@ -17,14 +17,6 @@ source "$DOTFILES"/shared/shell/editor-binding.sh
 source "$DOTFILES"/shared/shell/init_lesspipe.sh
 source "$DOTFILES"/shared/shell/claude.sh
 
-# Configure Git completion
-autoload -Uz compinit && compinit
-
-# Source local configuration
-if [[ -f "$HOME/.zshrc.local" ]]; then
-    source "$HOME/.zshrc.local"
-fi
-
 # Warn if any important sourced files are missing
 for file in \
     "$DOTFILES/shared/shell/homebrew.sh" \
@@ -44,3 +36,19 @@ for file in \
         echo "Warning: $file not found!"
     fi
 done
+
+# Configure completion system with smart daily caching
+# IMPORTANT: This must run AFTER all shell scripts that modify fpath
+autoload -Uz compinit
+
+# Rebuild completions only if dump file doesn't exist or is older than 24 hours
+if [[ ! -f ~/.zcompdump ]] || [[ -n $(find ~/.zcompdump -mtime +1 -print 2>/dev/null) ]]; then
+    compinit
+else
+    compinit -C
+fi
+
+# Source local configuration
+if [[ -f "$HOME/.zshrc.local" ]]; then
+    source "$HOME/.zshrc.local"
+fi

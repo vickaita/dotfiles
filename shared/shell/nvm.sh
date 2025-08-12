@@ -1,20 +1,20 @@
-# nvm_setup.sh
+# nvm_setup.sh with lazy loading
 
 # Default location for installed Node versions
 if [[ -z "$NVM_DIR" ]]; then
     export NVM_DIR="$HOME/.nvm"
 fi
 
-# Check if nvm command exists, if it is already initialized then we don't want
-# to source it again
-if ! typeset -f nvm >/dev/null; then
+# Lazy load NVM to improve shell startup time
+_nvm_lazy_load() {
+    unset -f nvm node npm npx
 
     # Source nvm from the Homebrew location if it exists there, checking a few
     # different places that it could be installed
     # Otherwise, attempt to load from the default location
     if [[ -s "/usr/local/opt/nvm/nvm.sh" ]]; then
         source "/usr/local/opt/nvm/nvm.sh"
-    elif [[ -s "/opt/homebrew/opt/nvm/nvim.sh" ]]; then
+    elif [[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
         source "/opt/homebrew/opt/nvm/nvm.sh"
     elif [[ -s "$NVM_DIR/nvm.sh" ]]; then
         source "$NVM_DIR/nvm.sh"
@@ -37,15 +37,32 @@ if ! typeset -f nvm >/dev/null; then
         fi
     fi
 
-    # nvm completions for zsh are not supported by the bash completion script.
-    # For robust nvm completions in zsh, use the zsh-nvm plugin:
-    #   https://github.com/lukechilds/zsh-nvm
-    # Example (with zinit):
-    #   zinit light lukechilds/zsh-nvm
-    # Or see the plugin's README for manual install instructions.
-
     # Source zsh-nvm plugin for zsh completions if available
     if [[ "$CURRENT_SHELL" == "zsh" ]] && [[ -s "$HOME/.zsh-nvm/zsh-nvm.plugin.zsh" ]]; then
         source "$HOME/.zsh-nvm/zsh-nvm.plugin.zsh"
     fi
+}
+
+# Check if nvm is already loaded to avoid duplicate loading
+if ! typeset -f nvm >/dev/null; then
+    # Create placeholder functions that will trigger lazy loading
+    nvm() {
+        _nvm_lazy_load
+        nvm "$@"
+    }
+
+    node() {
+        _nvm_lazy_load
+        node "$@"
+    }
+
+    npm() {
+        _nvm_lazy_load
+        npm "$@"
+    }
+
+    npx() {
+        _nvm_lazy_load
+        npx "$@"
+    }
 fi
