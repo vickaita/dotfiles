@@ -23,6 +23,7 @@ source "$DOTFILES"/shared/shell/pyenv.sh
 source "$DOTFILES"/shared/shell/nvm.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
 source "$DOTFILES"/shared/shell/init_lesspipe.sh
+source "$DOTFILES"/shared/shell/claude.sh
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.

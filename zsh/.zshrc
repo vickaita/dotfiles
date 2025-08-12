@@ -15,6 +15,7 @@ source "$DOTFILES"/shared/shell/pyenv.sh
 source "$DOTFILES"/shared/shell/nvm.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
 source "$DOTFILES"/shared/shell/init_lesspipe.sh
+source "$DOTFILES"/shared/shell/claude.sh
 
 # Configure Git completion
 autoload -Uz compinit && compinit
@@ -37,10 +38,9 @@ for file in \
     "$DOTFILES/shared/shell/nvm.sh" \
     "$DOTFILES/shared/shell/editor-binding.sh" \
     "$DOTFILES/shared/shell/init_lesspipe.sh" \
-    "$DOTFILES/zsh/keybindings.zsh"
-    do
+    "$DOTFILES/shared/shell/claude.sh" \
+    "$DOTFILES/zsh/keybindings.zsh"; do
     if [ ! -f "$file" ]; then
         echo "Warning: $file not found!"
     fi
 done
-
