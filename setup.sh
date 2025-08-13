@@ -38,7 +38,7 @@ COMMON_PACKAGES=(
     lynx
     neovim
     ripgrep
-    # ruby  # TODO: Add ruby to ensure ERB is available for template processing
+    ruby
     shellcheck
     shellharden
     shfmt
