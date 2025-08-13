@@ -4,6 +4,7 @@ return {
     build = ":TSUpdate",
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
+      "nvim-treesitter/nvim-treesitter-context",
     },
     opts = {
       ensure_installed = {
@@ -106,5 +107,19 @@ return {
     config = function(_, opts)
       require("nvim-treesitter.configs").setup(opts)
     end,
+  },
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    opts = {
+      enable = true,
+      max_lines = 0,
+      min_window_height = 0,
+      line_numbers = true,
+      multiline_threshold = 20,
+      trim_scope = "outer",
+      mode = "cursor",
+      separator = nil,
+      zindex = 20,
+    },
   },
 }
