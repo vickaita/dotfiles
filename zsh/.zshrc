@@ -2,6 +2,11 @@ export DOTFILES="$HOME/.dotfiles"
 
 export CURRENT_SHELL="zsh"
 
+# Enable profiling if requested
+if [[ -n "$ZSH_PROFILE" ]]; then
+  zmodload zsh/zprof
+fi
+
 source "$DOTFILES"/zsh/keybindings.zsh
 
 source "$DOTFILES"/shared/shell/homebrew.sh
@@ -51,4 +56,9 @@ fi
 # Source local configuration
 if [[ -f "$HOME/.zshrc.local" ]]; then
     source "$HOME/.zshrc.local"
+fi
+
+# Show profiling results if enabled
+if [[ -n "$ZSH_PROFILE" ]]; then
+  zprof
 fi

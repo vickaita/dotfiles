@@ -242,6 +242,9 @@ rebuild-completions
 
 # Check shell startup time
 time zsh -i -c exit
+
+# Profile shell startup to identify slow components
+ZSH_PROFILE=1 zsh -i -c exit
 ```
 
 ### SSH Key Issues
