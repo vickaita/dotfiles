@@ -54,7 +54,7 @@ COMMON_PACKAGES=(
     zellij
 )
 
-MAC_SPECIFIC_PACKAGES=(fd gh pyenv fnm)
+MAC_SPECIFIC_PACKAGES=(fd gh pyenv fnm difftastic)
 MAC_CASK_PACKAGES=(ghostty)
 UBUNTU_SPECIFIC_PACKAGES=(fd-find)
 
@@ -177,6 +177,7 @@ install_ubuntu() {
     install_fnm_ubuntu
     install_pyenv_ubuntu
     install_gh_ubuntu
+    install_difftastic_ubuntu
 
     log_info "Ubuntu tools installation complete!"
 }
@@ -221,6 +222,17 @@ install_gh_ubuntu() {
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
     sudo apt update
     sudo apt install -y gh
+}
+
+# Install difftastic for Ubuntu
+install_difftastic_ubuntu() {
+    if command -v difft >/dev/null 2>&1; then
+        log_info "difftastic is already installed"
+        return
+    fi
+
+    log_info "Installing difftastic via snap..."
+    sudo snap install difftastic
 }
 
 # Check and manage SSH keys (improved idempotency)

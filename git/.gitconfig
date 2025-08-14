@@ -6,5 +6,18 @@
 	editor = nvim
 [init]
 	defaultBranch = main
+[diff]
+	tool = difftastic
+[difftool]
+	prompt = false
+[difftool "difftastic"]
+	cmd = difft "$LOCAL" "$REMOTE"
+[pager]
+	difftool = true
+[alias]
+	ddiff = difftool
+	difft = difftool
+	dlog = "!f() { GIT_EXTERNAL_DIFF=difft git log -p --ext-diff $@; }; f"
+	dshow = "!f() { GIT_EXTERNAL_DIFF=difft git show --ext-diff $@; }; f"
 [include]
 	path = ~/.gitconfig.local
