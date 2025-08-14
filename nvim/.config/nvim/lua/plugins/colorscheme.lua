@@ -34,18 +34,25 @@ for _, t in ipairs(themes) do
         if not ok then
           vim.notify("Colorscheme " .. scheme .. " not found: " .. err, vim.log.levels.WARN)
         else
-          -- Make ~ characters match line number colors (delayed to ensure colorscheme is fully loaded)
-          vim.defer_fn(function()
-            -- First try linking
-            vim.cmd("highlight link EndOfBuffer LineNr")
-            -- If that doesn't work, copy the actual colors
-            vim.defer_fn(function()
-              local linenr_hl = vim.api.nvim_get_hl(0, { name = "LineNr" })
-              if linenr_hl.fg then
-                vim.api.nvim_set_hl(0, "EndOfBuffer", { fg = linenr_hl.fg, bg = linenr_hl.bg })
-              end
-            end, 50)
-          end, 10)
+          -- Make ~ characters match line number colors
+          local function set_endbuffer_highlight()
+            -- Get LineNr highlight and apply it to EndOfBuffer
+            local linenr_hl = vim.api.nvim_get_hl(0, { name = "LineNr" })
+            if linenr_hl and linenr_hl.fg then
+              vim.api.nvim_set_hl(0, "EndOfBuffer", { fg = linenr_hl.fg, bg = linenr_hl.bg })
+            else
+              -- Fallback: try linking if we can't get the colors
+              vim.cmd("highlight link EndOfBuffer LineNr")
+            end
+          end
+
+          vim.schedule(set_endbuffer_highlight)
+
+          -- Also set up autocmd to handle colorscheme changes
+          vim.api.nvim_create_autocmd("ColorScheme", {
+            callback = set_endbuffer_highlight,
+            desc = "Make EndOfBuffer match LineNr colors",
+          })
         end
       end
     end,
