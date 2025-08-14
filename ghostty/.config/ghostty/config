@@ -17,7 +17,7 @@ mouse-hide-while-typing = true
 # shell-integration-features = no-cursor
 
 # Improve contrast
-minimum-contrast = 3
+minimum-contrast = 1.1
 
 # Window settings
 window-padding-x = 8
