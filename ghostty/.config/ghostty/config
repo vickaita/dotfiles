@@ -16,6 +16,9 @@ cursor-style-blink = false
 mouse-hide-while-typing = true
 # shell-integration-features = no-cursor
 
+# Improve contrast
+minimum-contrast = 3
+
 # Window settings
 window-padding-x = 8
 window-padding-y = 8
