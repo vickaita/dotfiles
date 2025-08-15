@@ -1,0 +1,11 @@
+# mise configuration
+# This file is versioned in dotfiles and stowed to ~/.config/mise/config.toml
+
+[settings]
+# Enable idiomatic version files for compatibility with existing projects
+# Removes deprecation warning and ensures consistent behavior after mise 2025.10.0
+idiomatic_version_file_enable_tools = ["node", "python", "ruby"]
+
+# Optional: Add other global settings here
+# verbose = false
+# experimental = false

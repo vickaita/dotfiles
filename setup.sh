@@ -38,7 +38,6 @@ COMMON_PACKAGES=(
     lynx
     neovim
     ripgrep
-    ruby
     shellcheck
     shellharden
     shfmt
@@ -54,7 +53,7 @@ COMMON_PACKAGES=(
     zellij
 )
 
-MAC_SPECIFIC_PACKAGES=(fd gh pyenv fnm difftastic)
+MAC_SPECIFIC_PACKAGES=(fd gh mise difftastic)
 MAC_CASK_PACKAGES=(ghostty)
 UBUNTU_SPECIFIC_PACKAGES=(fd-find)
 
@@ -174,40 +173,22 @@ install_ubuntu() {
     install_packages "${COMMON_PACKAGES[@]}" "${UBUNTU_SPECIFIC_PACKAGES[@]}"
 
     # Handle special packages
-    install_fnm_ubuntu
-    install_pyenv_ubuntu
+    install_mise_ubuntu
     install_gh_ubuntu
     install_difftastic_ubuntu
 
     log_info "Ubuntu tools installation complete!"
 }
 
-# Install fnm (Fast Node Manager) - Ubuntu only (macOS uses Homebrew)
-install_fnm_ubuntu() {
-    if command -v fnm >/dev/null 2>&1; then
-        log_info "fnm is already installed"
+# Install mise (polyglot tool version manager) - Ubuntu only (macOS uses Homebrew)
+install_mise_ubuntu() {
+    if command -v mise >/dev/null 2>&1; then
+        log_info "mise is already installed"
         return
     fi
 
-    log_info "Installing fnm via script..."
-    curl -fsSL https://fnm.vercel.app/install | bash
-}
-
-# Install pyenv - platform specific
-install_pyenv_ubuntu() {
-    if command -v pyenv >/dev/null 2>&1; then
-        log_info "pyenv is already installed"
-        return
-    fi
-
-    log_info "Installing pyenv dependencies..."
-    sudo apt install -y make build-essential libssl-dev zlib1g-dev \
-        libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-        libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
-        libffi-dev liblzma-dev
-
-    log_info "Installing pyenv via script..."
-    curl https://pyenv.run | bash
+    log_info "Installing mise via script..."
+    curl https://mise.run | sh
 }
 
 # Install GitHub CLI for Ubuntu
@@ -382,6 +363,7 @@ stow_configs() {
         "bash"
         "ghostty"
         "htop"
+        "mise"
         "npm"
         "nvim"
         "prettier"

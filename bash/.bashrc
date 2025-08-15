@@ -19,8 +19,7 @@ source "$DOTFILES"/shared/shell/history.sh
 source "$DOTFILES"/shared/shell/rust.sh
 source "$DOTFILES"/shared/shell/direnv.sh
 source "$DOTFILES"/shared/shell/fzf.sh
-source "$DOTFILES"/shared/shell/pyenv.sh
-source "$DOTFILES"/shared/shell/fnm.sh
+source "$DOTFILES"/shared/shell/mise.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
 source "$DOTFILES"/shared/shell/less-pager.sh
 source "$DOTFILES"/shared/shell/claude.sh

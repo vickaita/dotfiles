@@ -4,16 +4,20 @@
 typeset -A _zsh_file_times
 typeset -a _zsh_file_order
 
-# Function to time file sourcing
-_time_source() {
-  local file="$1"
+# Timing wrapper that decorates the base _source function
+_timing_wrapper() {
+  local original_source_func="$1"
+  local file="$2"
 
   # Start timing
   zmodload zsh/datetime
   local start_time=$EPOCHREALTIME
 
+  # Call the original _source function (handles file checking and sourcing)
+  $original_source_func "$file"
+
+  # Only store timing if file was actually sourced (file exists)
   if [[ -f "$file" ]]; then
-    source "$file"
     local end_time=$EPOCHREALTIME
 
     # Calculate duration in milliseconds (multiply by 1000)
@@ -23,15 +27,11 @@ _time_source() {
     # Store timing info as integer
     _zsh_file_times["$file"]=$duration_tenths
     _zsh_file_order+=("$file")
-  else
-    echo "Warning: $file not found!"
   fi
 }
 
 # Function to display file timing results
 _show_file_times() {
-  echo "\n=== Zsh File Loading Times ==="
-
   # Create array of file:time pairs for sorting
   local -a sorted_files
   local total_time=0
@@ -48,11 +48,12 @@ _show_file_times() {
     local time_tenths=${entry%%:*}
     local file=${entry#*:}
 
-    # Extract filename relative to DOTFILES for cleaner display
-    local display_name=${file#$DOTFILES/}
-    if [[ "$display_name" == "$file" ]]; then
+    # Remove any quotes from the file path and extract filename for display
+    local clean_file=${file//\"/}
+    local display_name=${clean_file#$DOTFILES/}
+    if [[ "$display_name" == "$clean_file" ]]; then
       # If not under DOTFILES, show just basename
-      display_name=${file##*/}
+      display_name=${clean_file##*/}
     fi
 
     # Convert tenths back to decimal milliseconds for display
@@ -62,28 +63,4 @@ _show_file_times() {
 
   local total_ms=$(( total_time / 10.0 ))
   printf "\nTotal: %.1fms across %d files\n" $total_ms ${#_zsh_file_order}
-}
-
-# Define _source function for timing mode
-_source() {
-  local file="$1"
-
-  # Start timing
-  zmodload zsh/datetime
-  local start_time=$EPOCHREALTIME
-
-  if [[ -f "$file" ]]; then
-    source "$file"
-    local end_time=$EPOCHREALTIME
-
-    # Calculate duration in milliseconds (multiply by 1000)
-    # Use awk for reliable floating point math, store as integer tenths of ms
-    local duration_tenths=$(awk "BEGIN {printf \"%.0f\", ($end_time - $start_time) * 10000}" 2>/dev/null || echo "10")
-
-    # Store timing info as integer
-    _zsh_file_times["$file"]=$duration_tenths
-    _zsh_file_order+=("$file")
-  else
-    echo "Warning: $file not found!"
-  fi
 }
