@@ -21,6 +21,7 @@ source "$DOTFILES"/shared/shell/fnm.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
 source "$DOTFILES"/shared/shell/less-pager.sh
 source "$DOTFILES"/shared/shell/claude.sh
+source "$DOTFILES"/shared/shell/aliases.sh
 
 # Warn if any important sourced files are missing
 for file in \
@@ -36,6 +37,7 @@ for file in \
     "$DOTFILES/shared/shell/editor-binding.sh" \
     "$DOTFILES/shared/shell/less-pager.sh" \
     "$DOTFILES/shared/shell/claude.sh" \
+    "$DOTFILES/shared/shell/aliases.sh" \
     "$DOTFILES/zsh/keybindings.zsh"; do
     if [ ! -f "$file" ]; then
         echo "Warning: $file not found!"
