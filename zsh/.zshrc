@@ -5,44 +5,34 @@ export CURRENT_SHELL="zsh"
 # Enable profiling if requested
 if [[ -n "$ZSH_PROFILE" ]]; then
   zmodload zsh/zprof
+  source "$DOTFILES/zsh/profiling.zsh"
+else
+  # Define _source function for normal mode (with file existence check)
+  _source() {
+    local file="$1"
+    if [[ -f "$file" ]]; then
+      source "$file"
+    else
+      echo "Warning: $file not found!"
+    fi
+  }
 fi
 
-source "$DOTFILES"/zsh/keybindings.zsh
-
-source "$DOTFILES"/shared/shell/homebrew.sh
-source "$DOTFILES"/shared/shell/utils.sh
-source "$DOTFILES"/shared/shell/prompt.sh
-source "$DOTFILES"/shared/shell/history.sh
-source "$DOTFILES"/shared/shell/rust.sh
-source "$DOTFILES"/shared/shell/direnv.sh
-source "$DOTFILES"/shared/shell/fzf.sh
-source "$DOTFILES"/shared/shell/pyenv.sh
-source "$DOTFILES"/shared/shell/fnm.sh
-source "$DOTFILES"/shared/shell/editor-binding.sh
-source "$DOTFILES"/shared/shell/less-pager.sh
-source "$DOTFILES"/shared/shell/claude.sh
-source "$DOTFILES"/shared/shell/aliases.sh
-
-# Warn if any important sourced files are missing
-for file in \
-    "$DOTFILES/shared/shell/homebrew.sh" \
-    "$DOTFILES/shared/shell/utils.sh" \
-    "$DOTFILES/shared/shell/prompt.sh" \
-    "$DOTFILES/shared/shell/history.sh" \
-    "$DOTFILES/shared/shell/rust.sh" \
-    "$DOTFILES/shared/shell/direnv.sh" \
-    "$DOTFILES/shared/shell/fzf.sh" \
-    "$DOTFILES/shared/shell/pyenv.sh" \
-    "$DOTFILES/shared/shell/fnm.sh" \
-    "$DOTFILES/shared/shell/editor-binding.sh" \
-    "$DOTFILES/shared/shell/less-pager.sh" \
-    "$DOTFILES/shared/shell/claude.sh" \
-    "$DOTFILES/shared/shell/aliases.sh" \
-    "$DOTFILES/zsh/keybindings.zsh"; do
-    if [ ! -f "$file" ]; then
-        echo "Warning: $file not found!"
-    fi
-done
+# Source shell configuration files
+_source "$DOTFILES/zsh/keybindings.zsh"
+_source "$DOTFILES/shared/shell/homebrew.sh"
+_source "$DOTFILES/shared/shell/utils.sh"
+_source "$DOTFILES/shared/shell/prompt.sh"
+_source "$DOTFILES/shared/shell/history.sh"
+_source "$DOTFILES/shared/shell/rust.sh"
+_source "$DOTFILES/shared/shell/direnv.sh"
+_source "$DOTFILES/shared/shell/fzf.sh"
+_source "$DOTFILES/shared/shell/pyenv.sh"
+_source "$DOTFILES/shared/shell/fnm.sh"
+_source "$DOTFILES/shared/shell/editor-binding.sh"
+_source "$DOTFILES/shared/shell/less-pager.sh"
+_source "$DOTFILES/shared/shell/claude.sh"
+_source "$DOTFILES/shared/shell/aliases.sh"
 
 # Configure completion system with smart daily caching
 # IMPORTANT: This must run AFTER all shell scripts that modify fpath
@@ -57,10 +47,15 @@ fi
 
 # Source local configuration
 if [[ -f "$HOME/.zshrc.local" ]]; then
-    source "$HOME/.zshrc.local"
+  _source "$HOME/.zshrc.local"
 fi
+
+# Clean up - remove _source function from global scope
+unset -f _source
 
 # Show profiling results if enabled
 if [[ -n "$ZSH_PROFILE" ]]; then
+  _show_file_times
+  echo "\n=== Function-level Profiling ==="
   zprof
 fi
