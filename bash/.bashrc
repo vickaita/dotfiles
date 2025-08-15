@@ -22,7 +22,7 @@ source "$DOTFILES"/shared/shell/fzf.sh
 source "$DOTFILES"/shared/shell/pyenv.sh
 source "$DOTFILES"/shared/shell/fnm.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
-source "$DOTFILES"/shared/shell/init_lesspipe.sh
+source "$DOTFILES"/shared/shell/less-pager.sh
 source "$DOTFILES"/shared/shell/claude.sh
 
 # check the window size after each command and, if necessary,

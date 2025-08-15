@@ -19,7 +19,7 @@ source "$DOTFILES"/shared/shell/fzf.sh
 source "$DOTFILES"/shared/shell/pyenv.sh
 source "$DOTFILES"/shared/shell/fnm.sh
 source "$DOTFILES"/shared/shell/editor-binding.sh
-source "$DOTFILES"/shared/shell/init_lesspipe.sh
+source "$DOTFILES"/shared/shell/less-pager.sh
 source "$DOTFILES"/shared/shell/claude.sh
 
 # Warn if any important sourced files are missing
@@ -34,7 +34,7 @@ for file in \
     "$DOTFILES/shared/shell/pyenv.sh" \
     "$DOTFILES/shared/shell/fnm.sh" \
     "$DOTFILES/shared/shell/editor-binding.sh" \
-    "$DOTFILES/shared/shell/init_lesspipe.sh" \
+    "$DOTFILES/shared/shell/less-pager.sh" \
     "$DOTFILES/shared/shell/claude.sh" \
     "$DOTFILES/zsh/keybindings.zsh"; do
     if [ ! -f "$file" ]; then

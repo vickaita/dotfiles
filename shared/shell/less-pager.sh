@@ -1,3 +1,6 @@
+# Configure less as the default pager with color support
+export PAGER="less -R"
+
 # make less more friendly for non-text input files, see lesspipe(1)
 # Check if 'lesspipe' is available as a command in PATH (most common on Linux)
 if command -v lesspipe >/dev/null 2>&1; then
