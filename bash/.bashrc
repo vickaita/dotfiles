@@ -12,18 +12,27 @@ export DOTFILES="$HOME"/.dotfiles
 
 export CURRENT_SHELL="bash"
 
-source "$DOTFILES"/shared/shell/homebrew.sh
-source "$DOTFILES"/shared/shell/utils.sh
-source "$DOTFILES"/shared/shell/prompt.sh
-source "$DOTFILES"/shared/shell/history.sh
-source "$DOTFILES"/shared/shell/rust.sh
-source "$DOTFILES"/shared/shell/direnv.sh
-source "$DOTFILES"/shared/shell/fzf.sh
-source "$DOTFILES"/shared/shell/mise.sh
-source "$DOTFILES"/shared/shell/editor-binding.sh
-source "$DOTFILES"/shared/shell/less-pager.sh
-source "$DOTFILES"/shared/shell/claude.sh
-source "$DOTFILES"/shared/shell/aliases.sh
+_source() {
+    local file="$1"
+    if [[ -f "$file" ]]; then
+        source "$file"
+    else
+        echo "Warning: $file not found!"
+    fi
+}
+
+_source "$DOTFILES/shared/shell/homebrew.sh"
+_source "$DOTFILES/shared/shell/utils.sh"
+_source "$DOTFILES/shared/shell/prompt.sh"
+_source "$DOTFILES/shared/shell/history.sh"
+_source "$DOTFILES/shared/shell/rust.sh"
+_source "$DOTFILES/shared/shell/direnv.sh"
+_source "$DOTFILES/shared/shell/fzf.sh"
+_source "$DOTFILES/shared/shell/mise.sh"
+_source "$DOTFILES/shared/shell/editor-binding.sh"
+_source "$DOTFILES/shared/shell/less-pager.sh"
+_source "$DOTFILES/shared/shell/claude.sh"
+_source "$DOTFILES/shared/shell/aliases.sh"
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
@@ -35,7 +44,7 @@ shopt -s checkwinsize
 
 # set variable identifying the chroot you work in (used in the prompt below)
 if [ "${debian_chroot:-}" = "" ] && [ -r /etc/debian_chroot ]; then
-	debian_chroot=$(cat /etc/debian_chroot)
+    debian_chroot=$(cat /etc/debian_chroot)
 fi
 
 COLOR_RED="\033[0;31m"
@@ -57,47 +66,46 @@ esac
 #force_color_prompt=yes
 
 if [ "$force_color_prompt" != "" ]; then
-	if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-		# We have color support; assume it's compliant with Ecma-48
-		# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-		# a case would tend to support setf rather than setaf.)
-		color_prompt=yes
-	else
-		color_prompt=
-	fi
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
+    else
+        color_prompt=
+    fi
 fi
 
 if [ "$color_prompt" = yes ]; then
-	PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 else
-	PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
 unset color_prompt force_color_prompt
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
 xterm* | rxvt*)
-	# PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-	PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-	;;
+    # PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
 *) ;;
 esac
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
-	test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-	alias ls='ls --color=auto'
-	#alias dir='dir --color=auto'
-	#alias vdir='vdir --color=auto'
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
 
-	alias grep='grep --color=auto'
-	alias fgrep='fgrep --color=auto'
-	alias egrep='egrep --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
 fi
 
 # colored GCC warnings and errors
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -105,21 +113,21 @@ fi
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
 if [ -f ~/.bash_aliases ]; then
-	. ~/.bash_aliases
+    _source ~/.bash_aliases
 fi
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
-	if [ -f /usr/share/bash-completion/bash_completion ]; then
-		. /usr/share/bash-completion/bash_completion
-	elif [ -f /etc/bash_completion ]; then
-		. /etc/bash_completion
-	fi
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        _source /usr/share/bash-completion/bash_completion
+    elif [ -f /etc/bash_completion ]; then
+        _source /etc/bash_completion
+    fi
 fi
 
 # Source local configuration
 if [[ -f ~/.bashrc.local ]]; then
-	source ~/.bashrc.local
+    _source ~/.bashrc.local
 fi
