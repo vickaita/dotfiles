@@ -157,6 +157,9 @@ install_mac() {
         install_casks "${MAC_CASK_PACKAGES[@]}"
     fi
 
+    # Setup Node.js LTS
+    setup_nodejs_lts
+
     log_info "macOS tools installation complete!"
 }
 
@@ -176,6 +179,9 @@ install_ubuntu() {
     install_mise_ubuntu
     install_gh_ubuntu
     install_difftastic_ubuntu
+
+    # Setup Node.js LTS
+    setup_nodejs_lts
 
     log_info "Ubuntu tools installation complete!"
 }
@@ -214,6 +220,30 @@ install_difftastic_ubuntu() {
 
     log_info "Installing difftastic via snap..."
     sudo snap install difftastic
+}
+
+# Setup Node.js LTS using mise
+setup_nodejs_lts() {
+    if ! command -v mise >/dev/null 2>&1; then
+        log_warn "mise not found, skipping Node.js setup"
+        return
+    fi
+
+    log_info "Setting up Node.js LTS via mise..."
+
+    # Install the latest LTS version and set as global default
+    if mise install node@lts && mise use -g node@lts; then
+        log_info "Node.js LTS installed and set as global default"
+
+        # Verify installation
+        if mise exec -- node --version >/dev/null 2>&1; then
+            local node_version
+            node_version=$(mise exec -- node --version)
+            log_info "Node.js version: $node_version"
+        fi
+    else
+        log_error "Failed to install Node.js LTS"
+    fi
 }
 
 # Check and manage SSH keys (improved idempotency)
@@ -285,7 +315,6 @@ create_ssh_key() {
         esac
     done
 }
-
 
 # Create ~/.config directory if it doesn't exist; this prevents issues with stow
 # creating a symlink to the config directory in the first stowed config
@@ -364,7 +393,6 @@ stow_configs() {
         "ghostty"
         "htop"
         "mise"
-        "npm"
         "nvim"
         "prettier"
         "tmux"
@@ -436,7 +464,6 @@ main() {
     else
         log_info "Skipping template processing (--skip-templates)"
     fi
-
 
     if [[ "${SKIP_SSH:-false}" != "true" ]]; then
         manage_ssh_keys

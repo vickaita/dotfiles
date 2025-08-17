@@ -153,13 +153,13 @@ After setup, you can customize configurations in:
 ### macOS Specific
 
 - **Package Manager**: homebrew
-- **Tools**: fd, gh (GitHub CLI), pyenv, fnm (Fast Node Manager)
+- **Tools**: fd, gh (GitHub CLI)
 - **Applications**: ghostty (via Homebrew Cask)
 
 ### Ubuntu Specific
 
 - **Tools**: fd-find
-- **Installed via script**: fnm, pyenv, GitHub CLI
+- **Installed via script**: mise, GitHub CLI
 
 ## Shell Performance
 
