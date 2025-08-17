@@ -30,5 +30,9 @@ if [ "$ZSH_VERSION" != "" ]; then
 fi
 
 if [ "$BASH_VERSION" != "" ]; then
-    PROMPT_COMMAND='history -a; history -c; history -r; __git_ps1 "\[\033[36m\]\w" "\[\033[0;0m\] $ " " \[\033[1;34m\][\[\033[1;31m\]%s\[\033[1;34m\]]"'
+    __prompt_command() {
+        history -a
+        __git_ps1 "\[\033[36m\]\w" "\[\033[0;0m\] $ " " \[\033[1;34m\][\[\033[1;31m\]%s\[\033[1;34m\]]"
+    }
+    PROMPT_COMMAND+=(__prompt_command)
 fi

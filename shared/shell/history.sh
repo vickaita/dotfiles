@@ -23,7 +23,7 @@ if [[ "$CURRENT_SHELL" == "zsh" ]]; then
     # periodically re-written to trim it when the number of lines grows 20%
     # beyond the value specified by $SAVEHIST (see also the HIST_SAVE_BY_COPY
     # option).
-    # NOTE: Diabled because INC_APPEND_HISTORY_TIME is set instead.
+    # NOTE: Disabled because SHARE_HISTORY is set instead.
     # APPEND_HISTORY <D>
 
     # Perform textual history expansion, csh-style, treating the character ‘!’
@@ -136,7 +136,7 @@ if [[ "$CURRENT_SHELL" == "zsh" ]]; then
     # periodically re-written to trim it when the number of lines grows 20%
     # beyond the value specified by $SAVEHIST (see also the HIST_SAVE_BY_COPY
     # option).
-    # NOTE: Diabled because INC_APPEND_HISTORY_TIME is set instead.
+    # NOTE: Disabled because SHARE_HISTORY is set instead.
     # INC_APPEND_HISTORY
 
     # This option is a variant of INC_APPEND_HISTORY in which, where possible,
@@ -146,9 +146,10 @@ if [[ "$CURRENT_SHELL" == "zsh" ]]; then
     # entry will not be available immediately from other instances of the shell
     # that are using the same history file.
     #
-    # This option is only useful if INC_APPEND_HISTORY and SHARE_HISTORY are
-    # turned off. The three options should be considered mutually exclusive.
-    setopt INC_APPEND_HISTORY_TIME
+    # NOTE: Disabled because SHARE_HISTORY is set instead for real-time history sharing between shells.
+    # The three options should be considered mutually exclusive.
+    # setopt INC_APPEND_HISTORY_TIME
+    unsetopt INC_APPEND_HISTORY_TIME
 
     # This option both imports new commands from the history file, and also
     # causes your typed commands to be appended to the history file (the latter
@@ -167,8 +168,8 @@ if [[ "$CURRENT_SHELL" == "zsh" ]]; then
     # you may wish to turn SHARE_HISTORY off, INC_APPEND_HISTORY or
     # INC_APPEND_HISTORY_TIME (see above) on, and then manually import commands
     # whenever you need them using ‘fc -RI’.
-    # NOTE: Diabled because INC_APPEND_HISTORY_TIME is set instead.
-    # SHARE_HISTORY <K>
+    # NOTE: Enabled for real-time history sharing between Zsh sessions.
+    setopt SHARE_HISTORY # <K>
 
 elif [[ "$CURRENT_SHELL" == "bash" ]]; then
     export HISTFILE=~/.bash_history
