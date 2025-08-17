@@ -381,7 +381,8 @@ process_erb_template() {
 
 # Create local configuration files from ERB templates
 create_local_configs() {
-    local templates_dir="$(dirname "$0")/templates"
+    local templates_dir
+    templates_dir="$(dirname "$0")/templates"
 
     if [[ ! -d "$templates_dir" ]]; then
         log_warn "Templates directory not found at $templates_dir"
