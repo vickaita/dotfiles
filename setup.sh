@@ -427,27 +427,27 @@ stow_configs() {
 # Install TMux Plugin Manager (Ubuntu only - macOS uses homebrew tpm package)
 install_tmux_plugin_manager_ubuntu() {
     local tpm_dir="$HOME/.tmux/plugins/tpm"
-    
+
     if [[ -d "$tpm_dir" ]]; then
         log_info "TMux Plugin Manager already installed at $tpm_dir"
         return
     fi
-    
+
     if ! command -v tmux >/dev/null 2>&1; then
         log_warn "tmux not found, skipping TMux Plugin Manager installation"
         return
     fi
-    
+
     if ! command -v git >/dev/null 2>&1; then
         log_warn "git not found, skipping TMux Plugin Manager installation"
         return
     fi
-    
+
     log_info "Installing TMux Plugin Manager for Ubuntu..."
-    
+
     # Create .tmux/plugins directory if it doesn't exist
     mkdir -p "$(dirname "$tpm_dir")"
-    
+
     if git clone https://github.com/tmux-plugins/tpm "$tpm_dir"; then
         log_info "TMux Plugin Manager installed successfully to $tpm_dir"
     else
@@ -582,7 +582,7 @@ while [[ $# -gt 0 ]]; do
         echo "  --skip-templates   Skip template processing"
         echo "  --skip-ssh         Skip SSH key management"
         echo "  --skip-stow        Skip stowing configuration files"
-        echo "  --help            Show this help message"
+        echo "  --help             Show this help message"
         exit 0
         ;;
     *)
