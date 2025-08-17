@@ -1,5 +1,10 @@
 # Adds a segment to the path if it's not already there
 prepend_to_path() {
+    if [ ! -d "$1" ]; then
+        echo "WARN: directory '$1' does not exist" >&2
+        return
+    fi
+
     if [[ ! ":$PATH:" == *":$1:"* ]]; then
         export PATH="$1:$PATH"
     fi
@@ -7,6 +12,11 @@ prepend_to_path() {
 
 # Adds a segment to the end of the path if it's not already there
 append_to_path() {
+    if [ ! -d "$1" ]; then
+        echo "WARN: directory '$1' does not exist" >&2
+        return
+    fi
+
     if [[ ! ":$PATH:" == *":$1:"* ]]; then
         export PATH="$PATH:$1"
     fi
