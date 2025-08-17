@@ -296,12 +296,13 @@ manage_ssh_keys() {
     # Check for existing keys
     local keys_found=false
     if [[ -d "$key_dir" ]]; then
-        for key in "$key_dir"/*.pub; do
-            if [[ -e "$key" ]]; then
-                keys_found=true
+        mapfile -t pub_keys < <(find "$key_dir" -maxdepth 1 -name '*.pub' -print)
+        if [[ ${#pub_keys[@]} -gt 0 ]]; then
+            keys_found=true
+            for key in "${pub_keys[@]}"; do
                 log_info "Found key: $(basename "$key")"
-            fi
-        done
+            done
+        fi
     fi
 
     if [[ "$keys_found" = "false" ]]; then
