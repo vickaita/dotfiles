@@ -5,6 +5,7 @@ set -euo pipefail # Exit on error, undefined vars, pipe failures
 
 # Identify the OS
 OS="$(uname)"
+DOTFILES="$(dirname "$(realpath "$0")")"
 
 # Color output for better UX
 readonly RED='\033[0;31m'
@@ -423,6 +424,32 @@ stow_configs() {
     log_info "Stowing complete!"
 }
 
+# Trust mise configuration files
+trust_mise_configs() {
+    if command -v mise >/dev/null 2>&1; then
+        local configs=()
+
+        if [[ -f "$DOTFILES/mise.toml" ]]; then
+            configs+=("$DOTFILES/mise.toml")
+        fi
+
+        if [[ -d "$DOTFILES/mise" ]]; then
+            while IFS= read -r -d '' file; do
+                configs+=("$file")
+            done < <(find "$DOTFILES/mise" -name '*.toml' -print0)
+        fi
+
+        if [[ ${#configs[@]} -gt 0 ]]; then
+            log_info "Trusting mise configuration files..."
+            for config in "${configs[@]}"; do
+                mise trust --yes "$config"
+            done
+        fi
+    else
+        log_warn "mise not installed; skipping mise trust step"
+    fi
+}
+
 # Main function
 main() {
     log_info "Starting system setup..."
@@ -451,6 +478,9 @@ main() {
     else
         log_info "Skipping package installation (--skip-packages)"
     fi
+
+    # Trust mise configuration files
+    trust_mise_configs
 
     # Common post-installation tasks
     if [[ "${SKIP_CONFIGS:-false}" != "true" ]]; then

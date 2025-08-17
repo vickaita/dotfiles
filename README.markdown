@@ -80,6 +80,14 @@ stow zsh       # Zsh configuration
 stow tmux      # Tmux configuration
 ```
 
+**Note:** When setting up manually, trust the repository's Mise configuration files so they can be processed correctly:
+
+```bash
+mise trust ~/.dotfiles/mise.toml ~/.dotfiles/mise/.config/mise/config.toml
+```
+
+The `setup.sh` script performs this automatically.
+
 ## Available Modules
 
 ### Editors & IDEs
