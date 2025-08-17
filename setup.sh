@@ -45,7 +45,6 @@ COMMON_PACKAGES=(
     stow
     tmux
     tmuxinator
-    tpm
     tree
     uv
     vim
@@ -54,7 +53,7 @@ COMMON_PACKAGES=(
     zellij
 )
 
-MAC_SPECIFIC_PACKAGES=(fd gh mise difftastic)
+MAC_SPECIFIC_PACKAGES=(fd gh mise difftastic tpm)
 MAC_CASK_PACKAGES=(ghostty)
 UBUNTU_SPECIFIC_PACKAGES=(fd-find)
 
@@ -180,6 +179,7 @@ install_ubuntu() {
     install_mise_ubuntu
     install_gh_ubuntu
     install_difftastic_ubuntu
+    install_tmux_plugin_manager_ubuntu
 
     # Setup Node.js LTS
     setup_nodejs_lts
@@ -422,6 +422,37 @@ stow_configs() {
     done
 
     log_info "Stowing complete!"
+}
+
+# Install TMux Plugin Manager (Ubuntu only - macOS uses homebrew tpm package)
+install_tmux_plugin_manager_ubuntu() {
+    local tpm_dir="$HOME/.tmux/plugins/tpm"
+    
+    if [[ -d "$tpm_dir" ]]; then
+        log_info "TMux Plugin Manager already installed at $tpm_dir"
+        return
+    fi
+    
+    if ! command -v tmux >/dev/null 2>&1; then
+        log_warn "tmux not found, skipping TMux Plugin Manager installation"
+        return
+    fi
+    
+    if ! command -v git >/dev/null 2>&1; then
+        log_warn "git not found, skipping TMux Plugin Manager installation"
+        return
+    fi
+    
+    log_info "Installing TMux Plugin Manager for Ubuntu..."
+    
+    # Create .tmux/plugins directory if it doesn't exist
+    mkdir -p "$(dirname "$tpm_dir")"
+    
+    if git clone https://github.com/tmux-plugins/tpm "$tpm_dir"; then
+        log_info "TMux Plugin Manager installed successfully to $tpm_dir"
+    else
+        log_error "Failed to install TMux Plugin Manager"
+    fi
 }
 
 # Trust mise configuration files
