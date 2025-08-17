@@ -32,6 +32,7 @@ COMMON_PACKAGES=(
     fzf
     git
     glances
+    gnupg
     htop
     jq
     lazygit
@@ -195,7 +196,41 @@ install_mise_ubuntu() {
     fi
 
     log_info "Installing mise via script..."
-    curl https://mise.run | sh
+
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    local sig_file="$tmp_dir/install.sh.sig"
+    local installer="$tmp_dir/install.sh"
+    local mise_gpg_fingerprint="24853EC9F655CE80B48E6C3A8B81C9D17413A06D"
+
+    # Import mise GPG key if missing
+    if ! gpg --list-keys "$mise_gpg_fingerprint" >/dev/null 2>&1; then
+        if ! curl -fsSL https://github.com/jdx.gpg | gpg --import >/dev/null 2>&1; then
+            log_error "Failed to import mise GPG key"
+            rm -rf "$tmp_dir"
+            return 1
+        fi
+    fi
+
+    if ! curl -fsSL https://github.com/jdx/mise/releases/latest/download/install.sh.sig -o "$sig_file"; then
+        log_error "Failed to download mise installer signature"
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    if ! gpg --decrypt "$sig_file" > "$installer" 2>/dev/null; then
+        log_error "Mise installer signature verification failed"
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    if ! sh "$installer"; then
+        log_error "Mise installation script failed"
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    rm -rf "$tmp_dir"
 }
 
 # Install GitHub CLI for Ubuntu
