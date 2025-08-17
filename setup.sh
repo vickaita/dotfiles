@@ -93,7 +93,7 @@ install_packages() {
             brew install "${to_install[@]}"
         elif [[ "$OS" = "Linux" ]]; then
             log_info "Installing packages: ${to_install[*]}"
-            sudo apt install -y "${to_install[@]}"
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${to_install[@]}"
         fi
     else
         log_info "All packages are already installed"
