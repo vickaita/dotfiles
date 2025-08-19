@@ -908,14 +908,7 @@ local function extract_checkbox_items(lines, buffer_id)
     if status then
       local indent = #(line:match("^(%s*)") or "")
       -- Extract the text content after the checkbox
-      -- First find the checkbox pattern, then get everything after it
-      local bullet_prefix = line:match("^(%s*" .. config.bullet_pattern .. " +)") or line:match("^(%s*%d+%. +)")
-      local text = ""
-      if bullet_prefix then
-        local checkbox_end = bullet_prefix:len() + 4 -- length of "[x] " or "[ ] " etc
-        text = line:sub(checkbox_end) or ""
-        text = text:match("^%s*(.-)%s*$") or "" -- trim whitespace
-      end
+      local text = line:match("%[.%]%s*(.*)") or ""
       table.insert(items, {
         text = text,
         status = status,
