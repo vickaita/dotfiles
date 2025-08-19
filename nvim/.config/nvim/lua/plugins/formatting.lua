@@ -85,38 +85,5 @@ return {
         zsh = { "shfmt" },
       }
     end)(),
-    formatters = {
-      dprint = {
-        condition = function(self, ctx)
-          -- Check if dprint.json exists in project or use inline config
-          local cwd = vim.fn.getcwd()
-          local config_path = cwd .. "/dprint.json"
-          return vim.uv.fs_stat(config_path) ~= nil
-        end,
-        args = function(self, ctx)
-          -- If no config file, use inline config for markdown
-          local cwd = vim.fn.getcwd()
-          local config_path = cwd .. "/dprint.json"
-          if vim.uv.fs_stat(config_path) then
-            return { "fmt", "--stdin", ctx.filename }
-          else
-            return {
-              "fmt",
-              "--stdin",
-              ctx.filename,
-              "--config",
-              vim.json.encode({
-                lineWidth = vim.bo.textwidth > 0 and vim.bo.textwidth or 80,
-                markdown = {
-                  textWrap = "maintain", -- preserve checkbox formatting
-                },
-                includes = { "**/*.md" },
-                plugins = { "https://plugins.dprint.dev/markdown-0.15.3.wasm" },
-              }),
-            }
-          end
-        end,
-      },
-    },
   },
 }
