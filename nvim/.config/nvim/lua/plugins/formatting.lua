@@ -75,7 +75,7 @@ return {
         json = json_formatters,
         jsonc = json_formatters,
         yaml = { "prettier" },
-        markdown = { "dprint", "prettier", stop_after_first = true },
+        markdown = { "prettier" },
         graphql = { "prettier" },
         handlebars = { "prettier" },
         go = { "goimports", "gofmt" },
