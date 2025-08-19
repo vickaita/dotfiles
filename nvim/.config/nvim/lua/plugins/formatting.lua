@@ -108,7 +108,7 @@ return {
               vim.json.encode({
                 lineWidth = vim.bo.textwidth > 0 and vim.bo.textwidth or 80,
                 markdown = {
-                  textWrap = "always",
+                  textWrap = "maintain", -- preserve checkbox formatting
                 },
                 includes = { "**/*.md" },
                 plugins = { "https://plugins.dprint.dev/markdown-0.15.3.wasm" },
