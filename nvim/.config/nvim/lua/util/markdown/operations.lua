@@ -249,6 +249,7 @@ function diff_trees(old_ast, new_ast)
           content = new_item.content,
           status = new_item.status,
           indent = new_item.indent,
+          line_number = new_item.line_number,
           type = "added",
           change_type = "added",
         })
@@ -259,6 +260,7 @@ function diff_trees(old_ast, new_ast)
           status = new_item.status,
           prev_status = old_item.status,
           indent = new_item.indent,
+          line_number = new_item.line_number,
           type = "status_changed",
           change_type = "status_changed",
         })
@@ -275,6 +277,7 @@ function diff_trees(old_ast, new_ast)
           content = old_item.content,
           status = old_item.status,
           indent = old_item.indent,
+          line_number = old_item.line_number,
           type = "removed",
           change_type = "removed",
         })
@@ -282,26 +285,39 @@ function diff_trees(old_ast, new_ast)
     end
   end
 
-  -- Find parent items with child activity
+  -- Find all ancestor items with child activity
   local parent_activity = {}
   for _, change in ipairs(changes) do
     if change.indent > 0 then
-      -- This is a child item that changed, find its parent(s)
-      for _, new_item in ipairs(new_items) do
-        if new_item.indent < change.indent and new_item.content and new_item.content ~= "" then
-          -- This could be a parent - check if it's the immediate parent
-          local is_immediate_parent = true
+      -- This is a child item that changed, find all its ancestors in the hierarchical parent chain
+      -- An ancestor is any item that:
+      -- 1. Has lower indentation than the changed item
+      -- 2. Appears before the changed item in the document
+      -- 3. Is in the direct hierarchical path (no sibling at same level between them)
+      
+      local change_line = change.line_number or 0
+      for _, potential_ancestor in ipairs(new_items) do
+        local ancestor_line = potential_ancestor.line_number or 0
+        if potential_ancestor.indent < change.indent and 
+           potential_ancestor.content and potential_ancestor.content ~= "" and
+           ancestor_line < change_line then
+          
+          -- Check if this is a true ancestor by ensuring no sibling blocks the path
+          local is_true_ancestor = true
           for _, other_item in ipairs(new_items) do
-            if other_item.indent > new_item.indent and other_item.indent < change.indent then
-              is_immediate_parent = false
+            local other_line = other_item.line_number or 0
+            -- A sibling would have the same indentation level and come between ancestor and change
+            if other_item.indent == potential_ancestor.indent and 
+               other_line > ancestor_line and other_line < change_line then
+              is_true_ancestor = false
               break
             end
           end
-
-          if is_immediate_parent then
-            local parent_key = new_item.content:lower()
+          
+          if is_true_ancestor then
+            local parent_key = potential_ancestor.content:lower()
             if not parent_activity[parent_key] then
-              -- Check if this parent already has a change recorded
+              -- Check if this ancestor already has a change recorded
               local already_has_change = false
               for _, existing_change in ipairs(changes) do
                 if existing_change.content:lower() == parent_key then
@@ -312,15 +328,15 @@ function diff_trees(old_ast, new_ast)
 
               if not already_has_change then
                 parent_activity[parent_key] = {
-                  content = new_item.content,
-                  status = new_item.status,
-                  indent = new_item.indent,
+                  content = potential_ancestor.content,
+                  status = potential_ancestor.status,
+                  indent = potential_ancestor.indent,
+                  line_number = potential_ancestor.line_number,
                   type = "parent_activity",
                   change_type = "child_activity",
                 }
               end
             end
-            break -- Found the immediate parent
           end
         end
       end
@@ -330,6 +346,30 @@ function diff_trees(old_ast, new_ast)
   -- Add parent activity changes
   for _, activity in pairs(parent_activity) do
     table.insert(changes, activity)
+  end
+
+  -- Sort changes to maintain document order and hierarchical structure
+  table.sort(changes, function(a, b)
+    -- First sort by line number to maintain document order
+    local line_a = a.line_number or 0
+    local line_b = b.line_number or 0
+    
+    if line_a ~= line_b then
+      return line_a < line_b
+    end
+    
+    -- For items at the same line (ancestors/descendants), sort by indent (shallowest first)
+    return a.indent < b.indent
+  end)
+  
+  -- Debug output (temporary)
+  if vim.g.debug_compare_daily then
+    print("=== DEBUG: Changes after sorting ===")
+    for i, change in ipairs(changes) do
+      print(string.format("%2d: '%s' (indent=%d, line=%s, type=%s)", 
+        i, change.content, change.indent, 
+        tostring(change.line_number), change.change_type))
+    end
   end
 
   return changes
