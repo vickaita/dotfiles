@@ -251,6 +251,13 @@ return {
             end, {
               desc = "Compare current day with previous day and show new items",
             })
+
+            -- Test AST functions (for debugging/development)
+            vim.api.nvim_create_user_command("TestMarkdownAST", function()
+              require("util.markdown").test_ast_functions()
+            end, {
+              desc = "Test the new AST-based markdown processing functions",
+            })
           end
         end,
       })
