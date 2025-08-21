@@ -8,7 +8,7 @@
 ---        if no children with status -> keep original status
 --- @param ast ASTNode: root node of the AST (modified in place)
 --- @return ASTNode: the modified AST
-function propagate_checkbox_status(ast)
+local function propagate_checkbox_status(ast)
   if not ast then
     return ast
   end
@@ -100,7 +100,7 @@ end
 --- If a completed item has incomplete descendants, it's converted to progress
 --- @param ast ASTNode: root node of the AST (modified in place)
 --- @return ASTNode: the modified AST
-function prune_completed_branches(ast)
+local function prune_completed_branches(ast)
   if not ast then
     return ast
   end
@@ -208,167 +208,139 @@ local function flatten_ast(ast)
   return items
 end
 
---- Compare two ASTs and find differences
+--- Compare two ASTs and find differences using tree walking
 --- @param old_ast ASTNode: previous AST state
 --- @param new_ast ASTNode: current AST state
---- @return table[]: array of changes with type: "added", "removed", "status_changed", "parent_activity"
-function diff_trees(old_ast, new_ast)
+--- @return table[]: array of changes in hierarchical order
+local function diff_trees(old_ast, new_ast)
   if not new_ast then
     return {}
   end
 
-  local old_items = old_ast and flatten_ast(old_ast) or {}
-  local new_items = flatten_ast(new_ast)
+  -- Create lookup maps for efficient comparison
+  local old_map = {}
+  if old_ast then
+    local old_items = flatten_ast(old_ast)
+    for _, item in ipairs(old_items) do
+      if item.content and item.content ~= "" then
+        old_map[item.content:lower()] = item
+      end
+    end
+  end
 
   local changes = {}
 
-  -- Create maps for efficient lookup
-  local old_map = {}
-  for _, item in ipairs(old_items) do
-    if item.content and item.content ~= "" then
-      old_map[item.content:lower()] = item
-    end
-  end
+  -- First pass: determine which nodes have changes
+  local node_changes = {}
 
-  local new_map = {}
-  for _, item in ipairs(new_items) do
-    if item.content and item.content ~= "" then
-      new_map[item.content:lower()] = item
-    end
-  end
+  local function analyze_tree(node)
+    local node_has_direct_changes = false
+    local change_info = nil
 
-  -- Find new items and status changes
-  for _, new_item in ipairs(new_items) do
-    if new_item.content and new_item.content ~= "" then
-      local normalized_content = new_item.content:lower()
+    -- Check if this node itself has direct changes (only for list items)
+    if (node.type == "checkbox" or node.type == "list") and node.content and node.content ~= "" then
+      local normalized_content = node.content:lower()
       local old_item = old_map[normalized_content]
 
       if not old_item then
         -- New item
-        table.insert(changes, {
-          content = new_item.content,
-          status = new_item.status,
-          indent = new_item.indent,
-          line_number = new_item.line_number,
+        change_info = {
+          content = node.content,
+          status = node.status,
+          indent = node.indent,
+          line_number = node.line_number,
           type = "added",
           change_type = "added",
-        })
-      elseif old_item.status ~= new_item.status and new_item.type == "checkbox" then
+        }
+        node_has_direct_changes = true
+      elseif old_item.status ~= node.status and node.type == "checkbox" then
         -- Status changed
-        table.insert(changes, {
-          content = new_item.content,
-          status = new_item.status,
+        change_info = {
+          content = node.content,
+          status = node.status,
           prev_status = old_item.status,
-          indent = new_item.indent,
-          line_number = new_item.line_number,
+          indent = node.indent,
+          line_number = node.line_number,
           type = "status_changed",
           change_type = "status_changed",
-        })
+        }
+        node_has_direct_changes = true
       end
+    end
+
+    -- Recursively analyze children
+    local any_child_changed = false
+    for _, child in ipairs(node.children) do
+      local child_changed = analyze_tree(child)
+      if child_changed then
+        any_child_changed = true
+      end
+    end
+
+    -- Store change info for this node
+    if node_has_direct_changes then
+      node_changes[node] = change_info
+    elseif
+      any_child_changed
+      and (node.type == "checkbox" or node.type == "list")
+      and node.content
+      and node.content ~= ""
+    then
+      node_changes[node] = {
+        content = node.content,
+        status = node.status,
+        indent = node.indent,
+        line_number = node.line_number,
+        type = "parent_activity",
+        change_type = "child_activity",
+      }
+    end
+
+    return node_has_direct_changes or any_child_changed
+  end
+
+  -- Second pass: collect changes in pre-order traversal (parent before children)
+  local function collect_changes(node)
+    -- Add this node's change if it has one
+    if node_changes[node] then
+      table.insert(changes, node_changes[node])
+    end
+
+    -- Recursively collect children's changes
+    for _, child in ipairs(node.children) do
+      collect_changes(child)
     end
   end
 
-  -- Find removed items
-  for _, old_item in ipairs(old_items) do
-    if old_item.content and old_item.content ~= "" then
-      local normalized_content = old_item.content:lower()
-      if not new_map[normalized_content] then
-        table.insert(changes, {
-          content = old_item.content,
-          status = old_item.status,
-          indent = old_item.indent,
-          line_number = old_item.line_number,
-          type = "removed",
-          change_type = "removed",
-        })
+  -- Run both passes
+  analyze_tree(new_ast)
+  collect_changes(new_ast)
+
+  -- Find removed items (items that exist in old but not in new)
+  if old_ast then
+    local new_map = {}
+    local new_items = flatten_ast(new_ast)
+    for _, item in ipairs(new_items) do
+      if item.content and item.content ~= "" then
+        new_map[item.content:lower()] = item
       end
     end
-  end
 
-  -- Find all ancestor items with child activity
-  local parent_activity = {}
-  for _, change in ipairs(changes) do
-    if change.indent > 0 then
-      -- This is a child item that changed, find all its ancestors in the hierarchical parent chain
-      -- An ancestor is any item that:
-      -- 1. Has lower indentation than the changed item
-      -- 2. Appears before the changed item in the document
-      -- 3. Is in the direct hierarchical path (no sibling at same level between them)
-      
-      local change_line = change.line_number or 0
-      for _, potential_ancestor in ipairs(new_items) do
-        local ancestor_line = potential_ancestor.line_number or 0
-        if potential_ancestor.indent < change.indent and 
-           potential_ancestor.content and potential_ancestor.content ~= "" and
-           ancestor_line < change_line then
-          
-          -- Check if this is a true ancestor by ensuring no sibling blocks the path
-          local is_true_ancestor = true
-          for _, other_item in ipairs(new_items) do
-            local other_line = other_item.line_number or 0
-            -- A sibling would have the same indentation level and come between ancestor and change
-            if other_item.indent == potential_ancestor.indent and 
-               other_line > ancestor_line and other_line < change_line then
-              is_true_ancestor = false
-              break
-            end
-          end
-          
-          if is_true_ancestor then
-            local parent_key = potential_ancestor.content:lower()
-            if not parent_activity[parent_key] then
-              -- Check if this ancestor already has a change recorded
-              local already_has_change = false
-              for _, existing_change in ipairs(changes) do
-                if existing_change.content:lower() == parent_key then
-                  already_has_change = true
-                  break
-                end
-              end
-
-              if not already_has_change then
-                parent_activity[parent_key] = {
-                  content = potential_ancestor.content,
-                  status = potential_ancestor.status,
-                  indent = potential_ancestor.indent,
-                  line_number = potential_ancestor.line_number,
-                  type = "parent_activity",
-                  change_type = "child_activity",
-                }
-              end
-            end
-          end
+    local old_items = flatten_ast(old_ast)
+    for _, old_item in ipairs(old_items) do
+      if old_item.content and old_item.content ~= "" then
+        local normalized_content = old_item.content:lower()
+        if not new_map[normalized_content] then
+          table.insert(changes, {
+            content = old_item.content,
+            status = old_item.status,
+            indent = old_item.indent,
+            line_number = old_item.line_number,
+            type = "removed",
+            change_type = "removed",
+          })
         end
       end
-    end
-  end
-
-  -- Add parent activity changes
-  for _, activity in pairs(parent_activity) do
-    table.insert(changes, activity)
-  end
-
-  -- Sort changes to maintain document order and hierarchical structure
-  table.sort(changes, function(a, b)
-    -- First sort by line number to maintain document order
-    local line_a = a.line_number or 0
-    local line_b = b.line_number or 0
-    
-    if line_a ~= line_b then
-      return line_a < line_b
-    end
-    
-    -- For items at the same line (ancestors/descendants), sort by indent (shallowest first)
-    return a.indent < b.indent
-  end)
-  
-  -- Debug output (temporary)
-  if vim.g.debug_compare_daily then
-    print("=== DEBUG: Changes after sorting ===")
-    for i, change in ipairs(changes) do
-      print(string.format("%2d: '%s' (indent=%d, line=%s, type=%s)", 
-        i, change.content, change.indent, 
-        tostring(change.line_number), change.change_type))
     end
   end
 
@@ -383,4 +355,3 @@ M.prune_completed_branches = prune_completed_branches
 M.diff_trees = diff_trees
 
 return M
-
