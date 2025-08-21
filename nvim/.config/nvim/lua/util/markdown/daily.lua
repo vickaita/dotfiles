@@ -300,16 +300,16 @@ local function get_action_description(from_status, to_status, change_type)
     elseif to_status == "done" then
       return "Completed"
     else
-      return "Activity on"
+      return ""
     end
   elseif not from_status then
     -- New item
     if to_status == "done" then
-      return "Added and completed"
+      return "Completed"
     elseif to_status == "progress" then
-      return "Added and started"
+      return "Started"
     else
-      return "Added"
+      return ""
     end
   else
     -- Status change
@@ -581,4 +581,3 @@ M.compare_daily_changes = compare_daily_changes
 M.carry_over_and_process = carry_over_and_process
 
 return M
-
