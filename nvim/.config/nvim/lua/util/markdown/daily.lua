@@ -454,18 +454,21 @@ local function format_changes_section(changes, previous_date)
 
         if #content_lines > 0 then
           -- First line with action prefix
-          table.insert(lines, prefix .. "- " .. action .. " " .. content_lines[1])
+          local action_prefix = action ~= "" and (action .. " ") or ""
+          table.insert(lines, prefix .. "- " .. action_prefix .. content_lines[1])
           -- Additional lines with continuation indentation
           for i = 2, #content_lines do
             table.insert(lines, prefix .. "  " .. content_lines[i])
           end
         else
           -- Fallback for empty content
-          table.insert(lines, prefix .. "- " .. action .. " ")
+          local action_prefix = action ~= "" and (action .. " ") or ""
+          table.insert(lines, prefix .. "- " .. action_prefix)
         end
       else
         -- Fallback for no content
-        table.insert(lines, prefix .. "- " .. action .. " ")
+        local action_prefix = action ~= "" and (action .. " ") or ""
+        table.insert(lines, prefix .. "- " .. action_prefix)
       end
     end
   end
