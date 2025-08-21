@@ -36,3 +36,7 @@ rebuild-completions() {
     fi
     echo "💡 Tip: New completions are available for any software you just installed."
 }
+
+dotfiles() {
+    cd "$DOTFILES" || return
+}
