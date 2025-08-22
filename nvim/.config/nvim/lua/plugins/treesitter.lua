@@ -63,8 +63,8 @@ return {
             ["is"] = "@statement.inner",
             ["ad"] = "@assignment.outer",
             ["id"] = "@assignment.inner",
-            ["hl"] = "@assignment.lhs",
-            ["hr"] = "@assignment.rhs",
+            ["sl"] = "@assignment.lhs",
+            ["sr"] = "@assignment.rhs",
           },
         },
         move = {
