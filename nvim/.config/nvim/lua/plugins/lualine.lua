@@ -52,6 +52,7 @@ return {
       lualine_c = {
         {
           "filename",
+          path = 1, -- Show relative path
           cond = function()
             return vim.bo.filetype ~= "neo-tree"
           end,
