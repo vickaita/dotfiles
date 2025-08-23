@@ -5,7 +5,7 @@ typeset -A _zsh_file_times
 typeset -a _zsh_file_order
 
 # Timing wrapper that decorates the base safe_source function
-_timing_wrapper() {
+timing_wrapper() {
   local original_source_func="$1"
   local file="$2"
 

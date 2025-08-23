@@ -16,7 +16,7 @@ safe_source() {
 if [[ -n "$ZSH_PROFILE" ]]; then
     zmodload zsh/zprof
     source "$DOTFILES/zsh/profiling.zsh"
-    alias safe_source="_timing_wrapper safe_source"
+    alias safe_source="timing_wrapper safe_source"
 fi
 
 # Source shell configuration files
