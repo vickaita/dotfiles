@@ -29,10 +29,12 @@ COMMON_PACKAGES=(
     bat
     curl
     direnv
+    eza
     fzf
     git
     glances
     gnupg
+    gum
     htop
     jq
     lazygit
@@ -44,6 +46,7 @@ COMMON_PACKAGES=(
     shellharden
     shfmt
     stow
+    tldr
     tmux
     tmuxinator
     tree
@@ -51,7 +54,9 @@ COMMON_PACKAGES=(
     vim
     w3m
     wget
+    yq
     zellij
+    zoxide
 )
 
 MAC_SPECIFIC_PACKAGES=(fd gh mise difftastic tpm)
