@@ -4,6 +4,7 @@
 	username = vickaita
 [core]
 	editor = nvim
+	pager = less -FRX --mouse
 [init]
 	defaultBranch = main
 [diff]
