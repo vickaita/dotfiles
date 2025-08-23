@@ -218,33 +218,43 @@ install_homebrew() {
         install_casks "${CASK_PACKAGES[@]}"
     fi
 
-    # Setup Node.js LTS
-    setup_nodejs_lts
+    # Setup global language versions
+    setup_global_languages
 
     log_info "Package installation complete!"
 }
 
-# Setup Node.js LTS using mise
-setup_nodejs_lts() {
+# Setup global language versions using mise configuration
+setup_global_languages() {
     if ! command -v mise >/dev/null 2>&1; then
-        log_warn "mise not found, skipping Node.js setup"
+        log_warn "mise not found, skipping language setup"
         return
     fi
 
-    log_info "Setting up Node.js LTS via mise..."
+    log_info "Installing languages defined in mise configuration..."
 
-    # Install the latest LTS version and set as global default
-    if mise install node@lts && mise use -g node@lts; then
-        log_info "Node.js LTS installed and set as global default"
+    # Install all tools defined in mise config files (including stowed config.toml)
+    if mise install; then
+        log_info "Languages installed successfully"
 
-        # Verify installation
-        if mise exec -- node --version >/dev/null 2>&1; then
-            local node_version
-            node_version=$(mise exec -- node --version)
-            log_info "Node.js version: $node_version"
+        # Show installed versions
+        log_info "Installed language versions:"
+        if command -v node >/dev/null 2>&1 || mise which node >/dev/null 2>&1; then
+            local node_version=$(mise exec -- node --version 2>/dev/null || echo "not available")
+            log_info "  Node.js: $node_version"
+        fi
+        
+        if command -v python >/dev/null 2>&1 || mise which python >/dev/null 2>&1; then
+            local python_version=$(mise exec -- python --version 2>/dev/null || echo "not available")
+            log_info "  Python: $python_version"
+        fi
+        
+        if command -v ruby >/dev/null 2>&1 || mise which ruby >/dev/null 2>&1; then
+            local ruby_version=$(mise exec -- ruby --version 2>/dev/null | cut -d' ' -f2 || echo "not available")
+            log_info "  Ruby: $ruby_version"
         fi
     else
-        log_error "Failed to install Node.js LTS"
+        log_error "Failed to install languages from mise configuration"
     fi
 }
 
