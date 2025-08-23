@@ -30,22 +30,28 @@ COMMON_PACKAGES=(
     curl
     direnv
     eza
+    ffmpeg
     fzf
     git
     glances
     gnupg
     gum
     htop
+    imagemagick
     jq
     lazygit
     lesspipe
     lynx
     neovim
+    pandoc
+    poppler
     ripgrep
+    ripgrep-all
     shellcheck
     shellharden
     shfmt
     stow
+    tesseract
     tldr
     tmux
     tmuxinator
@@ -301,12 +307,13 @@ manage_ssh_keys() {
     # Check for existing keys
     local keys_found=false
     if [[ -d "$key_dir" ]]; then
-        mapfile -t pub_keys < <(find "$key_dir" -maxdepth 1 -name '*.pub' -print)
-        if [[ ${#pub_keys[@]} -gt 0 ]]; then
+        local pub_keys
+        pub_keys=$(find "$key_dir" -maxdepth 1 -name '*.pub' -print 2>/dev/null)
+        if [[ -n "$pub_keys" ]]; then
             keys_found=true
-            for key in "${pub_keys[@]}"; do
+            while IFS= read -r key; do
                 log_info "Found key: $(basename "$key")"
-            done
+            done <<< "$pub_keys"
         fi
     fi
 
