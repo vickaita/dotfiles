@@ -4,7 +4,7 @@
 typeset -A _zsh_file_times
 typeset -a _zsh_file_order
 
-# Timing wrapper that decorates the base _source function
+# Timing wrapper that decorates the base safe_source function
 _timing_wrapper() {
   local original_source_func="$1"
   local file="$2"
@@ -13,7 +13,7 @@ _timing_wrapper() {
   zmodload zsh/datetime
   local start_time=$EPOCHREALTIME
 
-  # Call the original _source function (handles file checking and sourcing)
+  # Call the original safe_source function (handles file checking and sourcing)
   $original_source_func "$file"
 
   # Only store timing if file was actually sourced (file exists)

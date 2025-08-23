@@ -1,9 +1,9 @@
 export CURRENT_SHELL="zsh"
 export DOTFILES="$HOME/.dotfiles"
 
-# Define custom function for sourcing files with an extra check to make sure the
-# file exists and warn if it doesn't.
-_source() {
+# Define custom function for sourcing files with an extra check to make sure
+# the file exists and warn if it doesn't.
+safe_source() {
     local file="$1"
     if [[ -f "$file" ]]; then
         source "$file"
@@ -16,24 +16,24 @@ _source() {
 if [[ -n "$ZSH_PROFILE" ]]; then
     zmodload zsh/zprof
     source "$DOTFILES/zsh/profiling.zsh"
-    alias _source="_timing_wrapper _source"
+    alias safe_source="_timing_wrapper safe_source"
 fi
 
 # Source shell configuration files
-_source "$DOTFILES/zsh/keybindings.zsh"
-_source "$DOTFILES/shared/shell/homebrew.sh"
-_source "$DOTFILES/shared/shell/utils.sh"
-_source "$DOTFILES/shared/shell/prompt.sh"
-_source "$DOTFILES/shared/shell/history.sh"
-_source "$DOTFILES/shared/shell/rust.sh"
-_source "$DOTFILES/shared/shell/direnv.sh"
-_source "$DOTFILES/shared/shell/fzf.sh"
-_source "$DOTFILES/shared/shell/mise.sh"
-_source "$DOTFILES/shared/shell/zoxide.sh"
-_source "$DOTFILES/shared/shell/editor-binding.sh"
-_source "$DOTFILES/shared/shell/less-pager.sh"
-_source "$DOTFILES/shared/shell/claude.sh"
-_source "$DOTFILES/shared/shell/aliases.sh"
+safe_source "$DOTFILES/zsh/keybindings.zsh"
+safe_source "$DOTFILES/shared/shell/homebrew.sh"
+safe_source "$DOTFILES/shared/shell/utils.sh"
+safe_source "$DOTFILES/shared/shell/prompt.sh"
+safe_source "$DOTFILES/shared/shell/history.sh"
+safe_source "$DOTFILES/shared/shell/rust.sh"
+safe_source "$DOTFILES/shared/shell/direnv.sh"
+safe_source "$DOTFILES/shared/shell/fzf.sh"
+safe_source "$DOTFILES/shared/shell/mise.sh"
+safe_source "$DOTFILES/shared/shell/zoxide.sh"
+safe_source "$DOTFILES/shared/shell/editor-binding.sh"
+safe_source "$DOTFILES/shared/shell/less-pager.sh"
+safe_source "$DOTFILES/shared/shell/claude.sh"
+safe_source "$DOTFILES/shared/shell/aliases.sh"
 
 # Configure completion system with smart daily caching
 # IMPORTANT: This must run AFTER all shell scripts that modify fpath
@@ -48,7 +48,7 @@ fi
 
 # Source local configuration
 if [[ -f "$HOME/.zshrc.local" ]]; then
-    _source "$HOME/.zshrc.local"
+    safe_source "$HOME/.zshrc.local"
 fi
 
 # Show profiling results if enabled

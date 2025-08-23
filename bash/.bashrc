@@ -12,7 +12,7 @@ export DOTFILES="$HOME"/.dotfiles
 
 export CURRENT_SHELL="bash"
 
-_source() {
+safesafe_source() {
     local file="$1"
     if [[ -f "$file" ]]; then
         source "$file"
@@ -21,19 +21,19 @@ _source() {
     fi
 }
 
-_source "$DOTFILES/shared/shell/homebrew.sh"
-_source "$DOTFILES/shared/shell/utils.sh"
-_source "$DOTFILES/shared/shell/prompt.sh"
-_source "$DOTFILES/shared/shell/history.sh"
-_source "$DOTFILES/shared/shell/rust.sh"
-_source "$DOTFILES/shared/shell/direnv.sh"
-_source "$DOTFILES/shared/shell/fzf.sh"
-_source "$DOTFILES/shared/shell/mise.sh"
-_source "$DOTFILES/shared/shell/zoxide.sh"
-_source "$DOTFILES/shared/shell/editor-binding.sh"
-_source "$DOTFILES/shared/shell/less-pager.sh"
-_source "$DOTFILES/shared/shell/claude.sh"
-_source "$DOTFILES/shared/shell/aliases.sh"
+safe_source "$DOTFILES/shared/shell/homebrew.sh"
+safe_source "$DOTFILES/shared/shell/utils.sh"
+safe_source "$DOTFILES/shared/shell/prompt.sh"
+safe_source "$DOTFILES/shared/shell/history.sh"
+safe_source "$DOTFILES/shared/shell/rust.sh"
+safe_source "$DOTFILES/shared/shell/direnv.sh"
+safe_source "$DOTFILES/shared/shell/fzf.sh"
+safe_source "$DOTFILES/shared/shell/mise.sh"
+safe_source "$DOTFILES/shared/shell/zoxide.sh"
+safe_source "$DOTFILES/shared/shell/editor-binding.sh"
+safe_source "$DOTFILES/shared/shell/less-pager.sh"
+safe_source "$DOTFILES/shared/shell/claude.sh"
+safe_source "$DOTFILES/shared/shell/aliases.sh"
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
@@ -114,7 +114,7 @@ fi
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
 if [ -f ~/.bash_aliases ]; then
-    _source ~/.bash_aliases
+    safe_source ~/.bash_aliases
 fi
 
 # enable programmable completion features (you don't need to enable
@@ -122,13 +122,13 @@ fi
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
     if [ -f /usr/share/bash-completion/bash_completion ]; then
-        _source /usr/share/bash-completion/bash_completion
+        safe_source /usr/share/bash-completion/bash_completion
     elif [ -f /etc/bash_completion ]; then
-        _source /etc/bash_completion
+        safe_source /etc/bash_completion
     fi
 fi
 
 # Source local configuration
 if [[ -f ~/.bashrc.local ]]; then
-    _source ~/.bashrc.local
+    safe_source ~/.bashrc.local
 fi
