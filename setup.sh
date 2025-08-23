@@ -263,6 +263,7 @@ manage_ssh_keys() {
     local key_dir="$HOME/.ssh"
     local default_key_rsa="$key_dir/id_rsa"
     local default_key_ed25519="$key_dir/id_ed25519"
+    local ssh_config="$key_dir/config"
 
     # Create SSH directory if it doesn't exist
     [[ ! -d "$key_dir" ]] && mkdir -p "$key_dir" && chmod 700 "$key_dir"
@@ -301,17 +302,25 @@ manage_ssh_keys() {
         fi
     else
         log_info "SSH keys already exist, skipping creation"
+        setup_ssh_agent_integration
     fi
+
+    # Always ensure SSH config is properly set up
+    setup_ssh_config
 }
 
 create_ssh_key() {
+    local email
+    read -rp "Enter your email for the SSH key: " email
+    
     echo "Which type of key would you like to create?"
     select key_type in "Ed25519" "RSA"; do
         case $key_type in
         Ed25519)
             if [[ ! -f "$default_key_ed25519" ]]; then
-                ssh-keygen -t ed25519 -f "$default_key_ed25519"
+                ssh-keygen -t ed25519 -C "$email" -f "$default_key_ed25519"
                 log_info "Ed25519 SSH key created!"
+                setup_ssh_agent_integration
             else
                 log_warn "Ed25519 key already exists at $default_key_ed25519"
             fi
@@ -319,8 +328,9 @@ create_ssh_key() {
             ;;
         RSA)
             if [[ ! -f "$default_key_rsa" ]]; then
-                ssh-keygen -t rsa -b 4096 -f "$default_key_rsa"
+                ssh-keygen -t rsa -b 4096 -C "$email" -f "$default_key_rsa"
                 log_info "RSA SSH key created!"
+                setup_ssh_agent_integration
             else
                 log_warn "RSA key already exists at $default_key_rsa"
             fi
@@ -328,6 +338,126 @@ create_ssh_key() {
             ;;
         esac
     done
+}
+
+# Set up SSH agent integration with platform-specific optimizations
+setup_ssh_agent_integration() {
+    local key_dir="$HOME/.ssh"
+    
+    log_info "Setting up SSH agent integration..."
+    
+    # Find SSH keys to add
+    local keys_to_add=()
+    [[ -f "$key_dir/id_ed25519" ]] && keys_to_add+=("$key_dir/id_ed25519")
+    [[ -f "$key_dir/id_rsa" ]] && keys_to_add+=("$key_dir/id_rsa")
+    
+    if [[ ${#keys_to_add[@]} -eq 0 ]]; then
+        log_warn "No SSH keys found to add to agent"
+        return
+    fi
+    
+    # Platform-specific setup
+    case "$OS" in
+        Darwin)
+            log_info "Setting up macOS Keychain integration..."
+            # Add keys to macOS Keychain
+            for key in "${keys_to_add[@]}"; do
+                if ssh-add --apple-use-keychain "$key" 2>/dev/null; then
+                    log_info "Added $(basename "$key") to macOS Keychain"
+                else
+                    log_warn "Failed to add $(basename "$key") to Keychain (may need passphrase)"
+                fi
+            done
+            ;;
+        Linux)
+            log_info "Setting up SSH agent for Linux..."
+            # Start ssh-agent if not already running
+            if [[ -z "${SSH_AUTH_SOCK:-}" ]]; then
+                eval "$(ssh-agent -s)" >/dev/null 2>&1
+            fi
+            
+            # Add keys to agent
+            for key in "${keys_to_add[@]}"; do
+                if ssh-add "$key" 2>/dev/null; then
+                    log_info "Added $(basename "$key") to SSH agent"
+                else
+                    log_warn "Failed to add $(basename "$key") to agent (may need passphrase)"
+                fi
+            done
+            ;;
+    esac
+}
+
+# Set up SSH config with best practices
+setup_ssh_config() {
+    local ssh_config="$HOME/.ssh/config"
+    local config_updated=false
+    
+    log_info "Configuring SSH client settings..."
+    
+    # Create config file if it doesn't exist
+    if [[ ! -f "$ssh_config" ]]; then
+        touch "$ssh_config"
+        chmod 600 "$ssh_config"
+    fi
+    
+    # Check if our config block already exists
+    if ! grep -q "# Dotfiles SSH Configuration" "$ssh_config"; then
+        log_info "Adding SSH configuration optimizations..."
+        
+        # Platform-specific configuration
+        case "$OS" in
+            Darwin)
+                cat >> "$ssh_config" << 'EOF'
+
+# Dotfiles SSH Configuration - macOS optimized
+Host *
+    # Use macOS Keychain for key management
+    AddKeysToAgent yes
+    UseKeychain yes
+    
+    # Security and performance optimizations
+    IdentitiesOnly yes
+    HashKnownHosts yes
+    
+    # Connection optimizations
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    
+    # Preferred key types (most secure first)
+    PubkeyAcceptedKeyTypes ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ssh-rsa
+EOF
+                ;;
+            Linux)
+                cat >> "$ssh_config" << 'EOF'
+
+# Dotfiles SSH Configuration - Linux optimized
+Host *
+    # Use SSH agent for key management
+    AddKeysToAgent yes
+    
+    # Security and performance optimizations
+    IdentitiesOnly yes
+    HashKnownHosts yes
+    
+    # Connection optimizations
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    
+    # Preferred key types (most secure first)
+    PubkeyAcceptedKeyTypes ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ssh-rsa
+EOF
+                ;;
+        esac
+        
+        config_updated=true
+    fi
+    
+    if [[ "$config_updated" = "true" ]]; then
+        log_info "SSH configuration updated with security optimizations"
+    else
+        log_info "SSH configuration already contains dotfiles settings"
+    fi
 }
 
 # Create ~/.config directory if it doesn't exist; this prevents issues with
