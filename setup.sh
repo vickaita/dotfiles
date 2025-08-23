@@ -5,7 +5,12 @@ set -euo pipefail # Exit on error, undefined vars, pipe failures
 
 # Identify the OS
 OS="$(uname)"
-DOTFILES="$(dirname "$(realpath "$0")")"
+# Get absolute path in a portable way (realpath doesn't exist on fresh macOS)
+if command -v realpath >/dev/null 2>&1; then
+    DOTFILES="$(dirname "$(realpath "$0")")"
+else
+    DOTFILES="$(cd "$(dirname "$0")" && pwd)"
+fi
 
 # Color output for better UX
 readonly RED='\033[0;31m'
@@ -28,10 +33,13 @@ log_error() {
 COMMON_PACKAGES=(
     bat
     curl
+    difftastic
     direnv
     eza
+    fd
     ffmpeg
     fzf
+    gh
     git
     glances
     gnupg
@@ -42,6 +50,7 @@ COMMON_PACKAGES=(
     lazygit
     lesspipe
     lynx
+    mise
     neovim
     pandoc
     poppler
@@ -55,6 +64,7 @@ COMMON_PACKAGES=(
     tldr
     tmux
     tmuxinator
+    tpm
     tree
     uv
     vim
@@ -65,18 +75,13 @@ COMMON_PACKAGES=(
     zoxide
 )
 
-MAC_SPECIFIC_PACKAGES=(fd gh mise difftastic tpm)
-MAC_CASK_PACKAGES=(ghostty)
-UBUNTU_SPECIFIC_PACKAGES=(fd-find)
+# GUI applications (casks) - work on both macOS and Linux with Homebrew
+CASK_PACKAGES=(ghostty)
 
-# Check if a package is installed (cross-platform)
+# Check if a Homebrew package is installed (universal)
 is_package_installed() {
     local package="$1"
-    if [[ "$OS" = "Darwin" ]]; then
-        brew list --formula | grep -q "^${package}$" 2>/dev/null
-    elif [[ "$OS" = "Linux" ]]; then
-        dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"
-    fi
+    brew list --formula | grep -q "^${package}$" 2>/dev/null
 }
 
 # Check if a cask is installed (macOS only)
@@ -85,7 +90,7 @@ is_cask_installed() {
     brew list --cask | grep -q "^${cask}$" 2>/dev/null
 }
 
-# Install packages only if not already installed
+# Install Homebrew packages only if not already installed (universal)
 install_packages() {
     local packages=("$@")
     local to_install=()
@@ -99,19 +104,14 @@ install_packages() {
     done
 
     if [[ ${#to_install[@]} -gt 0 ]]; then
-        if [[ "$OS" = "Darwin" ]]; then
-            log_info "Installing packages: ${to_install[*]}"
-            brew install "${to_install[@]}"
-        elif [[ "$OS" = "Linux" ]]; then
-            log_info "Installing packages: ${to_install[*]}"
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${to_install[@]}"
-        fi
+        log_info "Installing packages: ${to_install[*]}"
+        brew install "${to_install[@]}"
     else
         log_info "All packages are already installed"
     fi
 }
 
-# Install cask packages only if not already installed (macOS only)
+# Install cask packages only if not already installed (GUI applications)
 install_casks() {
     local casks=("$@")
     local to_install=()
@@ -132,8 +132,40 @@ install_casks() {
     fi
 }
 
-install_mac() {
-    log_info "Setting up tools for macOS..."
+# Install Linux build tools required for Homebrew
+install_linux_build_tools() {
+    log_info "Installing build tools for Homebrew..."
+
+    if command -v apt-get >/dev/null 2>&1; then
+        # Debian/Ubuntu
+        sudo apt-get update
+        sudo apt-get install -y build-essential procps curl file git
+    elif command -v dnf >/dev/null 2>&1; then
+        # Fedora/CentOS/RHEL
+        sudo dnf groupinstall -y "Development Tools"
+        sudo dnf install -y procps curl file git
+    elif command -v yum >/dev/null 2>&1; then
+        # Older CentOS/RHEL
+        sudo yum groupinstall -y "Development Tools"
+        sudo yum install -y procps curl file git
+    elif command -v pacman >/dev/null 2>&1; then
+        # Arch Linux
+        sudo pacman -S --needed --noconfirm base-devel procps-ng curl file git
+    elif command -v zypper >/dev/null 2>&1; then
+        # openSUSE
+        sudo zypper install -y -t pattern devel_basis
+        sudo zypper install -y procps curl file git
+    else
+        log_warn "Unknown Linux distribution. Please install build tools manually:"
+        log_warn "- build-essential/Development Tools"
+        log_warn "- procps, curl, file, git"
+        return 1
+    fi
+}
+
+# Universal Homebrew installation for all platforms
+install_homebrew() {
+    log_info "Setting up Homebrew..."
 
     # Check for curl
     if ! command -v curl >/dev/null 2>&1; then
@@ -143,8 +175,25 @@ install_mac() {
 
     # Check for Homebrew, and install if missing
     if ! command -v brew >/dev/null 2>&1; then
+        # On Linux, install build tools first
+        if [[ "$OS" = "Linux" ]]; then
+            install_linux_build_tools
+        fi
+
         log_info "Installing Homebrew..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+        # Source Homebrew environment
+        if [[ "$OS" = "Darwin" ]]; then
+            if [[ -x "/opt/homebrew/bin/brew" ]]; then
+                eval "$(/opt/homebrew/bin/brew shellenv)"
+            elif [[ -x "/usr/local/bin/brew" ]]; then
+                eval "$(/usr/local/bin/brew shellenv)"
+            fi
+        else
+            # Linux
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        fi
 
         # Verify installation
         if ! command -v brew >/dev/null 2>&1; then
@@ -162,111 +211,17 @@ install_mac() {
     fi
 
     # Install packages
-    install_packages "${COMMON_PACKAGES[@]}" "${MAC_SPECIFIC_PACKAGES[@]}"
+    install_packages "${COMMON_PACKAGES[@]}"
 
-    # Install cask packages
-    if [[ ${#MAC_CASK_PACKAGES[@]} -gt 0 ]]; then
-        install_casks "${MAC_CASK_PACKAGES[@]}"
+    # Install cask packages (GUI applications)
+    if [[ ${#CASK_PACKAGES[@]} -gt 0 ]]; then
+        install_casks "${CASK_PACKAGES[@]}"
     fi
 
     # Setup Node.js LTS
     setup_nodejs_lts
 
-    log_info "macOS tools installation complete!"
-}
-
-install_ubuntu() {
-    log_info "Setting up tools for Ubuntu..."
-
-    # Optional: Update packages (make this configurable)
-    if [[ "${UPDATE_APT:-false}" = "true" ]]; then
-        log_info "Updating package lists and upgrading system..."
-        sudo apt update && sudo apt upgrade -y
-    fi
-
-    # Install packages
-    install_packages "${COMMON_PACKAGES[@]}" "${UBUNTU_SPECIFIC_PACKAGES[@]}"
-
-    # Handle special packages
-    install_mise_ubuntu
-    install_gh_ubuntu
-    install_difftastic_ubuntu
-    install_tmux_plugin_manager_ubuntu
-
-    # Setup Node.js LTS
-    setup_nodejs_lts
-
-    log_info "Ubuntu tools installation complete!"
-}
-
-# Install mise (polyglot tool version manager) - Ubuntu only (macOS uses Homebrew)
-install_mise_ubuntu() {
-    if command -v mise >/dev/null 2>&1; then
-        log_info "mise is already installed"
-        return
-    fi
-
-    log_info "Installing mise via script..."
-
-    local tmp_dir
-    tmp_dir=$(mktemp -d)
-    local sig_file="$tmp_dir/install.sh.sig"
-    local installer="$tmp_dir/install.sh"
-    local mise_gpg_fingerprint="24853EC9F655CE80B48E6C3A8B81C9D17413A06D"
-
-    # Import mise GPG key if missing
-    if ! gpg --list-keys "$mise_gpg_fingerprint" >/dev/null 2>&1; then
-        if ! curl -fsSL https://github.com/jdx.gpg | gpg --import >/dev/null 2>&1; then
-            log_error "Failed to import mise GPG key"
-            rm -rf "$tmp_dir"
-            return 1
-        fi
-    fi
-
-    if ! curl -fsSL https://github.com/jdx/mise/releases/latest/download/install.sh.sig -o "$sig_file"; then
-        log_error "Failed to download mise installer signature"
-        rm -rf "$tmp_dir"
-        return 1
-    fi
-
-    if ! gpg --decrypt "$sig_file" > "$installer" 2>/dev/null; then
-        log_error "Mise installer signature verification failed"
-        rm -rf "$tmp_dir"
-        return 1
-    fi
-
-    if ! sh "$installer"; then
-        log_error "Mise installation script failed"
-        rm -rf "$tmp_dir"
-        return 1
-    fi
-
-    rm -rf "$tmp_dir"
-}
-
-# Install GitHub CLI for Ubuntu
-install_gh_ubuntu() {
-    if command -v gh >/dev/null 2>&1; then
-        log_info "GitHub CLI is already installed"
-        return
-    fi
-
-    log_info "Installing GitHub CLI..."
-    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
-    sudo apt update
-    sudo apt install -y gh
-}
-
-# Install difftastic for Ubuntu
-install_difftastic_ubuntu() {
-    if command -v difft >/dev/null 2>&1; then
-        log_info "difftastic is already installed"
-        return
-    fi
-
-    log_info "Installing difftastic via snap..."
-    sudo snap install difftastic
+    log_info "Package installation complete!"
 }
 
 # Setup Node.js LTS using mise
@@ -313,7 +268,7 @@ manage_ssh_keys() {
             keys_found=true
             while IFS= read -r key; do
                 log_info "Found key: $(basename "$key")"
-            done <<< "$pub_keys"
+            done <<<"$pub_keys"
         fi
     fi
 
@@ -365,8 +320,8 @@ create_ssh_key() {
     done
 }
 
-# Create ~/.config directory if it doesn't exist; this prevents issues with stow
-# creating a symlink to the config directory in the first stowed config
+# Create ~/.config directory if it doesn't exist; this prevents issues with
+# stow creating a symlink to the config directory in the first stowed config
 function setup_config_directory() {
     local config_dir="$HOME/.config"
 
@@ -404,30 +359,36 @@ create_local_configs() {
 
     log_info "Processing configuration templates from $templates_dir..."
 
-    # Find all .erb files in templates directory
-    while IFS= read -r -d '' template_file; do
-        local template_name
-        template_name="$(basename "$template_file")"
+    # Find all .erb files in templates directory (using portable method)
+    local erb_files
+    erb_files=$(find "$templates_dir" -name "*.erb" -type f -print 2>/dev/null)
 
-        # Remove .erb extension to get target filename
-        local target_name="${template_name%.erb}"
-        local target_path="$HOME/$target_name"
+    if [[ -n "$erb_files" ]]; then
+        while IFS= read -r template_file; do
+            [[ -z "$template_file" ]] && continue
 
-        # Check if target file already exists
-        if [[ -f "$target_path" ]]; then
-            log_info "$target_name already exists at $target_path, skipping"
-            continue
-        fi
+            local template_name
+            template_name="$(basename "$template_file")"
 
-        log_info "Creating $target_name from ERB template..."
-        process_erb_template "$template_file" "$target_path"
+            # Remove .erb extension to get target filename
+            local target_name="${template_name%.erb}"
+            local target_path="$HOME/$target_name"
 
-        # Special handling for gitconfig.local
-        if [[ "$target_name" == ".gitconfig.local" ]] && [[ -z "${GIT_EMAIL:-}" ]]; then
-            log_warn "Set GIT_EMAIL environment variable or edit ~/.gitconfig.local manually"
-        fi
+            # Check if target file already exists
+            if [[ -f "$target_path" ]]; then
+                log_info "$target_name already exists at $target_path, skipping"
+                continue
+            fi
 
-    done < <(find "$templates_dir" -name "*.erb" -type f -print0)
+            log_info "Creating $target_name from ERB template..."
+            process_erb_template "$template_file" "$target_path"
+
+            # Special handling for gitconfig.local
+            if [[ "$target_name" == ".gitconfig.local" ]] && [[ -z "${GIT_EMAIL:-}" ]]; then
+                log_warn "Set GIT_EMAIL environment variable or edit ~/.gitconfig.local manually"
+            fi
+        done <<<"$erb_files"
+    fi
 
     log_info "Template processing complete!"
 }
@@ -435,7 +396,12 @@ create_local_configs() {
 # Stow all configuration directories
 stow_configs() {
     local dotfiles_dir
-    dotfiles_dir="$(dirname "$(realpath "$0")")"
+    # Get absolute path in a portable way
+    if command -v realpath >/dev/null 2>&1; then
+        dotfiles_dir="$(dirname "$(realpath "$0")")"
+    else
+        dotfiles_dir="$(cd "$(dirname "$0")" && pwd)"
+    fi
 
     # List of directories to stow
     local stow_dirs=(
@@ -473,36 +439,6 @@ stow_configs() {
     log_info "Stowing complete!"
 }
 
-# Install TMux Plugin Manager (Ubuntu only - macOS uses homebrew tpm package)
-install_tmux_plugin_manager_ubuntu() {
-    local tpm_dir="$HOME/.tmux/plugins/tpm"
-
-    if [[ -d "$tpm_dir" ]]; then
-        log_info "TMux Plugin Manager already installed at $tpm_dir"
-        return
-    fi
-
-    if ! command -v tmux >/dev/null 2>&1; then
-        log_warn "tmux not found, skipping TMux Plugin Manager installation"
-        return
-    fi
-
-    if ! command -v git >/dev/null 2>&1; then
-        log_warn "git not found, skipping TMux Plugin Manager installation"
-        return
-    fi
-
-    log_info "Installing TMux Plugin Manager for Ubuntu..."
-
-    # Create .tmux/plugins directory if it doesn't exist
-    mkdir -p "$(dirname "$tpm_dir")"
-
-    if git clone https://github.com/tmux-plugins/tpm "$tpm_dir"; then
-        log_info "TMux Plugin Manager installed successfully to $tpm_dir"
-    else
-        log_error "Failed to install TMux Plugin Manager"
-    fi
-}
 
 # Trust mise configuration files
 trust_mise_configs() {
@@ -514,9 +450,14 @@ trust_mise_configs() {
         fi
 
         if [[ -d "$DOTFILES/mise" ]]; then
-            while IFS= read -r -d '' file; do
-                configs+=("$file")
-            done < <(find "$DOTFILES/mise" -name '*.toml' -print0)
+            local toml_files
+            toml_files=$(find "$DOTFILES/mise" -name '*.toml' -print 2>/dev/null)
+            if [[ -n "$toml_files" ]]; then
+                while IFS= read -r file; do
+                    [[ -z "$file" ]] && continue
+                    configs+=("$file")
+                done <<<"$toml_files"
+            fi
         fi
 
         if [[ ${#configs[@]} -gt 0 ]]; then
@@ -534,21 +475,16 @@ trust_mise_configs() {
 main() {
     log_info "Starting system setup..."
 
-    # Package installation
+    # Package installation via universal Homebrew
     if [[ "${SKIP_PACKAGES:-false}" != "true" ]]; then
         case "$OS" in
         Darwin)
             log_info "Detected macOS"
-            install_mac
+            install_homebrew
             ;;
         Linux)
-            if grep -q 'Ubuntu' /etc/os-release 2>/dev/null; then
-                log_info "Detected Ubuntu"
-                install_ubuntu
-            else
-                log_error "Unsupported Linux distribution. This script currently supports Ubuntu."
-                exit 1
-            fi
+            log_info "Detected Linux"
+            install_homebrew
             ;;
         *)
             log_error "Unsupported OS: $OS"
@@ -597,10 +533,6 @@ while [[ $# -gt 0 ]]; do
         export UPDATE_BREW=true
         shift
         ;;
-    --update-apt)
-        export UPDATE_APT=true
-        shift
-        ;;
     --skip-packages)
         export SKIP_PACKAGES=true
         shift
@@ -625,7 +557,6 @@ while [[ $# -gt 0 ]]; do
         echo "Usage: $0 [options]"
         echo "Options:"
         echo "  --update-brew      Update Homebrew before installing packages"
-        echo "  --update-apt       Update APT packages before installing"
         echo "  --skip-packages    Skip package installation"
         echo "  --skip-configs     Skip config directory setup"
         echo "  --skip-templates   Skip template processing"
