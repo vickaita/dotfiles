@@ -20,6 +20,7 @@
 	difft = difftool
 	dlog = "!f() { GIT_EXTERNAL_DIFF=difft git log -p --ext-diff $@; }; f"
 	dshow = "!f() { GIT_EXTERNAL_DIFF=difft git show --ext-diff $@; }; f"
+	diffbat = "!f() { git diff --no-color --unified=9999 $@ | bat --language=diff --style=changes,numbers,snip; }; f"
 [include]
 	path = ~/.gitconfig.local
 [merge]
