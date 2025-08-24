@@ -1,0 +1,100 @@
+# Catppuccin delta themes
+# Copyright (c) 2021 Catppuccin
+# Source: https://github.com/catppuccin/delta
+# Licensed under MIT License
+
+[delta "catppuccin-latte"]
+	blame-code-style = syntax
+	blame-format = "{author:<18} ({commit:>9}) {timestamp:^16} "
+	blame-palette = "#dc8a78 #dd7878 #ea76cb #8839ef #d20f39 #e64553 #fe640b #df8e1d #40a02b #209fb5 #1e66f5 #7287fd"
+	commit-decoration-style = none
+	commit-style = "#179299"
+	file-decoration-style = none
+	file-style = "#1e66f5"
+	hunk-header-decoration-style = "#04a5e5" box
+	hunk-header-file-style = "#8839ef"
+	hunk-header-line-number-style = "#40a02b"
+	hunk-header-style = file line-number syntax
+	line-numbers = true
+	line-numbers-left-style = "#9ca0b0"
+	line-numbers-minus-style = "#d20f39"
+	line-numbers-plus-style = "#40a02b"
+	line-numbers-right-style = "#9ca0b0"
+	line-numbers-zero-style = "#9ca0b0"
+	minus-emph-style = normal "#e64553"
+	minus-style = normal "#ffe9e9"
+	plus-emph-style = normal "#40a02b"
+	plus-style = normal "#f1f8ff"
+	syntax-theme = Catppuccin-latte
+
+[delta "catppuccin-frappe"]
+	blame-code-style = syntax
+	blame-format = "{author:<18} ({commit:>9}) {timestamp:^16} "
+	blame-palette = "#f2d5cf #eebebe #f4b8e4 #ca9ee6 #e78284 #ea999c #ef9f76 #e5c890 #a6d189 #81c8be #85c1dc #8caaee"
+	commit-decoration-style = none
+	commit-style = "#81c8be"
+	file-decoration-style = none
+	file-style = "#8caaee"
+	hunk-header-decoration-style = "#85c1dc" box
+	hunk-header-file-style = "#ca9ee6"
+	hunk-header-line-number-style = "#a6d189"
+	hunk-header-style = file line-number syntax
+	line-numbers = true
+	line-numbers-left-style = "#838ba7"
+	line-numbers-minus-style = "#e78284"
+	line-numbers-plus-style = "#a6d189"
+	line-numbers-right-style = "#838ba7"
+	line-numbers-zero-style = "#838ba7"
+	minus-emph-style = normal "#ea999c"
+	minus-style = normal "#4c4f69"
+	plus-emph-style = normal "#a6d189"
+	plus-style = normal "#414559"
+	syntax-theme = Catppuccin-frappe
+
+[delta "catppuccin-macchiato"]
+	blame-code-style = syntax
+	blame-format = "{author:<18} ({commit:>9}) {timestamp:^16} "
+	blame-palette = "#f0c6c6 #f5bde6 #c6a0f6 #ed8796 #ee99a0 #f5a97f #eed49f #a6da95 #8bd5ca #91d7e3 #7dc4e4 #8aadf4"
+	commit-decoration-style = none
+	commit-style = "#8bd5ca"
+	file-decoration-style = none
+	file-style = "#8aadf4"
+	hunk-header-decoration-style = "#91d7e3" box
+	hunk-header-file-style = "#c6a0f6"
+	hunk-header-line-number-style = "#a6da95"
+	hunk-header-style = file line-number syntax
+	line-numbers = true
+	line-numbers-left-style = "#6e738d"
+	line-numbers-minus-style = "#ed8796"
+	line-numbers-plus-style = "#a6da95"
+	line-numbers-right-style = "#6e738d"
+	line-numbers-zero-style = "#6e738d"
+	minus-emph-style = normal "#ee99a0"
+	minus-style = normal "#3c3e4f"
+	plus-emph-style = normal "#a6da95"
+	plus-style = normal "#363749"
+	syntax-theme = Catppuccin-macchiato
+
+[delta "catppuccin-mocha"]
+	blame-code-style = syntax
+	blame-format = "{author:<18} ({commit:>9}) {timestamp:^16} "
+	blame-palette = "#f2cdcd #f5c2e7 #cba6f7 #f38ba8 #eba0ac #fab387 #f9e2af #a6e3a1 #94e2d5 #89dceb #74c7ec #89b4fa"
+	commit-decoration-style = none
+	commit-style = "#94e2d5"
+	file-decoration-style = none
+	file-style = "#89b4fa"
+	hunk-header-decoration-style = "#89dceb" box
+	hunk-header-file-style = "#cba6f7"
+	hunk-header-line-number-style = "#a6e3a1"
+	hunk-header-style = file line-number syntax
+	line-numbers = true
+	line-numbers-left-style = "#6c7086"
+	line-numbers-minus-style = "#f38ba8"
+	line-numbers-plus-style = "#a6e3a1"
+	line-numbers-right-style = "#6c7086"
+	line-numbers-zero-style = "#6c7086"
+	minus-emph-style = normal "#eba0ac"
+	minus-style = normal "#313244"
+	plus-emph-style = normal "#a6e3a1"
+	plus-style = normal "#2a2b3d"
+	syntax-theme = Catppuccin-mocha

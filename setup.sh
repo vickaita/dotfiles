@@ -33,6 +33,7 @@ log_error() {
 COMMON_PACKAGES=(
     bat
     curl
+    delta
     difftastic
     direnv
     eza
