@@ -31,6 +31,7 @@ log_error() {
 }
 
 COMMON_PACKAGES=(
+    atuin
     bat
     curl
     delta
@@ -244,12 +245,12 @@ setup_global_languages() {
             local node_version=$(mise exec -- node --version 2>/dev/null || echo "not available")
             log_info "  Node.js: $node_version"
         fi
-        
+
         if command -v python >/dev/null 2>&1 || mise which python >/dev/null 2>&1; then
             local python_version=$(mise exec -- python --version 2>/dev/null || echo "not available")
             log_info "  Python: $python_version"
         fi
-        
+
         if command -v ruby >/dev/null 2>&1 || mise which ruby >/dev/null 2>&1; then
             local ruby_version=$(mise exec -- ruby --version 2>/dev/null | cut -d' ' -f2 || echo "not available")
             log_info "  Ruby: $ruby_version"
@@ -313,7 +314,7 @@ manage_ssh_keys() {
 create_ssh_key() {
     local email
     read -rp "Enter your email for the SSH key: " email
-    
+
     echo "Which type of key would you like to create?"
     select key_type in "Ed25519" "RSA"; do
         case $key_type in
@@ -344,48 +345,48 @@ create_ssh_key() {
 # Set up SSH agent integration with platform-specific optimizations
 setup_ssh_agent_integration() {
     local key_dir="$HOME/.ssh"
-    
+
     log_info "Setting up SSH agent integration..."
-    
+
     # Find SSH keys to add
     local keys_to_add=()
     [[ -f "$key_dir/id_ed25519" ]] && keys_to_add+=("$key_dir/id_ed25519")
     [[ -f "$key_dir/id_rsa" ]] && keys_to_add+=("$key_dir/id_rsa")
-    
+
     if [[ ${#keys_to_add[@]} -eq 0 ]]; then
         log_warn "No SSH keys found to add to agent"
         return
     fi
-    
+
     # Platform-specific setup
     case "$OS" in
-        Darwin)
-            log_info "Setting up macOS Keychain integration..."
-            # Add keys to macOS Keychain
-            for key in "${keys_to_add[@]}"; do
-                if ssh-add --apple-use-keychain "$key" 2>/dev/null; then
-                    log_info "Added $(basename "$key") to macOS Keychain"
-                else
-                    log_warn "Failed to add $(basename "$key") to Keychain (may need passphrase)"
-                fi
-            done
-            ;;
-        Linux)
-            log_info "Setting up SSH agent for Linux..."
-            # Start ssh-agent if not already running
-            if [[ -z "${SSH_AUTH_SOCK:-}" ]]; then
-                eval "$(ssh-agent -s)" >/dev/null 2>&1
+    Darwin)
+        log_info "Setting up macOS Keychain integration..."
+        # Add keys to macOS Keychain
+        for key in "${keys_to_add[@]}"; do
+            if ssh-add --apple-use-keychain "$key" 2>/dev/null; then
+                log_info "Added $(basename "$key") to macOS Keychain"
+            else
+                log_warn "Failed to add $(basename "$key") to Keychain (may need passphrase)"
             fi
-            
-            # Add keys to agent
-            for key in "${keys_to_add[@]}"; do
-                if ssh-add "$key" 2>/dev/null; then
-                    log_info "Added $(basename "$key") to SSH agent"
-                else
-                    log_warn "Failed to add $(basename "$key") to agent (may need passphrase)"
-                fi
-            done
-            ;;
+        done
+        ;;
+    Linux)
+        log_info "Setting up SSH agent for Linux..."
+        # Start ssh-agent if not already running
+        if [[ -z "${SSH_AUTH_SOCK:-}" ]]; then
+            eval "$(ssh-agent -s)" >/dev/null 2>&1
+        fi
+
+        # Add keys to agent
+        for key in "${keys_to_add[@]}"; do
+            if ssh-add "$key" 2>/dev/null; then
+                log_info "Added $(basename "$key") to SSH agent"
+            else
+                log_warn "Failed to add $(basename "$key") to agent (may need passphrase)"
+            fi
+        done
+        ;;
     esac
 }
 
@@ -393,23 +394,23 @@ setup_ssh_agent_integration() {
 setup_ssh_config() {
     local ssh_config="$HOME/.ssh/config"
     local config_updated=false
-    
+
     log_info "Configuring SSH client settings..."
-    
+
     # Create config file if it doesn't exist
     if [[ ! -f "$ssh_config" ]]; then
         touch "$ssh_config"
         chmod 600 "$ssh_config"
     fi
-    
+
     # Check if our config block already exists
     if ! grep -q "# Dotfiles SSH Configuration" "$ssh_config"; then
         log_info "Adding SSH configuration optimizations..."
-        
+
         # Platform-specific configuration
         case "$OS" in
-            Darwin)
-                cat >> "$ssh_config" << 'EOF'
+        Darwin)
+            cat >>"$ssh_config" <<'EOF'
 
 # Dotfiles SSH Configuration - macOS optimized
 Host *
@@ -428,9 +429,9 @@ Host *
     # Preferred key types (most secure first)
     PubkeyAcceptedKeyTypes ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ssh-rsa
 EOF
-                ;;
-            Linux)
-                cat >> "$ssh_config" << 'EOF'
+            ;;
+        Linux)
+            cat >>"$ssh_config" <<'EOF'
 
 # Dotfiles SSH Configuration - Linux optimized
 Host *
@@ -448,12 +449,12 @@ Host *
     # Preferred key types (most secure first)
     PubkeyAcceptedKeyTypes ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ssh-rsa
 EOF
-                ;;
+            ;;
         esac
-        
+
         config_updated=true
     fi
-    
+
     if [[ "$config_updated" = "true" ]]; then
         log_info "SSH configuration updated with security optimizations"
     else
@@ -546,6 +547,7 @@ stow_configs() {
 
     # List of directories to stow
     local stow_dirs=(
+        "atuin"
         "bash"
         "ghostty"
         "htop"
@@ -579,7 +581,6 @@ stow_configs() {
 
     log_info "Stowing complete!"
 }
-
 
 # Trust mise configuration files
 trust_mise_configs() {

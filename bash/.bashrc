@@ -12,7 +12,7 @@ export DOTFILES="$HOME"/.dotfiles
 
 export CURRENT_SHELL="bash"
 
-safesafe_source() {
+safe_source() {
     local file="$1"
     if [[ -f "$file" ]]; then
         source "$file"
@@ -22,6 +22,7 @@ safesafe_source() {
 }
 
 safe_source "$DOTFILES/shared/shell/homebrew.sh"
+safe_source "$DOTFILES/shared/shell/catppuccin-colors.sh"
 safe_source "$DOTFILES/shared/shell/utils.sh"
 safe_source "$DOTFILES/shared/shell/prompt.sh"
 safe_source "$DOTFILES/shared/shell/history.sh"
@@ -33,6 +34,7 @@ safe_source "$DOTFILES/shared/shell/zoxide.sh"
 safe_source "$DOTFILES/shared/shell/editor-binding.sh"
 safe_source "$DOTFILES/shared/shell/less-pager.sh"
 safe_source "$DOTFILES/shared/shell/claude.sh"
+safe_source "$DOTFILES/shared/shell/atuin.sh"
 safe_source "$DOTFILES/shared/shell/aliases.sh"
 
 # check the window size after each command and, if necessary,

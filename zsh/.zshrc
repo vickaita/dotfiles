@@ -22,6 +22,7 @@ fi
 # Source shell configuration files
 safe_source "$DOTFILES/zsh/keybindings.zsh"
 safe_source "$DOTFILES/shared/shell/homebrew.sh"
+safe_source "$DOTFILES/shared/shell/catppuccin-colors.sh"
 safe_source "$DOTFILES/shared/shell/utils.sh"
 safe_source "$DOTFILES/shared/shell/prompt.sh"
 safe_source "$DOTFILES/shared/shell/history.sh"
@@ -33,6 +34,7 @@ safe_source "$DOTFILES/shared/shell/zoxide.sh"
 safe_source "$DOTFILES/shared/shell/editor-binding.sh"
 safe_source "$DOTFILES/shared/shell/less-pager.sh"
 safe_source "$DOTFILES/shared/shell/claude.sh"
+safe_source "$DOTFILES/shared/shell/atuin.sh"
 safe_source "$DOTFILES/shared/shell/aliases.sh"
 
 # Configure completion system with smart daily caching

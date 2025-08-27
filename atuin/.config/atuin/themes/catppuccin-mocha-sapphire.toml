@@ -1,0 +1,17 @@
+# Catppuccin Mocha theme for Atuin (sapphire accent)
+# Based on Catppuccin themes: https://github.com/catppuccin/atuin
+# Copyright (c) 2021 Catppuccin
+# Licensed under the MIT License
+
+[theme]
+name = "catppuccin-mocha-sapphire"
+
+[colors]
+AlertInfo = "#A6E3A1"
+AlertWarn = "#FAB387"
+AlertError = "#F38BA8"
+Annotation = "#74C7EC"
+Base = "#CDD6F4"
+Guidance = "#9399B2"
+Important = "#F38BA8"
+Title = "#74C7EC"
