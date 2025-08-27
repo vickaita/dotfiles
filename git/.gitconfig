@@ -5,6 +5,7 @@
 [core]
 	editor = nvim
 	pager = less -FRX --mouse
+	fsmonitor = true
 [init]
 	defaultBranch = main
 [diff]
@@ -23,6 +24,9 @@
 	diffbat = "!f() { git diff --no-color --unified=9999 $@ | bat --language=diff --style=changes,numbers,snip; }; f"
 	delta = "!f() { git diff $@ | delta --navigate; }; f"
 	delta-split = "!f() { git diff $@ | delta --navigate --side-by-side; }; f"
+	fsm-start = fsmonitor--daemon start
+	fsm-stop = fsmonitor--daemon stop
+	fsm-status = fsmonitor--daemon status
 [delta]
 	features = catppuccin-mocha
 	file-decoration-style = none
