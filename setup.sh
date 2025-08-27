@@ -582,6 +582,7 @@ stow_configs() {
     log_info "Stowing complete!"
 }
 
+
 # Trust mise configuration files
 trust_mise_configs() {
     if command -v mise >/dev/null 2>&1; then
@@ -636,6 +637,7 @@ main() {
     else
         log_info "Skipping package installation (--skip-packages)"
     fi
+
 
     # Trust mise configuration files
     trust_mise_configs

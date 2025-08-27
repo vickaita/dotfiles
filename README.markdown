@@ -80,7 +80,8 @@ stow zsh       # Zsh configuration
 stow tmux      # Tmux configuration
 ```
 
-**Note:** When setting up manually, trust the repository's Mise configuration files so they can be processed correctly:
+**Note:** When setting up manually, trust the repository's Mise configuration
+files so they can be processed correctly:
 
 ```bash
 mise trust ~/.dotfiles/mise.toml ~/.dotfiles/mise/.config/mise/config.toml
@@ -191,6 +192,36 @@ rebuild-completions
 This utility function will clear the completion cache and rebuild it, making new
 completions available right away. Otherwise, completions automatically rebuild
 within 24 hours.
+
+## GitHub Copilot Extension Setup
+
+The setup script installs the GitHub CLI (`gh`) but does not automatically
+install the Copilot extension due to authentication requirements. To enable
+GitHub Copilot in your terminal:
+
+1. **Authenticate with GitHub**:
+
+    ```bash
+    gh auth login
+    ```
+
+2. **Install the Copilot extension**:
+
+    ```bash
+    gh extension install github/gh-copilot
+    ```
+
+3. **Restart your shell to load aliases**:
+    ```bash
+    exec $SHELL
+    ```
+
+Once set up, you'll have access to these convenient aliases:
+
+- `ghcs` - Get command suggestions (`gh copilot suggest`)
+- `ghce` - Get command explanations (`gh copilot explain`)
+
+**Note**: You need an active GitHub Copilot subscription to use these features.
 
 ## Maintenance
 

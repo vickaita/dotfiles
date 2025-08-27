@@ -36,6 +36,7 @@ safe_source "$DOTFILES/shared/shell/less-pager.sh"
 safe_source "$DOTFILES/shared/shell/claude.sh"
 safe_source "$DOTFILES/shared/shell/atuin.sh"
 safe_source "$DOTFILES/shared/shell/aliases.sh"
+safe_source "$DOTFILES/shared/shell/gh-copilot.sh"
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.

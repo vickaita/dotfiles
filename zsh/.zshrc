@@ -36,6 +36,7 @@ safe_source "$DOTFILES/shared/shell/less-pager.sh"
 safe_source "$DOTFILES/shared/shell/claude.sh"
 safe_source "$DOTFILES/shared/shell/atuin.sh"
 safe_source "$DOTFILES/shared/shell/aliases.sh"
+safe_source "$DOTFILES/shared/shell/gh-copilot.sh"
 
 # Configure completion system with smart daily caching
 # IMPORTANT: This must run AFTER all shell scripts that modify fpath
