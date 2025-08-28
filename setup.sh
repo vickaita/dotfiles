@@ -77,7 +77,7 @@ COMMON_PACKAGES=(
     zoxide
 )
 
-# GUI applications (casks) - work on both macOS and Linux with Homebrew
+# GUI applications (casks) - macOS only
 CASK_PACKAGES=(ghostty)
 
 # Check if a Homebrew package is installed (universal)
@@ -215,8 +215,8 @@ install_homebrew() {
     # Install packages
     install_packages "${COMMON_PACKAGES[@]}"
 
-    # Install cask packages (GUI applications)
-    if [[ ${#CASK_PACKAGES[@]} -gt 0 ]]; then
+    # Install cask packages (GUI applications) — macOS only
+    if [[ "$OS" = "Darwin" ]] && [[ ${#CASK_PACKAGES[@]} -gt 0 ]]; then
         install_casks "${CASK_PACKAGES[@]}"
     fi
 
