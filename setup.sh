@@ -242,17 +242,20 @@ setup_global_languages() {
         # Show installed versions
         log_info "Installed language versions:"
         if command -v node >/dev/null 2>&1 || mise which node >/dev/null 2>&1; then
-            local node_version=$(mise exec -- node --version 2>/dev/null || echo "not available")
+            local node_version
+            node_version=$(mise exec -- node --version 2>/dev/null || echo "not available")
             log_info "  Node.js: $node_version"
         fi
 
         if command -v python >/dev/null 2>&1 || mise which python >/dev/null 2>&1; then
-            local python_version=$(mise exec -- python --version 2>/dev/null || echo "not available")
+            local python_version
+            python_version=$(mise exec -- python --version 2>/dev/null || echo "not available")
             log_info "  Python: $python_version"
         fi
 
         if command -v ruby >/dev/null 2>&1 || mise which ruby >/dev/null 2>&1; then
-            local ruby_version=$(mise exec -- ruby --version 2>/dev/null | cut -d' ' -f2 || echo "not available")
+            local ruby_version
+            ruby_version=$(mise exec -- ruby --version 2>/dev/null | cut -d' ' -f2 || echo "not available")
             log_info "  Ruby: $ruby_version"
         fi
     else
