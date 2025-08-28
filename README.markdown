@@ -57,9 +57,8 @@ performance optimizations, and extensive customization options.
 ### Setup with Options
 
 ```bash
-# Update package managers before installing
-./setup.sh --update-brew    # macOS
-./setup.sh --update-apt     # Ubuntu
+# Optionally update Homebrew before installing (macOS and Linux)
+./setup.sh --update-brew
 
 # Selective installation
 ./setup.sh --skip-packages    # Skip package installation
@@ -84,7 +83,7 @@ stow tmux      # Tmux configuration
 files so they can be processed correctly:
 
 ```bash
-mise trust ~/.dotfiles/mise.toml ~/.dotfiles/mise/.config/mise/config.toml
+mise trust ~/.dotfiles/mise/.config/mise/config.toml
 ```
 
 The `setup.sh` script performs this automatically.
@@ -106,7 +105,6 @@ The `setup.sh` script performs this automatically.
 
 - **git**: Git configuration with template support
 - **prettier**: Code formatting configuration
-- **npm**: Node.js package manager settings
 
 ### System Tools
 
@@ -159,16 +157,10 @@ After setup, you can customize configurations in:
 - **Python**: uv (Python package installer)
 - **Terminal**: lynx, w3m, zellij, tmuxinator, tpm
 
-### macOS Specific
+### Platform Notes
 
-- **Package Manager**: homebrew
-- **Tools**: fd, gh (GitHub CLI)
-- **Applications**: ghostty (via Homebrew Cask)
-
-### Ubuntu Specific
-
-- **Tools**: fd-find
-- **Installed via script**: mise, GitHub CLI
+- **Package Manager**: Homebrew on macOS and Linux
+- **Applications**: ghostty (via Homebrew Cask on macOS)
 
 ## Shell Performance
 

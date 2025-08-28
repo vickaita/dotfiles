@@ -260,7 +260,7 @@ setup_global_languages() {
     fi
 }
 
-# Check and manage SSH keys (improved idempotency)
+# Check and manage SSH keys
 manage_ssh_keys() {
     local key_dir="$HOME/.ssh"
     local default_key_rsa="$key_dir/id_rsa"
@@ -417,17 +417,17 @@ Host *
     # Use macOS Keychain for key management
     AddKeysToAgent yes
     UseKeychain yes
-    
+
     # Security and performance optimizations
     IdentitiesOnly yes
     HashKnownHosts yes
-    
+
     # Connection optimizations
     ServerAliveInterval 60
     ServerAliveCountMax 3
-    
-    # Preferred key types (most secure first)
-    PubkeyAcceptedKeyTypes ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ssh-rsa
+
+    # Preferred key algorithms (modern only; excludes deprecated ssh-rsa)
+    PubkeyAcceptedKeyTypes ssh-ed25519,sk-ssh-ed25519@openssh.com,ecdsa-sha2-nistp256,sk-ecdsa-sha2-nistp256@openssh.com,ecdsa-sha2-nistp384
 EOF
             ;;
         Linux)
@@ -437,17 +437,17 @@ EOF
 Host *
     # Use SSH agent for key management
     AddKeysToAgent yes
-    
+
     # Security and performance optimizations
     IdentitiesOnly yes
     HashKnownHosts yes
-    
+
     # Connection optimizations
     ServerAliveInterval 60
     ServerAliveCountMax 3
-    
-    # Preferred key types (most secure first)
-    PubkeyAcceptedKeyTypes ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ssh-rsa
+
+    # Preferred key algorithms (modern only; excludes deprecated ssh-rsa)
+    PubkeyAcceptedKeyTypes ssh-ed25519,sk-ssh-ed25519@openssh.com,ecdsa-sha2-nistp256,sk-ecdsa-sha2-nistp256@openssh.com,ecdsa-sha2-nistp384
 EOF
             ;;
         esac
@@ -546,16 +546,20 @@ stow_configs() {
     fi
 
     # List of directories to stow
+    # Include all configured modules present in this repo
     local stow_dirs=(
         "atuin"
         "bash"
+        "git"
         "ghostty"
         "htop"
+        "lazygit"
         "mise"
         "nvim"
         "prettier"
         "tmux"
         "vim"
+        "zellij"
         "zsh"
     )
 
@@ -581,7 +585,6 @@ stow_configs() {
 
     log_info "Stowing complete!"
 }
-
 
 # Trust mise configuration files
 trust_mise_configs() {
@@ -637,7 +640,6 @@ main() {
     else
         log_info "Skipping package installation (--skip-packages)"
     fi
-
 
     # Trust mise configuration files
     trust_mise_configs
