@@ -1,0 +1,69 @@
+# Jujutsu (jj) Configuration
+# See https://jj-vcs.github.io/jj/latest/config/ for full documentation
+
+[user]
+# User identity - uncomment and customize
+# name = "Your Name"
+# email = "your.email@example.com"
+
+[ui]
+# Default editor for commit messages and descriptions
+editor = "nvim"
+# Show colored diff output
+diff.tool = ["difft", "--color=always", "$left", "$right"]
+# Pager for long output
+pager = "less -FRX"
+
+[aliases]
+# Git-like aliases for familiarity
+st = ["status"]
+sw = ["checkout"]
+br = ["branch", "list"]
+co = ["checkout"]
+ci = ["commit"]
+# Show graph of commits
+graph = ["log", "--graph"]
+# Show recent commits
+recent = ["log", "-r", "@", "--limit", "10"]
+
+[revsets]
+# Custom revset aliases
+# Show commits in current branch that aren't in main
+feature = "@ - main"
+
+[colors]
+# Use colored output (matches terminal theme)
+# "working_copy" = "green bold"
+# "current_working_copy" = "green bold underline"
+# "branch" = "blue bold"
+# "tag" = "yellow bold"
+# "git_head" = "cyan bold"
+# "divergent" = "red bold"
+# "conflict" = "red bold"
+
+[git]
+# Auto-push to Git remote when committing
+auto-local-bookmark = true
+# Push bookmark changes to the Git remote
+push-bookmark-prefix = ""
+
+[snapshot]
+# Automatically snapshot working copy changes
+auto-track = "none" # "none" | "all" | "some"
+
+[template-aliases]
+# Custom templates for log output
+compact_log = '''
+separate(" ",
+  change_id.short(),
+  if(current_working_copy, "@"),
+  branches,
+  tags,
+  bookmarks,
+  if(conflict, "conflict"),
+  if(divergent, "divergent"),
+  if(hidden, "hidden"),
+  description.first_line(),
+)
+'''
+

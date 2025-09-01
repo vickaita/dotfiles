@@ -31,7 +31,7 @@
 	plus-emph-style = "#181825" "#a6e3a1"
 # Catppuccin delta themes from https://github.com/catppuccin/delta
 [include]
-	path = ~/.dotfiles/git/catppuccin.gitconfig
+	path = ../../catppuccin.gitconfig
 [include]
 	path = ~/.gitconfig.local
 [merge]

@@ -48,6 +48,7 @@ COMMON_PACKAGES=(
     gum
     htop
     imagemagick
+    jj
     jq
     lazygit
     lesspipe
@@ -556,6 +557,7 @@ stow_configs() {
         "git"
         "ghostty"
         "htop"
+        "jj"
         "lazygit"
         "mise"
         "nvim"
