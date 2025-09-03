@@ -1,0 +1,52 @@
+# Machine-specific jj (Jujutsu) configuration
+# This file is generated from templates/.jjconfig.local.toml.erb
+
+[user]
+<% if ENV['GIT_NAME'] %>
+name = "<%= ENV['GIT_NAME'] %>"
+<% else %>
+# Set your name for this machine
+# name = "First Last"
+<% end %>
+
+<% if ENV['GIT_EMAIL'] %>
+email = "<%= ENV['GIT_EMAIL'] %>"
+<% else %>
+# Set your email for this machine
+# email = "your.work@company.com"
+# email = "your.personal@gmail.com"
+<% end %>
+
+<% if ENV['GIT_SIGNING_KEY'] %>
+[signing]
+sign-all = true
+backend = "gpg"
+key = "<%= ENV['GIT_SIGNING_KEY'] %>"
+<% else %>
+# Uncomment to enable commit signing
+# [signing]
+# sign-all = true
+# backend = "gpg"  # or "ssh"
+# key = "your-signing-key-id"
+<% end %>
+
+<% if ENV['JJ_EDITOR'] %>
+[ui]
+editor = "<%= ENV['JJ_EDITOR'] %>"
+<% elsif ENV['GIT_EDITOR'] %>
+[ui]
+editor = "<%= ENV['GIT_EDITOR'] %>"
+<% else %>
+# Machine-specific editor (optional, inherits from main config)
+# [ui]
+# editor = "code --wait"
+# editor = "subl --wait"
+<% end %>
+
+# Add any other machine-specific jj configuration here
+# Examples:
+# [git]
+# auto-local-bookmark = false
+# 
+# [revset-aliases]
+# "work()" = "author('work.email@company.com')"

@@ -4,6 +4,3 @@ nvim/.config/github-copilot/
 nvim/.config/nvim/plugin/
 nvim/.config/configstore/
 nvim/.config/simple-update-notifier/
-
-# Machine-specific git config
-.gitconfig.local

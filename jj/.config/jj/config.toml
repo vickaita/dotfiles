@@ -2,57 +2,49 @@
 # See https://jj-vcs.github.io/jj/latest/config/ for full documentation
 
 [user]
-# User identity - uncomment and customize
+# User identity - set in ~/.jjconfig.local.toml for machine-specific values
 # name = "Your Name"
 # email = "your.email@example.com"
 
 [ui]
-# Default editor for commit messages and descriptions
 editor = "nvim"
-# Show colored diff output
-diff.tool = ["difft", "--color=always", "$left", "$right"]
-# Pager for long output
 pager = "less -FRX"
+# Leave ui.diff.tool unset → jj diff uses the built-in text diff
 
 [aliases]
-# Git-like aliases for familiarity
+# Git-like aliases
 st = ["status"]
 sw = ["checkout"]
 br = ["branch", "list"]
 co = ["checkout"]
 ci = ["commit"]
+
 # Show graph of commits
 graph = ["log", "--graph"]
 # Show recent commits
 recent = ["log", "-r", "@", "--limit", "10"]
 
+# External diff aliases
+difft = ["diff", "--tool=difft"]
+delta = ["diff", "--tool=delta"]
+diffbat = ["diff", "--tool=diffbat"]
+
 [revsets]
-# Custom revset aliases
 # Show commits in current branch that aren't in main
 feature = "@ - main"
 
-[colors]
-# Use colored output (matches terminal theme)
-# "working_copy" = "green bold"
-# "current_working_copy" = "green bold underline"
-# "branch" = "blue bold"
-# "tag" = "yellow bold"
-# "git_head" = "cyan bold"
-# "divergent" = "red bold"
-# "conflict" = "red bold"
-
 [git]
-# Auto-push to Git remote when committing
+# Automatically create a bookmark for each local branch
 auto-local-bookmark = true
-# Push bookmark changes to the Git remote
-push-bookmark-prefix = ""
+
+# Make commits look identical to Git commits
+set-committer = false
 
 [snapshot]
 # Automatically snapshot working copy changes
-auto-track = "none" # "none" | "all" | "some"
+auto-track = "all"
 
 [template-aliases]
-# Custom templates for log output
 compact_log = '''
 separate(" ",
   change_id.short(),
@@ -67,3 +59,16 @@ separate(" ",
 )
 '''
 
+[ui.diff-tools]
+# Difftastic (two-way tree diff)
+difft = ["difft", "--color=always", "$left", "$right"]
+
+# Delta (needs unified diff piped in)
+delta = ["sh", "-lc", "diff -ruN \"$left\" \"$right\" | delta --color=always"]
+
+# Bat (show unified diff with syntax highlighting)
+diffbat = ["sh", "-lc", "diff -ruN \"$left\" \"$right\" | bat --language=diff"]
+
+# Pull in machine-local overrides
+[include]
+files = ["~/.jjconfig.local.toml"]
