@@ -43,6 +43,7 @@ COMMON_PACKAGES=(
     fzf
     gh
     git
+    git-branchless
     glances
     gnupg
     gum
