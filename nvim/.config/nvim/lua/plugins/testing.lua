@@ -19,7 +19,13 @@ return {
       --     dap_go_enabled = true,
       --   },
       -- },
-      status = { virtual_text = true },
+      icons = {
+        passed = "",
+        running = "",
+        failed = "",
+        unknown = "",
+      },
+      status = { virtual_text = false },
       output = { open_on_run = true },
       -- quickfix = {
       --   open = function()
