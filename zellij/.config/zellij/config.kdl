@@ -180,7 +180,7 @@ keybinds {
     shared_except "locked" {
         unbind "Ctrl g"
         bind "Ctrl Space" { SwitchToMode "Locked"; }
-        bind "Ctrl q" { Quit; }
+        bind "Ctrl q" { Detach; }
         bind "Alt f" { ToggleFloatingPanes; }
         bind "Alt n" { NewPane; }
         bind "Alt i" { MoveTab "Left"; }
@@ -254,7 +254,7 @@ load_plugins {
 //   - detach (Default)
 //   - quit
 //
-// on_force_close "quit"
+on_force_close "detach"
 
 //  Send a request for a simplified ui (without arrow fonts) to plugins
 //  Options:
