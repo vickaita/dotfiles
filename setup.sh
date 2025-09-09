@@ -33,6 +33,7 @@ log_error() {
 COMMON_PACKAGES=(
     atuin
     bat
+    btop
     curl
     delta
     difftastic
