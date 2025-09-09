@@ -38,6 +38,9 @@ safe_source "$DOTFILES/shared/shell/atuin.sh"
 safe_source "$DOTFILES/shared/shell/aliases.sh"
 safe_source "$DOTFILES/shared/shell/gh-copilot.sh"
 
+# Add custom bin directory to PATH
+prepend_to_path "$DOTFILES/bin"
+
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize

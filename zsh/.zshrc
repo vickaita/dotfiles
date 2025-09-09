@@ -38,6 +38,9 @@ safe_source "$DOTFILES/shared/shell/atuin.sh"
 safe_source "$DOTFILES/shared/shell/aliases.sh"
 safe_source "$DOTFILES/shared/shell/gh-copilot.sh"
 
+# Add custom bin directory to PATH
+prepend_to_path "$DOTFILES/bin"
+
 # Configure completion system with smart daily caching
 # IMPORTANT: This must run AFTER all shell scripts that modify fpath
 autoload -Uz compinit
