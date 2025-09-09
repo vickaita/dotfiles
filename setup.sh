@@ -556,6 +556,7 @@ stow_configs() {
     local stow_dirs=(
         "atuin"
         "bash"
+        "bat"
         "git"
         "ghostty"
         "htop"
