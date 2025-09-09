@@ -1,4 +1,6 @@
 # Catppuccin Mocha theme
+# Theme source: https://github.com/catppuccin/bat
+# License: MIT License
 --theme="Catppuccin Mocha"
 
 # Show line numbers
