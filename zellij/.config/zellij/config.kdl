@@ -36,6 +36,18 @@ keybinds {
         bind "Ctrl n" { GoToNextTab; }
         bind "Tab" { ToggleTab; SwitchToMode "Locked"; }
         bind "Shift Tab" { ToggleTab; }
+        bind "1" { GoToTab 1; SwitchToMode "Locked"; }
+        bind "2" { GoToTab 2; SwitchToMode "Locked"; }
+        bind "3" { GoToTab 3; SwitchToMode "Locked"; }
+        bind "4" { GoToTab 4; SwitchToMode "Locked"; }
+        bind "5" { GoToTab 5; SwitchToMode "Locked"; }
+        bind "6" { GoToTab 6; SwitchToMode "Locked"; }
+        bind "7" { GoToTab 7; SwitchToMode "Locked"; }
+        bind "8" { GoToTab 8; SwitchToMode "Locked"; }
+        bind "9" { GoToTab 9; SwitchToMode "Locked"; }
+
+        // bindings for tab creation
+        bind "g" { NewTab; SwitchToMode "Locked"; }
 
         bind "p" { SwitchToMode "Pane"; }
         bind "r" { SwitchToMode "Resize"; }
@@ -43,6 +55,7 @@ keybinds {
         bind "t" { SwitchToMode "Tab"; }
         bind "f" { SwitchToMode "EnterSearch"; }
         bind "c" { SwitchToMode "Scroll"; }
+        bind "/" { SwitchToMode "entersearch"; }
         bind "e" { SwitchToMode "Session"; }
         bind "Ctrl b" { SwitchToMode "Tmux"; }
         bind "Esc" { SwitchToMode "Locked"; }
@@ -135,6 +148,7 @@ keybinds {
         bind "Ctrl b" "PageUp" "Left" "h" { PageScrollUp; }
         bind "Ctrl d" { HalfPageScrollDown; }
         bind "Ctrl u" { HalfPageScrollUp; }
+        bind "Esc" "Enter" { SwitchToMode "Locked"; }
         // uncomment this and adjust key if using copy_on_select=false
         // bind "Alt c" { Copy; }
     }
@@ -152,6 +166,8 @@ keybinds {
         bind "c" { SearchToggleOption "CaseSensitivity"; }
         bind "w" { SearchToggleOption "Wrap"; }
         bind "o" { SearchToggleOption "WholeWord"; }
+        bind "/" { SwitchToMode "entersearch"; }
+        bind "Esc" "Enter" { SwitchToMode "Locked"; }
     }
     entersearch {
         bind "Ctrl c" "Esc" { SwitchToMode "Scroll"; }
@@ -168,7 +184,7 @@ keybinds {
         bind "Esc" { UndoRenamePane; SwitchToMode "Pane"; }
     }
     session {
-        bind "Ctrl o" { SwitchToMode "Normal"; }
+        bind "Ctrl c" "Backspace" { SwitchToMode "Normal"; }
         bind "Ctrl s" { SwitchToMode "Scroll"; }
         bind "d" { Detach; }
         bind "w" {
@@ -249,30 +265,30 @@ keybinds {
         bind "Alt p" { TogglePaneInGroup; }
         bind "Alt Shift p" { ToggleGroupMarking; }
     }
-    shared_except "normal" "locked" {
-        bind "Enter" "Esc" { SwitchToMode "Normal"; }
-    }
-    shared_except "pane" "locked" {
-        bind "Ctrl p" { SwitchToMode "Pane"; }
-    }
-    shared_except "resize" "locked" {
-        bind "Ctrl n" { SwitchToMode "Resize"; }
-    }
-    shared_except "scroll" "locked" {
-        bind "Ctrl s" { SwitchToMode "Scroll"; }
-    }
-    shared_except "session" "locked" {
-        bind "Ctrl o" { SwitchToMode "Session"; }
-    }
-    shared_except "tab" "locked" {
-        bind "Ctrl t" { SwitchToMode "Tab"; }
-    }
-    shared_except "move" "locked" {
-        bind "Ctrl h" { SwitchToMode "Move"; }
-    }
-    shared_except "tmux" "locked" {
-        bind "Ctrl b" { SwitchToMode "Tmux"; }
-    }
+    // shared_except "normal" "locked" {
+    //     bind "Enter" "Esc" { SwitchToMode "Normal"; }
+    // }
+    // shared_except "pane" "locked" {
+    //     bind "Ctrl p" { SwitchToMode "Pane"; }
+    // }
+    // shared_except "resize" "locked" {
+    //     bind "Ctrl n" { SwitchToMode "Resize"; }
+    // }
+    // shared_except "scroll" "locked" {
+    //     bind "Ctrl s" { SwitchToMode "Scroll"; }
+    // }
+    // shared_except "session" "locked" {
+    //     bind "Ctrl o" { SwitchToMode "Session"; }
+    // }
+    // shared_except "tab" "locked" {
+    //     bind "Ctrl t" { SwitchToMode "Tab"; }
+    // }
+    // shared_except "move" "locked" {
+    //     bind "Ctrl h" { SwitchToMode "Move"; }
+    // }
+    // shared_except "tmux" "locked" {
+    //     bind "Ctrl b" { SwitchToMode "Tmux"; }
+    // }
 }
 
 // Plugin aliases - can be used to change the implementation of Zellij
@@ -395,8 +411,8 @@ theme "catppuccin-mocha"
 
 // Choose the mode that zellij uses when starting up.
 // Default: normal
-//
-// default_mode "locked"
+
+default_mode "locked"
 
 // Toggle enabling the mouse mode.
 // On certain configurations, or terminals this could
