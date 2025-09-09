@@ -4,17 +4,17 @@ keybinds {
         // Unbind the default Ctrl-g lock key
         unbind "Ctrl g"
 
-	// Unbind default mode switching keys to avoid conflicts
-	// unbind "Ctrl p"
-	unbind "Ctrl r"
-	unbind "Ctrl m"
-	unbind "Ctrl t"
-	unbind "Ctrl s"
-	unbind "Ctrl o"
-	unbind "Ctrl b"
-	unbind "Ctrl h"
+        // Unbind default mode switching keys to avoid conflicts
+        // unbind "Ctrl p"
+        unbind "Ctrl r"
+        unbind "Ctrl m"
+        unbind "Ctrl t"
+        unbind "Ctrl s"
+        unbind "Ctrl o"
+        unbind "Ctrl b"
+        unbind "Ctrl h"
 
-	// Bindings for moving between panes
+        // Bindings for moving between panes
         bind "h" { MoveFocus "Left"; SwitchToMode "Locked"; }
         bind "l" { MoveFocus "Right"; SwitchToMode "Locked"; }
         bind "j" { MoveFocus "Down"; SwitchToMode "Locked"; }
@@ -25,24 +25,26 @@ keybinds {
         bind "J" "Down" { MoveFocus "Down"; }
         bind "K" "Up" { MoveFocus "Up"; }
 
-	// Bindings for pane creation
+        // Bindings for pane creation
         bind "n" { NewPane; SwitchToMode "Locked"; }
         bind "s" { NewPane "stacked"; SwitchToMode "Locked"; }
-	bind "a" { NewPane "Right"; SwitchToMode "Locked"; }
-	bind "b" { NewPane "Down"; SwitchToMode "Locked"; }
+        bind "a" { NewPane "Right"; SwitchToMode "Locked"; }
+        bind "b" { NewPane "Down"; SwitchToMode "Locked"; }
 
-	// Bindings for moving between tabs
-	bind "Ctrl p" { GoToPreviousTab; }
-	bind "Ctrl n" { GoToNextTab; }
+        // Bindings for moving between tabs
+        bind "Ctrl p" { GoToPreviousTab; }
+        bind "Ctrl n" { GoToNextTab; }
+        bind "Tab" { ToggleTab; SwitchToMode "Locked"; }
+        bind "Shift Tab" { ToggleTab; }
 
-	bind "p" { SwitchToMode "Pane"; }
-	bind "r" { SwitchToMode "Resize"; }
-	bind "m" { SwitchToMode "Move"; }
-	bind "t" { SwitchToMode "Tab"; }
-	bind "f" { SwitchToMode "EnterSearch"; }
-	bind "c" { SwitchToMode "Scroll"; }
-	bind "e" { SwitchToMode "Session"; }
-	bind "Ctrl b" { SwitchToMode "Tmux"; }
+        bind "p" { SwitchToMode "Pane"; }
+        bind "r" { SwitchToMode "Resize"; }
+        bind "m" { SwitchToMode "Move"; }
+        bind "t" { SwitchToMode "Tab"; }
+        bind "f" { SwitchToMode "EnterSearch"; }
+        bind "c" { SwitchToMode "Scroll"; }
+        bind "e" { SwitchToMode "Session"; }
+        bind "Ctrl b" { SwitchToMode "Tmux"; }
         bind "Esc" { SwitchToMode "Locked"; }
         // uncomment this and adjust key if using copy_on_select=false
         // bind "Alt c" { Copy; }
@@ -157,12 +159,12 @@ keybinds {
     }
     renametab {
         bind "Ctrl c" { SwitchToMode "Normal"; }
-	bind "Enter" { SwitchToMode "Locked"; }
+        bind "Enter" { SwitchToMode "Locked"; }
         bind "Esc" { UndoRenameTab; SwitchToMode "Locked"; }
     }
     renamepane {
         bind "Ctrl c" { SwitchToMode "Normal"; }
-	bind "Enter" { SwitchToMode "Locked"; }
+        bind "Enter" { SwitchToMode "Locked"; }
         bind "Esc" { UndoRenamePane; SwitchToMode "Pane"; }
     }
     session {
