@@ -89,6 +89,32 @@ return {
     opts_extend = { "sources.default" },
   },
 
+  -- Symbol highlighting
+  {
+    "RRethy/vim-illuminate",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      providers = {
+        "lsp",
+        "treesitter",
+        "regex",
+      },
+      delay = 120,
+      filetype_overrides = {},
+      filetypes_denylist = {
+        "dirvish",
+        "fugitive",
+      },
+      under_cursor = true,
+      large_file_cutoff = nil,
+      large_file_overrides = nil,
+      min_count_to_highlight = 1,
+    },
+    config = function(_, opts)
+      require("illuminate").configure(opts)
+    end,
+  },
+
   -- Actual LSP client
   {
     "neovim/nvim-lspconfig",
