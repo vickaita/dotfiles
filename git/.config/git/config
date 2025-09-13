@@ -15,11 +15,17 @@
 [alias]
 	ddiff = difftool
 	difft = difftool
+	dft = difft-no-lock
 	dlog = "!f() { GIT_EXTERNAL_DIFF=difft git log -p --ext-diff $@; }; f"
 	dshow = "!f() { GIT_EXTERNAL_DIFF=difft git show --ext-diff $@; }; f"
 	diffbat = "!f() { git diff --no-color --unified=9999 $@ | bat --language=diff --style=changes,numbers,snip; }; f"
 	delta = "!f() { git diff $@ | delta --navigate; }; f"
 	delta-split = "!f() { git diff $@ | delta --navigate --side-by-side; }; f"
+	diff-no-lock = "!f() { git diff $@ -- ':(exclude)package-lock.json' ':(exclude)yarn.lock' ':(exclude)pnpm-lock.yaml' ':(exclude)composer.lock' ':(exclude)Pipfile.lock' ':(exclude)poetry.lock' ':(exclude)Cargo.lock' ':(exclude)Gemfile.lock' ':(exclude)go.sum'; }; f"
+	difft-no-lock = "!f() { git difftool $@ -- ':(exclude)package-lock.json' ':(exclude)yarn.lock' ':(exclude)pnpm-lock.yaml' ':(exclude)composer.lock' ':(exclude)Pipfile.lock' ':(exclude)poetry.lock' ':(exclude)Cargo.lock' ':(exclude)Gemfile.lock' ':(exclude)go.sum'; }; f"
+	delta-no-lock = "!f() { git diff-no-lock $@ | delta --navigate; }; f"
+	diffbat-no-lock = "!f() { git diff-no-lock --no-color --unified=9999 $@ | bat --language=diff --style=changes,numbers,snip; }; f"
+	delta-split-no-lock = "!f() { git diff-no-lock $@ | delta --navigate --side-by-side; }; f"
 	fsm-start = fsmonitor--daemon start
 	fsm-stop = fsmonitor--daemon stop
 	fsm-status = fsmonitor--daemon status
