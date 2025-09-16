@@ -29,6 +29,9 @@
 	fsm-start = fsmonitor--daemon start
 	fsm-stop = fsmonitor--daemon stop
 	fsm-status = fsmonitor--daemon status
+	wip = "!git-wip"
+	squash = "!git-squash"
+	cleanup = "!git-cleanup"
 [delta]
 	features = catppuccin-mocha
 	file-decoration-style = none

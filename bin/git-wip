@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+show_help() {
+    cat << EOF
+git-wip - Create work-in-progress commits
+
+USAGE:
+    git wip [OPTIONS] [MESSAGE]
+
+OPTIONS:
+    -m, --message MESSAGE   Custom message (will be prefixed with 'wip: ')
+    --amend                Amend the last wip commit instead of creating new one
+    -h, --help             Show this help message
+
+EXAMPLES:
+    git wip                           # Creates commit with message 'wip'
+    git wip -m "fixing auth bug"      # Creates commit with message 'wip: fixing auth bug'
+    git wip --amend                   # Amends the last wip commit with current changes
+
+NOTES:
+    - Automatically stages all changes (git add .)
+    - Uses --no-verify to skip pre-commit hooks
+    - For amend mode, the last commit must start with 'wip'
+EOF
+}
+
+main() {
+    local message=""
+    local amend=false
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -m|--message)
+                if [[ -n "${2:-}" ]]; then
+                    message="$2"
+                    shift 2
+                else
+                    echo "Error: --message requires a value" >&2
+                    exit 1
+                fi
+                ;;
+            --amend)
+                amend=true
+                shift
+                ;;
+            -*)
+                echo "Error: Unknown option $1" >&2
+                echo "Use --help for usage information" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$message" ]]; then
+                    message="$1"
+                    shift
+                else
+                    echo "Error: Too many arguments" >&2
+                    exit 1
+                fi
+                ;;
+        esac
+    done
+
+    # Check if there are any changes to commit
+    local has_staged_changes=false
+    local has_unstaged_changes=false
+    local has_untracked_files=false
+
+    # Check for staged changes
+    if ! git diff-index --quiet --cached HEAD 2>/dev/null; then
+        has_staged_changes=true
+    fi
+
+    # Check for unstaged changes to tracked files
+    if ! git diff-files --quiet; then
+        has_unstaged_changes=true
+    fi
+
+    # Check for untracked files
+    if [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
+        has_untracked_files=true
+    fi
+
+    # If we have any changes, stage them
+    if [[ "$has_unstaged_changes" == "true" || "$has_untracked_files" == "true" ]]; then
+        git add .
+        has_staged_changes=true
+    fi
+
+    # If no changes at all and not amending, exit
+    if [[ "$has_staged_changes" == "false" && "$amend" == "false" ]]; then
+        echo "No changes to commit" >&2
+        exit 1
+    fi
+
+    if [[ "$amend" == "true" ]]; then
+        # Check if last commit is a wip commit
+        local last_commit_msg
+        last_commit_msg=$(git log -1 --format='%s' 2>/dev/null || echo "")
+
+        if [[ ! "$last_commit_msg" =~ ^wip ]]; then
+            echo "Error: Last commit is not a wip commit, cannot amend" >&2
+            exit 1
+        fi
+
+        # Stage any unstaged changes for amend
+        if ! git diff-files --quiet; then
+            git add .
+        fi
+
+        git commit --amend --no-edit --no-verify
+        echo "Amended last wip commit"
+    else
+        # Create new wip commit
+        local commit_message
+        if [[ -n "$message" ]]; then
+            commit_message="wip: $message"
+        else
+            commit_message="wip"
+        fi
+
+        git commit --no-verify -m "$commit_message"
+        echo "Created wip commit: $commit_message"
+    fi
+}
+
+main "$@"

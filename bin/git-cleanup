@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+show_help() {
+    cat << EOF
+git-cleanup - Delete merged branches
+
+USAGE:
+    git cleanup [OPTIONS]
+
+OPTIONS:
+    --dry-run              Show which branches would be deleted without deleting them
+    --protect BRANCH       Additional branch to protect from deletion (can be used multiple times)
+    -h, --help             Show this help message
+
+DESCRIPTION:
+    Deletes all local branches that have been merged into the current branch,
+    except for protected branches. By default, protects: main, master, develop,
+    and the current branch.
+
+EXAMPLES:
+    git cleanup --dry-run                    # Preview which branches would be deleted
+    git cleanup                              # Delete merged branches
+    git cleanup --protect staging            # Also protect 'staging' branch
+    git cleanup --protect feature --protect hotfix  # Protect multiple additional branches
+EOF
+}
+
+main() {
+    local dry_run=false
+    local protected_branches=("main" "master" "develop")
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            --dry-run)
+                dry_run=true
+                shift
+                ;;
+            --protect)
+                if [[ -n "${2:-}" ]]; then
+                    protected_branches+=("$2")
+                    shift 2
+                else
+                    echo "Error: --protect requires a branch name" >&2
+                    exit 1
+                fi
+                ;;
+            -*)
+                echo "Error: Unknown option $1" >&2
+                echo "Use --help for usage information" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument $1" >&2
+                echo "Use --help for usage information" >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    # Get current branch to protect it
+    local current_branch
+    current_branch=$(git branch --show-current 2>/dev/null || echo "")
+    if [[ -n "$current_branch" ]]; then
+        protected_branches+=("$current_branch")
+    fi
+
+    # Build grep pattern to exclude protected branches
+    local grep_pattern=""
+    for branch in "${protected_branches[@]}"; do
+        if [[ -n "$grep_pattern" ]]; then
+            grep_pattern="$grep_pattern\\|"
+        fi
+        grep_pattern="$grep_pattern$branch"
+    done
+
+    # Find merged branches, excluding protected ones and current branch indicator
+    local merged_branches
+    merged_branches=$(git branch --merged 2>/dev/null | grep -v "\\*\\|$grep_pattern" || echo "")
+
+    if [[ -z "$merged_branches" ]]; then
+        echo "No merged branches to delete"
+        exit 0
+    fi
+
+    # Clean up whitespace
+    merged_branches=$(echo "$merged_branches" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+
+    if [[ "$dry_run" == "true" ]]; then
+        echo "Would delete the following merged branches:"
+        echo "$merged_branches" | sed 's/^/  /'
+        echo ""
+        echo "Protected branches: ${protected_branches[*]}"
+        exit 0
+    fi
+
+    echo "Deleting merged branches:"
+    echo "$merged_branches" | sed 's/^/  /'
+    echo ""
+
+    # Delete the branches
+    local deleted_count=0
+    while IFS= read -r branch; do
+        if [[ -n "$branch" ]]; then
+            if git branch -d "$branch" 2>/dev/null; then
+                echo "Deleted: $branch"
+                ((deleted_count++))
+            else
+                echo "Failed to delete: $branch" >&2
+            fi
+        fi
+    done <<< "$merged_branches"
+
+    echo ""
+    echo "Deleted $deleted_count merged branch(es)"
+}
+
+main "$@"

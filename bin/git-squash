@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+show_help() {
+    cat << EOF
+git-squash - Squash all wip commits into the first non-wip commit
+
+USAGE:
+    git squash [OPTIONS]
+
+OPTIONS:
+    --dry-run              Show what would be squashed without doing it
+    -h, --help             Show this help message
+
+DESCRIPTION:
+    Finds all consecutive wip commits starting from HEAD and squashes them
+    into the first non-wip commit found. The original non-wip commit message
+    is preserved but can be edited.
+
+SAFETY CHECKS:
+    - Aborts if the most recent commit is not a wip commit
+    - Aborts if there are uncommitted changes
+    - Aborts if no non-wip commit is found
+
+EXAMPLES:
+    git squash --dry-run      # Preview what would be squashed
+    git squash                # Perform the squash operation
+EOF
+}
+
+main() {
+    local dry_run=false
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            --dry-run)
+                dry_run=true
+                shift
+                ;;
+            -*)
+                echo "Error: Unknown option $1" >&2
+                echo "Use --help for usage information" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument $1" >&2
+                echo "Use --help for usage information" >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    # Check for uncommitted changes
+    if ! git diff-index --quiet HEAD 2>/dev/null; then
+        echo "Error: You have uncommitted changes. Please commit or stash them first." >&2
+        exit 1
+    fi
+
+    # Check if most recent commit is a wip commit
+    local recent_commit_msg
+    recent_commit_msg=$(git log -1 --format='%s' 2>/dev/null || echo "")
+
+    if [[ ! "$recent_commit_msg" =~ ^wip ]]; then
+        echo "Error: Most recent commit is not a wip commit, aborting" >&2
+        echo "Recent commit: $recent_commit_msg" >&2
+        exit 1
+    fi
+
+    # Find the first non-wip commit
+    local first_non_wip_hash
+    first_non_wip_hash=$(git log --oneline --grep='^wip' --invert-grep -1 --format='%H' 2>/dev/null || echo "")
+
+    if [[ -z "$first_non_wip_hash" ]]; then
+        echo "Error: No non-wip commit found" >&2
+        exit 1
+    fi
+
+    # Get list of wip commits that will be squashed
+    local wip_commits
+    wip_commits=$(git log --oneline "$first_non_wip_hash"..HEAD --format='%h %s')
+
+    if [[ -z "$wip_commits" ]]; then
+        echo "No wip commits found to squash" >&2
+        exit 1
+    fi
+
+    # Get the original commit message
+    local original_message
+    original_message=$(git log --format='%B' -1 "$first_non_wip_hash")
+
+    if [[ "$dry_run" == "true" ]]; then
+        echo "Would squash the following wip commits:"
+        echo "$wip_commits" | sed 's/^/  /'
+        echo ""
+        echo "Into commit (amending): $(git log --oneline -1 "$first_non_wip_hash")"
+        echo ""
+        echo "Original commit message would be preserved:"
+        echo "$original_message" | sed 's/^/  /'
+        exit 0
+    fi
+
+    echo "Squashing wip commits:"
+    echo "$wip_commits" | sed 's/^/  /'
+    echo ""
+    echo "Into (amending): $(git log --oneline -1 "$first_non_wip_hash")"
+    echo ""
+
+    # Move HEAD to the first non-wip commit and stage all changes since it
+    git reset --soft "$first_non_wip_hash"
+
+    # Amend that commit to include the staged changes, preserving message but allowing edits
+    git commit --amend --edit
+
+    echo "Squash completed successfully!"
+}
+
+main "$@"
