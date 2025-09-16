@@ -2,7 +2,7 @@ font-family = Monaco
 font-size = 15
 
 # Theme - uses built-in catppuccin-mocha theme
-theme = catppuccin-mocha
+theme = Catppuccin Mocha
 
 # Option key configuration
 # Left option key acts as meta (Alt)
