@@ -12,21 +12,21 @@ keybinds {
         unbind "Ctrl s"
         unbind "Ctrl o"
         unbind "Ctrl b"
-        unbind "Ctrl h"
+        // unbind "Ctrl h"
 
         // Bindings for moving between panes
         bind "h" { MoveFocus "Left"; SwitchToMode "Locked"; }
-        bind "l" { MoveFocus "Right"; SwitchToMode "Locked"; }
         bind "j" { MoveFocus "Down"; SwitchToMode "Locked"; }
         bind "k" { MoveFocus "Up"; SwitchToMode "Locked"; }
+        bind "l" { MoveFocus "Right"; SwitchToMode "Locked"; }
 
-        bind "H" "Left" { MoveFocus "Left"; }
-        bind "L" "Right" { MoveFocus "Right"; }
-        bind "J" "Down" { MoveFocus "Down"; }
-        bind "K" "Up" { MoveFocus "Up"; }
+        bind "H" "Ctrl h" "Left" { MoveFocus "Left"; }
+        bind "J" "Ctrl j" "Down" { MoveFocus "Down"; }
+        bind "K" "Ctrl k" "Up" { MoveFocus "Up"; }
+        bind "L" "Ctrl l" "Right" { MoveFocus "Right"; }
 
         // Bindings for pane creation
-        bind "n" { NewPane; SwitchToMode "Locked"; }
+        // bind "n" { NewPane; SwitchToMode "Locked"; }
         bind "s" { NewPane "stacked"; SwitchToMode "Locked"; }
         bind "a" { NewPane "Right"; SwitchToMode "Locked"; }
         bind "b" { NewPane "Down"; SwitchToMode "Locked"; }
@@ -91,23 +91,25 @@ keybinds {
         bind "p" { SwitchFocus; }
         bind "n" { NewPane; SwitchToMode "Locked"; }
         bind "H" { NewPane "Right"; MovePane "Left"; SwitchToMode "Locked"; }
-        bind "L" { NewPane "Right"; SwitchToMode "Locked"; }
+        // bind "L" { NewPane "Left"; SwitchToMode "Locked"; }
         bind "J" { NewPane "Down"; SwitchToMode "Locked"; }
-        bind "K" { NewPane "Up"; SwitchToMode "Locked"; }
+        // bind "K" { NewPane "Up"; SwitchToMode "Locked"; }
         bind "s" { NewPane "stacked"; SwitchToMode "Locked"; }
         bind "x" { CloseFocus; SwitchToMode "Locked"; }
         bind "f" { ToggleFocusFullscreen; SwitchToMode "Locked"; }
         bind "z" { TogglePaneFrames; SwitchToMode "Locked"; }
         bind "w" { ToggleFloatingPanes; SwitchToMode "Locked"; }
         bind "e" { TogglePaneEmbedOrFloating; SwitchToMode "Locked"; }
-        bind "r" { SwitchToMode "RenamePane"; PaneNameInput 0;}
+        bind "c" { SwitchToMode "RenamePane"; PaneNameInput 0;}
+        bind "r" { SwitchToMode "Resize"; }
+        bind "m" { SwitchToMode "Move"; }
         bind "i" { TogglePanePinned; SwitchToMode "Locked"; }
         bind "Esc" "Enter" { SwitchToMode "Locked"; }
     }
     move {
         bind "Ctrl c" "Backspace" { SwitchToMode "Normal"; }
         bind "n" "Tab" { MovePane; }
-        bind "Shift Tab" "p" { MovePaneBackwards; }
+        bind "p" "Shift Tab" { MovePaneBackwards; }
         bind "h" "Left" { MovePane "Left"; }
         bind "j" "Down" { MovePane "Down"; }
         bind "k" "Up" { MovePane "Up"; }
@@ -116,7 +118,7 @@ keybinds {
     }
     tab {
         bind "Ctrl c" "Backspace" { SwitchToMode "Normal"; }
-        bind "r" { SwitchToMode "RenameTab"; TabNameInput 0; }
+        bind "c" { SwitchToMode "RenameTab"; TabNameInput 0; }
         bind "h" "Left" "Up" "k" { GoToPreviousTab; }
         bind "l" "Right" "Down" "j" { GoToNextTab; }
         bind "n" { NewTab; SwitchToMode "Locked"; }
