@@ -27,9 +27,39 @@ EXAMPLES:
 EOF
 }
 
+add_protected_branch() {
+    local branch="$1"
+
+    [[ -z "$branch" ]] && return
+
+    for existing in "${protected_branches[@]-}"; do
+        if [[ "$existing" == "$branch" ]]; then
+            return
+        fi
+    done
+
+    protected_branches+=("$branch")
+}
+
+is_protected() {
+    local candidate="$1"
+
+    for protected in "${protected_branches[@]-}"; do
+        if [[ "$protected" == "$candidate" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 main() {
     local dry_run=false
-    local protected_branches=("main" "master" "develop")
+    local protected_branches=()
+
+    add_protected_branch "main"
+    add_protected_branch "master"
+    add_protected_branch "develop"
 
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -43,7 +73,7 @@ main() {
                 ;;
             --protect)
                 if [[ -n "${2:-}" ]]; then
-                    protected_branches+=("$2")
+                    add_protected_branch "$2"
                     shift 2
                 else
                     echo "Error: --protect requires a branch name" >&2
@@ -63,58 +93,65 @@ main() {
         esac
     done
 
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "Error: git-cleanup must be run inside a Git repository" >&2
+        exit 1
+    fi
+
     # Get current branch to protect it
     local current_branch
     current_branch=$(git branch --show-current 2>/dev/null || echo "")
     if [[ -n "$current_branch" ]]; then
-        protected_branches+=("$current_branch")
+        add_protected_branch "$current_branch"
     fi
 
-    # Build grep pattern to exclude protected branches
-    local grep_pattern=""
-    for branch in "${protected_branches[@]}"; do
-        if [[ -n "$grep_pattern" ]]; then
-            grep_pattern="$grep_pattern\\|"
+    # Find merged branches
+    local merged_branches_raw
+    if ! merged_branches_raw=$(git for-each-ref --merged HEAD --format="%(refname:short)" refs/heads/ 2>/dev/null); then
+        echo "Error: Unable to list merged branches" >&2
+        exit 1
+    fi
+
+    # Exclude protected branches
+    local filtered_branches=()
+    while IFS= read -r branch; do
+        [[ -z "$branch" ]] && continue
+        if ! is_protected "$branch"; then
+            filtered_branches+=("$branch")
         fi
-        grep_pattern="$grep_pattern$branch"
-    done
+    done <<< "$merged_branches_raw"
 
-    # Find merged branches, excluding protected ones and current branch indicator
-    local merged_branches
-    merged_branches=$(git branch --merged 2>/dev/null | grep -v "\\*\\|$grep_pattern" || echo "")
-
-    if [[ -z "$merged_branches" ]]; then
+    if [[ ${#filtered_branches[@]} -eq 0 ]]; then
         echo "No merged branches to delete"
         exit 0
     fi
 
-    # Clean up whitespace
-    merged_branches=$(echo "$merged_branches" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
-
     if [[ "$dry_run" == "true" ]]; then
         echo "Would delete the following merged branches:"
-        echo "$merged_branches" | sed 's/^/  /'
+        for branch in "${filtered_branches[@]}"; do
+            echo "  $branch"
+        done
         echo ""
         echo "Protected branches: ${protected_branches[*]}"
         exit 0
     fi
 
     echo "Deleting merged branches:"
-    echo "$merged_branches" | sed 's/^/  /'
+    for branch in "${filtered_branches[@]}"; do
+        echo "  $branch"
+    done
     echo ""
 
     # Delete the branches
     local deleted_count=0
-    while IFS= read -r branch; do
-        if [[ -n "$branch" ]]; then
-            if git branch -d "$branch" 2>/dev/null; then
-                echo "Deleted: $branch"
-                ((deleted_count++))
-            else
-                echo "Failed to delete: $branch" >&2
-            fi
+    for branch in "${filtered_branches[@]}"; do
+        if git branch -d "$branch" 2>/dev/null; then
+            echo "Deleted: $branch"
+            ((deleted_count++))
+        else
+            echo "Failed to delete: $branch" >&2
         fi
-    done <<< "$merged_branches"
+    done
 
     echo ""
     echo "Deleted $deleted_count merged branch(es)"
