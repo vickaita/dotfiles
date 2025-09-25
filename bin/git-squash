@@ -29,6 +29,23 @@ EXAMPLES:
 EOF
 }
 
+print_indented() {
+    local input="$1"
+
+    [[ -z "$input" ]] && return
+
+    while IFS= read -r line; do
+        printf '  %s\n' "$line"
+    done <<< "$input"
+}
+
+is_wip_commit_message() {
+    local message
+    message=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')
+
+    [[ $message =~ ^wip([[:space:]]|:|$) ]]
+}
+
 main() {
     local dry_run=false
 
@@ -55,6 +72,16 @@ main() {
         esac
     done
 
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "Error: git-squash must be run inside a Git repository" >&2
+        exit 1
+    fi
+
+    if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+        echo "Error: Repository has no commits to squash" >&2
+        exit 1
+    fi
+
     # Check for uncommitted changes
     if ! git diff-index --quiet HEAD 2>/dev/null; then
         echo "Error: You have uncommitted changes. Please commit or stash them first." >&2
@@ -65,29 +92,41 @@ main() {
     local recent_commit_msg
     recent_commit_msg=$(git log -1 --format='%s' 2>/dev/null || echo "")
 
-    if [[ ! "$recent_commit_msg" =~ ^wip ]]; then
+    if ! is_wip_commit_message "$recent_commit_msg"; then
         echo "Error: Most recent commit is not a wip commit, aborting" >&2
         echo "Recent commit: $recent_commit_msg" >&2
         exit 1
     fi
 
-    # Find the first non-wip commit
-    local first_non_wip_hash
-    first_non_wip_hash=$(git log --oneline --grep='^wip' --invert-grep -1 --format='%H' 2>/dev/null || echo "")
+    # Walk commits from HEAD to find contiguous wip commits and the first non-wip
+    local first_non_wip_hash=""
+    local wip_commit_hashes=()
+    while read -r commit_hash; do
+        local subject
+        subject=$(git log -1 --format='%s' "$commit_hash")
 
+        if is_wip_commit_message "$subject"; then
+            wip_commit_hashes+=("$commit_hash")
+            continue
+        fi
+
+        first_non_wip_hash="$commit_hash"
+        break
+    done < <(git rev-list HEAD)
+
+    # Ensure we found a non-wip commit to squash into
     if [[ -z "$first_non_wip_hash" ]]; then
         echo "Error: No non-wip commit found" >&2
         exit 1
     fi
 
-    # Get list of wip commits that will be squashed
-    local wip_commits
-    wip_commits=$(git log --oneline "$first_non_wip_hash"..HEAD --format='%h %s')
-
-    if [[ -z "$wip_commits" ]]; then
-        echo "No wip commits found to squash" >&2
+    if [[ ${#wip_commit_hashes[@]} -eq 0 ]]; then
+        echo "Error: No wip commits found to squash" >&2
         exit 1
     fi
+
+    local wip_commits
+    wip_commits=$(git log --oneline "$first_non_wip_hash"..HEAD --format='%h %s')
 
     # Get the original commit message
     local original_message
@@ -95,17 +134,17 @@ main() {
 
     if [[ "$dry_run" == "true" ]]; then
         echo "Would squash the following wip commits:"
-        echo "$wip_commits" | sed 's/^/  /'
+        print_indented "$wip_commits"
         echo ""
         echo "Into commit (amending): $(git log --oneline -1 "$first_non_wip_hash")"
         echo ""
         echo "Original commit message would be preserved:"
-        echo "$original_message" | sed 's/^/  /'
+        print_indented "$original_message"
         exit 0
     fi
 
     echo "Squashing wip commits:"
-    echo "$wip_commits" | sed 's/^/  /'
+    print_indented "$wip_commits"
     echo ""
     echo "Into (amending): $(git log --oneline -1 "$first_non_wip_hash")"
     echo ""

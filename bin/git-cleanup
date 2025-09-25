@@ -53,6 +53,22 @@ is_protected() {
     return 1
 }
 
+branch_fully_merged() {
+    local branch="$1"
+
+    # Fast path for branches whose tip commit is already contained in HEAD
+    if git merge-base --is-ancestor "$branch" HEAD >/dev/null 2>&1; then
+        return 0
+    fi
+
+    # Fallback to patch-id comparison so squash merges are treated as merged
+    if git cherry HEAD "$branch" | grep -q '^+'; then
+        return 1
+    fi
+
+    return 0
+}
+
 main() {
     local dry_run=false
     local protected_branches=()
@@ -105,21 +121,21 @@ main() {
         add_protected_branch "$current_branch"
     fi
 
-    # Find merged branches
-    local merged_branches_raw
-    if ! merged_branches_raw=$(git for-each-ref --merged HEAD --format="%(refname:short)" refs/heads/ 2>/dev/null); then
-        echo "Error: Unable to list merged branches" >&2
+    # Find candidate branches
+    local all_branches_raw
+    if ! all_branches_raw=$(git for-each-ref --format="%(refname:short)" refs/heads/ 2>/dev/null); then
+        echo "Error: Unable to list local branches" >&2
         exit 1
     fi
 
-    # Exclude protected branches
+    # Exclude protected branches and those that still contain unique changes
     local filtered_branches=()
     while IFS= read -r branch; do
         [[ -z "$branch" ]] && continue
-        if ! is_protected "$branch"; then
+        if ! is_protected "$branch" && branch_fully_merged "$branch"; then
             filtered_branches+=("$branch")
         fi
-    done <<< "$merged_branches_raw"
+    done <<< "$all_branches_raw"
 
     if [[ ${#filtered_branches[@]} -eq 0 ]]; then
         echo "No merged branches to delete"
