@@ -110,6 +110,21 @@ return {
               end
             end,
           },
+          {
+            "<leader>ui",
+            desc = function()
+              local enabled = vim.g.auto_import_folding_enabled
+              return enabled and "Disable auto import folding" or "Enable auto import folding"
+            end,
+            icon = function()
+              local enabled = vim.g.auto_import_folding_enabled
+              if enabled then
+                return { icon = "", color = "green" }
+              else
+                return { icon = "", color = "red" }
+              end
+            end,
+          },
           { "<leader>v", group = "vimwiki" },
           { "<leader>vd", group = "diary" },
           { "<leader>w", group = "workspace", icon = "󰷉" },
