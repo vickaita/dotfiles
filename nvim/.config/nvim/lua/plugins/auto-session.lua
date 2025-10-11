@@ -10,8 +10,9 @@ return {
       "ibhagwan/fzf-lua",
     },
     keys = {
-      { "<leader>wr", "<cmd>SessionSearch<cr>", desc = "Session search" },
-      { "<leader>ws", "<cmd>SessionSave<cr>", desc = "Save session" },
+      { "<leader>wr", "<cmd>AutoSession search<cr>", desc = "Session search" },
+      { "<leader>ws", "<cmd>AutoSession save<cr>", desc = "Save session" },
+      { "<leader>wd", "<cmd>AutoSession delete<cr>", desc = "Delete current session" },
     },
     opts = {
       auto_session_suppress_dirs = {
