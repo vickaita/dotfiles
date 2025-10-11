@@ -12,7 +12,6 @@ return {
     keys = {
       { "<leader>wr", "<cmd>SessionSearch<cr>", desc = "Session search" },
       { "<leader>ws", "<cmd>SessionSave<cr>", desc = "Save session" },
-      { "<leader>wa", "<cmd>SessionToggleAutoSave<cr>", desc = "Toggle autosave" },
     },
     opts = {
       auto_session_suppress_dirs = {
@@ -50,7 +49,7 @@ return {
 
       -- Pre and post session hooks
       pre_save_cmds = {},
-      
+
       post_restore_cmds = {
         function()
           -- Refresh git signs after restoring session
@@ -62,4 +61,3 @@ return {
     },
   },
 }
-

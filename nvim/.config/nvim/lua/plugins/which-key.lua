@@ -128,6 +128,22 @@ return {
           { "<leader>v", group = "vimwiki" },
           { "<leader>vd", group = "diary" },
           { "<leader>w", group = "workspace", icon = "󰷉" },
+          {
+            "<leader>wa",
+            "<cmd>AutoSession toggle<cr>",
+            desc = function()
+              local config = require("auto-session.config")
+              return config.auto_save and "Disable session auto-save" or "Enable session auto-save"
+            end,
+            icon = function()
+              local config = require("auto-session.config")
+              if config.auto_save then
+                return { icon = "", color = "green" }
+              else
+                return { icon = "", color = "red" }
+              end
+            end,
+          },
           { "<leader>x", group = "diagnostics" },
           { "<leader>a", group = "ai" },
           { "<leader>i", group = "insert" },
