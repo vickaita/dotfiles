@@ -15,28 +15,21 @@ return {
       { "<leader>wd", "<cmd>AutoSession delete<cr>", desc = "Delete current session" },
     },
     opts = {
-      auto_session_suppress_dirs = {
+      -- Saving / restoring
+      enabled = true,
+      auto_save = true,
+      auto_restore = true,
+      auto_create = true,
+      show_auto_restore_notif = true,
+
+      -- Filtering
+      suppressed_dirs = {
         "~/",
         "~/Projects",
         "~/Downloads",
         "/",
       },
-      auto_session_use_git_branch = true,
-      auto_session_enabled = true,
-      auto_save_enabled = true,
-      auto_restore_enabled = true,
-      auto_session_create_enabled = true,
-
-      -- Session lens configuration - commented out to use vim.ui.select (fzf-lua)
-      -- session_lens = {
-      --   buftypes_to_ignore = {},
-      --   load_on_setup = true,
-      --   theme_conf = { border = true },
-      --   previewer = false,
-      -- },
-
-      -- Configure which buffers to save in sessions
-      bypass_session_save_file_types = {
+      bypass_save_filetypes = {
         "alpha",
         "dashboard",
         "lir",
@@ -47,6 +40,17 @@ return {
         "mason",
         "neo-tree",
       },
+
+      -- Git / Session naming
+      git_use_branch_name = true,
+
+      -- Session lens configuration - commented out to use vim.ui.select (fzf-lua)
+      -- session_lens = {
+      --   buftypes_to_ignore = {},
+      --   load_on_setup = true,
+      --   theme_conf = { border = true },
+      --   previewer = false,
+      -- },
 
       -- Pre and post session hooks
       pre_save_cmds = {},
