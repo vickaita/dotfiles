@@ -17,6 +17,7 @@ return {
         "isort",
         "ruff",
         "ruff_fix",
+        "pyrefly",
       },
     },
   },
@@ -25,6 +26,7 @@ return {
     opts = {
       ensure_installed = {
         "pyright",
+        "pyrefly",
       },
     },
   },
