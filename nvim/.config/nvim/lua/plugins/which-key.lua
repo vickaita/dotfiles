@@ -29,10 +29,26 @@ return {
             "<leader>uf",
             desc = function()
               local disabled = vim.g.disable_autoformat or false
+              -- Check neoconf setting if available
+              local ok, neoconf = pcall(require, "neoconf")
+              if ok then
+                local neoconf_setting = neoconf.get("custom.disable_autoformat")
+                if neoconf_setting ~= nil then
+                  disabled = neoconf_setting
+                end
+              end
               return disabled and "Enable format on save" or "Disable format on save"
             end,
             icon = function()
               local disabled = vim.g.disable_autoformat or false
+              -- Check neoconf setting if available
+              local ok, neoconf = pcall(require, "neoconf")
+              if ok then
+                local neoconf_setting = neoconf.get("custom.disable_autoformat")
+                if neoconf_setting ~= nil then
+                  disabled = neoconf_setting
+                end
+              end
               if disabled then
                 return { icon = "", color = "red" }
               else

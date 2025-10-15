@@ -18,11 +18,12 @@ return {
     {
       "<leader>uf",
       function()
+        -- Toggle the global variable (will be saved per-session by auto-session)
         vim.g.disable_autoformat = not vim.g.disable_autoformat
         if vim.g.disable_autoformat then
-          vim.notify("Format on save disabled", vim.log.levels.INFO)
+          vim.notify("Format on save disabled (saved in session)", vim.log.levels.INFO)
         else
-          vim.notify("Format on save enabled", vim.log.levels.INFO)
+          vim.notify("Format on save enabled (saved in session)", vim.log.levels.INFO)
         end
       end,
       mode = "",
