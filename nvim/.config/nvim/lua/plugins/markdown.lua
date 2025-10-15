@@ -71,7 +71,7 @@ return {
           bullet = true, -- Preserve bullet points with checkboxes
           -- Custom checkboxes for different states
           unchecked = { icon = "[ ]", highlight = "RenderMarkdownUnchecked" },
-          checked = { icon = "[✖︎]", highlight = "RenderMarkdownDone" },
+          checked = { icon = "[✖︎] ", highlight = "RenderMarkdownDone" },
           custom = {
             todo = {
               raw = "[-]",

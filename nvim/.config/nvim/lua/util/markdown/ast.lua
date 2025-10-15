@@ -3,6 +3,8 @@
 
 local config = require("util.markdown.config").config
 
+local parse_line_info
+
 --- AST Node Structure and Constructors
 ---
 --- AST node represents a single list item in the markdown document
@@ -30,6 +32,7 @@ local function create_ast_node(node_type, content, opts)
     content = content or "",
     status = opts.status,
     indent = opts.indent or 0,
+    indent_string = opts.indent_string or string.rep(" ", opts.indent or 0),
     list_type = opts.list_type or "unordered",
     marker = opts.marker or "-",
     children = {},
@@ -87,61 +90,134 @@ local function validate_input(lines, buffer_id)
 end
 
 --- Extract full content from a range of lines for a list item
---- @param lines string[]: all document lines
---- @param start_line number: starting line (1-based)
---- @param end_line number: ending line (1-based)
---- @param base_indent number: base indentation of the list item
---- @return string: complete content including continuation lines
-local function extract_full_content(lines, start_line, end_line, base_indent)
-  if not lines or start_line > end_line then
+--- @param text string
+--- @return string
+local function lstrip(text)
+  if not text or text == "" then
+    return text or ""
+  end
+  local first_non_space = text:match("^%s*()") or 1
+  return text:sub(first_non_space)
+end
+
+--- Get leading whitespace for a line
+--- @param line string
+--- @return string
+local function get_indent_string(line)
+  if not line then
+    return ""
+  end
+  return line:match("^(%s*)") or ""
+end
+
+--- Strip list markers and optional checkbox from the first line content
+--- @param line string
+--- @return string
+local function strip_marker_from_line(line)
+  if not line or line == "" then
     return ""
   end
 
-  local content_parts = {}
-  local first_line = lines[start_line] or ""
+  local result = line
+  -- Unordered with checkbox
+  result = result:gsub("^%s*[%-%*%+]%s+%[.%]%s*", "", 1)
+  -- Ordered with checkbox
+  result = result:gsub("^%s*%d+[%.)]%s+%[.%]%s*", "", 1)
+  -- Unordered without checkbox
+  result = result:gsub("^%s*[%-%*%+]%s+", "", 1)
+  -- Ordered without checkbox
+  result = result:gsub("^%s*%d+[%.)]%s+", "", 1)
 
-  -- Extract content from first line (after the list marker and checkbox)
-  local first_content = first_line:match("^%s*[%-%*%+]%s+%[.%]%s*(.*)")
-    or first_line:match("^%s*%d+%.%s+%[.%]%s*(.*)")
-    or first_line:match("^%s*[%-%*%+]%s+(.*)")
-    or first_line:match("^%s*%d+%.%s+(.*)")
-    or ""
+  return lstrip(result)
+end
 
-  table.insert(content_parts, first_content)
+--- Combine first line content and continuation lines into a single string
+--- First line is expected to be stripped of markers already,
+--- continuation lines are included verbatim to preserve formatting.
+--- @param lines string[]
+--- @param start_line number
+--- @param end_line number
+--- @param first_line_content string
+--- @return string
+local function build_content_value(lines, start_line, end_line, first_line_content)
+  local parts = {}
+  table.insert(parts, first_line_content or "")
 
-  -- Extract continuation lines
-  for i = start_line + 1, end_line do
-    local line = lines[i] or ""
-    if line:match("%S") then -- Non-empty line
-      local line_indent = #(line:match("^(%s*)") or "")
-      if line_indent > base_indent then
-        -- Check if this is another list item (even if it's indented more)
-        local is_list_item = line:match("^%s*[%-%*%+]%s+") or line:match("^%s*%d+%.%s+")
-        if not is_list_item then
-          -- This is a continuation line, add it preserving relative indentation
-          local continuation = line:match("^%s*(.*)")
-          if continuation and continuation ~= "" then
-            table.insert(content_parts, continuation)
-          end
+  if lines and end_line and end_line > start_line then
+    for idx = start_line + 1, end_line do
+      table.insert(parts, lines[idx] or "")
+    end
+  end
+
+  return table.concat(parts, "\n")
+end
+
+--- Determine the last line (inclusive) that belongs to a list item for fallback parsing
+--- Uses indentation heuristics similar to the previous implementation while preserving blank lines.
+--- @param lines string[]
+--- @param start_line number
+--- @param base_indent number
+--- @param stop_lines table<number, boolean>|nil
+--- @return number
+local function find_fallback_content_end(lines, start_line, base_indent, stop_lines)
+  local end_line = start_line
+  if not lines then
+    return end_line
+  end
+
+  for j = start_line + 1, #lines do
+    local current = lines[j]
+    if not current then
+      break
+    end
+
+    if stop_lines and stop_lines[j] then
+      break
+    end
+
+    local handled = false
+
+    local next_info = parse_line_info(current, j)
+    if next_info then
+      if not stop_lines then
+        break
+      end
+
+      if stop_lines[j] then
+        break
+      end
+
+      if next_info.indent <= base_indent then
+        break
+      else
+        end_line = j
+        handled = true
+      end
+    end
+
+    if not handled then
+      if current:match("^%s*$") then
+        -- Blank line: include and continue scanning
+        end_line = j
+      else
+        local current_indent = #(current:match("^(%s*)") or "")
+        if current_indent > base_indent then
+          end_line = j
         else
-          -- This is a child list item, stop collecting continuation lines
           break
         end
-      else
-        -- Content at same or lower indentation, stop
-        break
       end
     end
   end
 
-  return table.concat(content_parts, "\n")
+  return end_line
 end
 
 --- Parse a single line to extract list information
 --- @param line string: the line to parse
 --- @param line_number number: line number for reference
 --- @return table|nil: parsed line info or nil if not a list item
-local function parse_line_info(line, line_number)
+parse_line_info = function(line, line_number)
   if not line or type(line) ~= "string" then
     return nil
   end
@@ -263,6 +339,232 @@ local function build_ast_tree(nodes)
   return root
 end
 
+--- Attempt to parse markdown using Tree-sitter and build an AST
+--- @param lines string[]|nil
+--- @param buffer_id number|nil
+--- @return ASTNode|nil, number -- AST root (or nil) and number of list items discovered
+local function parse_with_treesitter(lines, buffer_id)
+  local ok_ts, ts = pcall(require, "vim.treesitter")
+  if not ok_ts then
+    return nil, 0
+  end
+
+  buffer_id = buffer_id or 0
+
+  local parser
+  local source_for_text
+
+  if buffer_id ~= 0 then
+    local parser_ok, parsed = pcall(ts.get_parser, buffer_id, "markdown")
+    if parser_ok and parsed then
+      parser = parsed
+      if not lines or #lines == 0 then
+        local ok_lines, buf_lines = pcall(vim.api.nvim_buf_get_lines, buffer_id, 0, -1, false)
+        if ok_lines then
+          lines = buf_lines
+        end
+      end
+      source_for_text = buffer_id
+    end
+  end
+
+  if not parser then
+    if not lines then
+      return nil, 0
+    end
+    local text = table.concat(lines, "\n")
+    local parser_ok, parsed = pcall(ts.get_string_parser, text, "markdown")
+    if not parser_ok or not parsed then
+      return nil, 0
+    end
+    parser = parsed
+    source_for_text = text
+  end
+
+  local ok_parse, trees = pcall(function()
+    return parser:parse()
+  end)
+  if not ok_parse or not trees or not trees[1] then
+    return nil, 0
+  end
+
+  local tree = trees[1]
+  local root = tree and tree:root()
+  if not root then
+    return nil, 0
+  end
+
+  if not lines and type(source_for_text) == "string" then
+    lines = vim.split(source_for_text, "\n", { plain = true, trimempty = false })
+  end
+  lines = lines or {}
+
+  local ast_root = create_root_node()
+  local created_nodes = 0
+
+  local function determine_status(marker_text)
+    if not marker_text then
+      return nil
+    end
+    if marker_text:match("%[[xX]%]") then
+      return "done"
+    elseif marker_text:match("%[%-%]") then
+      return "progress"
+    elseif marker_text:match("%[%s*%]") then
+      return "todo"
+    end
+    return nil
+  end
+
+  local function make_list_item_node(ts_node)
+    if not ts_node then
+      return nil
+    end
+
+    local sr = ts_node:range()
+    local start_line = sr + 1
+    local raw_line = lines[start_line] or ""
+    local line_info = parse_line_info(raw_line, start_line)
+
+    local indent_string = line_info and line_info.indent_string or get_indent_string(raw_line)
+    local indent = line_info and line_info.indent or #indent_string
+    local list_type = line_info and line_info.list_type or "unordered"
+    local marker = line_info and line_info.marker or "-"
+    local status = line_info and line_info.status
+
+    local marker_text
+    local nested_start_lines = nil
+
+    for child in ts_node:iter_children() do
+      local child_type = child:type()
+      if not marker_text and child_type:match("^list_marker") then
+        marker_text = vim.treesitter.get_node_text(child, source_for_text) or ""
+        marker_text = marker_text:gsub("%s+$", "")
+      elseif child_type:match("^task_list_marker") then
+        if not status then
+          local marker_status = determine_status(vim.treesitter.get_node_text(child, source_for_text) or "")
+          if marker_status then
+            status = marker_status
+          end
+        end
+      elseif child_type == "list" then
+        local child_sr = child:range()
+        nested_start_lines = nested_start_lines or {}
+        nested_start_lines[child_sr + 1] = true
+      end
+    end
+
+    if marker_text and (not line_info or not line_info.marker) then
+      local numeric = marker_text:match("^(%d+)([%.%)])?")
+      if numeric then
+        list_type = "ordered"
+        local suffix = marker_text:match("%d+([%.%)])")
+        marker = numeric .. (suffix or ".")
+      else
+        local bullet = marker_text:match("[%-%*%+]")
+        if bullet then
+          marker = bullet
+        end
+        list_type = "unordered"
+      end
+    end
+
+    local node_type = (status and "checkbox") or (line_info and line_info.type) or "list"
+
+    local content_end_line = find_fallback_content_end(lines, start_line, indent, nested_start_lines)
+
+    local first_content = (line_info and line_info.content) or strip_marker_from_line(raw_line)
+    local content = build_content_value(lines, start_line, content_end_line, first_content)
+
+    local ast_node = create_ast_node(node_type, content, {
+      status = status,
+      indent = indent,
+      indent_string = indent_string,
+      list_type = list_type,
+      marker = marker,
+      line_number = start_line,
+      raw_line = raw_line,
+    })
+
+    created_nodes = created_nodes + 1
+    return ast_node
+  end
+
+  local function process_nested_lists(ts_item, parent_ast)
+    for child in ts_item:iter_children() do
+      if child:type() == "list" then
+        for nested_item in child:iter_children() do
+          if nested_item:type() == "list_item" then
+            local nested_ast = make_list_item_node(nested_item)
+            if nested_ast then
+              add_child(parent_ast, nested_ast)
+              process_nested_lists(nested_item, nested_ast)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  local function process_list(ts_list, parent_ast)
+    for item in ts_list:iter_children() do
+      if item:type() == "list_item" then
+        local ast_node = make_list_item_node(item)
+        if ast_node then
+          add_child(parent_ast, ast_node)
+          process_nested_lists(item, ast_node)
+        end
+      end
+    end
+  end
+
+  local function traverse(ts_node, parent_ast)
+    if ts_node:type() == "list" then
+      process_list(ts_node, parent_ast)
+    else
+      for child in ts_node:iter_children() do
+        traverse(child, parent_ast)
+      end
+    end
+  end
+
+  traverse(root, ast_root)
+
+  return ast_root, created_nodes
+end
+
+--- Fallback line-by-line parsing when Tree-sitter is unavailable
+--- @param lines string[]
+--- @return ASTNode
+local function parse_to_ast_fallback(lines)
+  if not lines or #lines == 0 then
+    return create_root_node()
+  end
+
+  local nodes = {}
+  local i = 1
+
+  while i <= #lines do
+    local line = lines[i]
+    local line_info = parse_line_info(line, i)
+    if line_info then
+      line_info.indent_string = get_indent_string(line)
+      local end_line = find_fallback_content_end(lines, i, line_info.indent)
+      local content = build_content_value(lines, i, end_line, line_info.content)
+      line_info.content = content
+
+      local ast_node = create_ast_node(line_info.type, content, line_info)
+      table.insert(nodes, ast_node)
+
+      i = end_line + 1
+    else
+      i = i + 1
+    end
+  end
+
+  return build_ast_tree(nodes)
+end
+
 --- Parse markdown lines into an AST structure
 --- Tries Tree-sitter first, falls back to line-by-line parsing
 --- @param lines string[]: array of lines to parse
@@ -275,113 +577,16 @@ function parse_to_ast(lines, buffer_id)
     return create_root_node()
   end
 
-  if not lines or #lines == 0 then
+  if lines and #lines == 0 then
     return create_root_node()
   end
 
-  buffer_id = buffer_id or 0
-  local nodes = {}
-
-  -- Try Tree-sitter first
-  local ok_ts = pcall(require, "vim.treesitter")
-  if ok_ts then
-    local parser_ok, parser = pcall(vim.treesitter.get_parser, buffer_id, "markdown")
-    if parser_ok and parser then
-      local tree = parser:parse()[1]
-      if tree then
-        local root = tree:root()
-        local query = vim.treesitter.query.parse("markdown", "(list_item) @item")
-        local ts_items = {}
-
-        for id, node in query:iter_captures(root, buffer_id, 0, -1) do
-          if query.captures[id] == "item" then
-            local sr, _, er, _ = node:range()
-            local line = lines[sr + 1] or ""
-            local line_info = parse_line_info(line, sr + 1)
-            if line_info then
-              -- Extract full multi-line content using the Tree-sitter range
-              local base_indent = line_info.indent
-              local full_content = extract_full_content(lines, sr + 1, er, base_indent)
-              line_info.content = full_content -- Override with complete content
-
-              table.insert(ts_items, {
-                sr = sr,
-                er = er,
-                info = line_info,
-              })
-            end
-          end
-        end
-
-        table.sort(ts_items, function(a, b)
-          return a.sr < b.sr
-        end)
-
-        -- Convert Tree-sitter items to AST nodes
-        for _, item in ipairs(ts_items) do
-          local ast_node = create_ast_node(item.info.type, item.info.content, item.info)
-          table.insert(nodes, ast_node)
-        end
-
-        -- Tree-sitter ranges can be unreliable, so we'll still fall back to line parsing
-        -- but only if we didn't get reasonable results
-        if #nodes > 0 then
-          return build_ast_tree(nodes)
-        end
-      end
-    end
+  local ts_ast, created = parse_with_treesitter(lines, buffer_id)
+  if ts_ast and created and created >= 0 then
+    return ts_ast
   end
 
-  -- Fallback: line-by-line parsing with multi-line content detection
-  local i = 1
-  while i <= #lines do
-    local line = lines[i]
-    local line_info = parse_line_info(line, i)
-    if line_info then
-      -- Find the end of this list item by looking for continuation lines
-      local end_line = i
-      local base_indent = line_info.indent
-
-      -- Look ahead for continuation lines
-      for j = i + 1, #lines do
-        local next_line = lines[j]
-        if not next_line or next_line:match("^%s*$") then
-          -- Empty line, might continue
-          goto continue_search
-        end
-
-        local next_line_info = parse_line_info(next_line, j)
-        if next_line_info then
-          -- This is another list item, stop here
-          break
-        end
-
-        local next_indent = #(next_line:match("^(%s*)") or "")
-        if next_indent > base_indent then
-          -- This is a continuation line
-          end_line = j
-        else
-          -- Content at same or lower indentation, stop
-          break
-        end
-
-        ::continue_search::
-      end
-
-      -- Extract full content including continuation lines
-      local full_content = extract_full_content(lines, i, end_line, base_indent)
-      line_info.content = full_content
-
-      local ast_node = create_ast_node(line_info.type, line_info.content, line_info)
-      table.insert(nodes, ast_node)
-
-      i = end_line + 1 -- Skip the lines we've processed
-    else
-      i = i + 1
-    end
-  end
-
-  return build_ast_tree(nodes)
+  return parse_to_ast_fallback(lines or {})
 end
 
 --- Render an AST node to markdown lines (can be multiple lines for multi-line content)
@@ -392,16 +597,13 @@ local function render_ast_node(node)
     return {}
   end
 
-  local indent_str = string.rep(" ", node.indent)
+  local indent_str = node.indent_string or string.rep(" ", node.indent)
   local marker = node.marker or "-"
   local content_lines = {}
 
-  -- Split content by newlines if it's multi-line
-  local content_parts = {}
-  if node.content and node.content ~= "" then
-    for line in node.content:gmatch("[^\n]+") do
-      table.insert(content_parts, line)
-    end
+  local content_parts = vim.split(node.content or "", "\n", { plain = true, trimempty = false })
+  if #content_parts == 0 then
+    table.insert(content_parts, "")
   end
 
   if node.type == "checkbox" then
@@ -414,20 +616,32 @@ local function render_ast_node(node)
 
     -- First line with list marker and checkbox
     local first_content = content_parts[1] or ""
-    table.insert(content_lines, indent_str .. marker .. " " .. checkbox_symbol .. " " .. first_content)
+    local first_line = indent_str .. marker .. " " .. checkbox_symbol
+    if first_content ~= "" then
+      first_line = first_line .. " " .. first_content
+    else
+      first_line = first_line .. " "
+    end
+    table.insert(content_lines, first_line)
 
-    -- Continuation lines with increased indentation
+    -- Continuation lines maintain their original indentation
     for i = 2, #content_parts do
-      table.insert(content_lines, indent_str .. "      " .. content_parts[i])
+      table.insert(content_lines, content_parts[i])
     end
   elseif node.type == "list" then
     -- First line with list marker
     local first_content = content_parts[1] or ""
-    table.insert(content_lines, indent_str .. marker .. " " .. first_content)
+    local first_line = indent_str .. marker
+    if first_content ~= "" then
+      first_line = first_line .. " " .. first_content
+    else
+      first_line = first_line .. " "
+    end
+    table.insert(content_lines, first_line)
 
-    -- Continuation lines with increased indentation
+    -- Continuation lines maintain their original indentation
     for i = 2, #content_parts do
-      table.insert(content_lines, indent_str .. "  " .. content_parts[i])
+      table.insert(content_lines, content_parts[i])
     end
   end
 
