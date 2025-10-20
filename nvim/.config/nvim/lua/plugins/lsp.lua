@@ -207,31 +207,31 @@ return {
           vim.keymap.set(
             "n",
             "gd",
-            vim.lsp.buf.definition,
+            "<cmd>FzfLua lsp_definitions jump1=true<cr>",
             vim.tbl_extend("force", opts, { desc = "Go to definition" })
           )
           vim.keymap.set(
             "n",
             "gD",
-            vim.lsp.buf.declaration,
+            "<cmd>FzfLua lsp_declarations jump1=true<cr>",
             vim.tbl_extend("force", opts, { desc = "Go to declaration" })
           )
           vim.keymap.set(
             "n",
             "gi",
-            vim.lsp.buf.implementation,
+            "<cmd>FzfLua lsp_implementations jump1=true<cr>",
             vim.tbl_extend("force", opts, { desc = "Go to implementation" })
           )
           vim.keymap.set(
             "n",
             "gr",
-            vim.lsp.buf.references,
+            "<cmd>FzfLua lsp_references jump1=true<cr>",
             vim.tbl_extend("force", opts, { desc = "Go to references" })
           )
           vim.keymap.set(
             "n",
             "gt",
-            vim.lsp.buf.type_definition,
+            "<cmd>FzfLua lsp_typedefs jump1=true<cr>",
             vim.tbl_extend("force", opts, { desc = "Go to type definition" })
           )
           vim.keymap.set("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Hover documentation" }))
