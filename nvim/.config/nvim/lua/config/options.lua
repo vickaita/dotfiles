@@ -22,3 +22,6 @@ vim.opt.list = true
 -- don't use relative line numbers by default
 vim.opt.number = true
 vim.opt.relativenumber = false
+
+-- open vertical splits to the right
+vim.opt.splitright = true

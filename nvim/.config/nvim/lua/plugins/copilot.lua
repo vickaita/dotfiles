@@ -41,6 +41,7 @@ return {
         window = {
           layout = "vertical",
           width = 0.4,
+          relative = "editor",
         },
       }
     end,
