@@ -28,16 +28,8 @@ from pygments.lexers import guess_lexer_for_filename
 from pygments.formatters import HtmlFormatter
 
 
-# Source code file extensions to display with syntax highlighting
-SOURCE_CODE_EXTENSIONS = {
-    '.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.c', '.cpp', '.h', '.hpp',
-    '.rs', '.go', '.rb', '.php', '.swift', '.kt', '.scala', '.sh', '.bash',
-    '.zsh', '.fish', '.css', '.scss', '.sass', '.less', '.html', '.xml',
-    '.json', '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf', '.sql',
-    '.r', '.R', '.m', '.lua', '.vim', '.el', '.clj', '.ex', '.exs',
-    '.hs', '.ml', '.fs', '.fsx', '.pl', '.pm', '.tcl', '.awk', '.sed',
-    '.dart', '.vue', '.svelte', '.zig', '.nim', '.cr', '.jl', '.lisp',
-}
+# Image file extensions to display in browser
+IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp', '.ico'}
 
 
 class MarkdownHandler(SimpleHTTPRequestHandler):
@@ -75,11 +67,27 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         if fs_path.suffix == '.md' and fs_path.exists():
             return self.serve_markdown(fs_path)
 
-        # Handle source code files
-        if fs_path.suffix.lower() in SOURCE_CODE_EXTENSIONS and fs_path.exists():
+        # Handle image files
+        if fs_path.suffix.lower() in IMAGE_EXTENSIONS and fs_path.exists():
+            # Check if this is a direct browser navigation (wants HTML viewer)
+            # vs an image resource request from an img tag (wants raw image)
+            accept = self.headers.get('Accept', '')
+            wants_html = 'text/html' in accept
+            wants_image = 'image' in accept
+
+            # If browser prefers HTML over images, show the viewer page
+            if wants_html and (not wants_image or accept.index('text/html') < accept.index('image')):
+                return self.serve_image(fs_path, path)
+            else:
+                # Serve the raw image file for img tags
+                return super().do_GET()
+
+        # Try to serve all other files as text with line numbers
+        # Binary files will fall back to normal serving
+        if fs_path.exists() and fs_path.is_file():
             return self.serve_source_code(fs_path)
 
-        # Default behavior for other files
+        # Default behavior for files that don't exist
         return super().do_GET()
 
     def serve_markdown(self, file_path):
@@ -113,13 +121,53 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, f"Error processing markdown: {str(e)}")
 
+    def serve_image(self, file_path, url_path):
+        """Serve image file in an HTML wrapper"""
+        try:
+            # Get image dimensions if possible
+            stat = file_path.stat()
+            file_size = stat.st_size
+
+            # Format file size
+            if file_size < 1024:
+                size_str = f"{file_size} B"
+            elif file_size < 1024 * 1024:
+                size_str = f"{file_size / 1024:.1f} KB"
+            else:
+                size_str = f"{file_size / (1024 * 1024):.1f} MB"
+
+            # Create HTML with the image
+            # Use the URL path for the image src so it loads correctly
+            html_content = f'''<div class="image-viewer">
+                <div class="image-header">
+                    <span class="filename">{file_path.name}</span>
+                    <span class="filesize">{size_str}</span>
+                </div>
+                <div class="image-container">
+                    <img src="/{url_path}" alt="{file_path.name}" />
+                </div>
+            </div>'''
+
+            # Wrap in HTML template
+            full_html = self.wrap_html(html_content, file_path.name)
+
+            # Send response
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', len(full_html.encode('utf-8')))
+            self.end_headers()
+            self.wfile.write(full_html.encode('utf-8'))
+
+        except Exception as e:
+            self.send_error(500, f"Error displaying image: {str(e)}")
+
     def serve_source_code(self, file_path):
-        """Serve source code file with syntax highlighting"""
+        """Serve text file with line numbers and syntax highlighting if recognized"""
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 code = f.read()
 
-            # Syntax highlight with pygments
+            # Try syntax highlighting with pygments
             try:
                 lexer = guess_lexer_for_filename(file_path, code)
                 formatter = HtmlFormatter(
@@ -128,13 +176,22 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
                     full=False
                 )
                 highlighted = highlight(code, lexer, formatter)
-
-                # Wrap in a container
                 html_content = f'<div class="source-file"><div class="file-header">{file_path.name}</div>{highlighted}</div>'
             except Exception:
-                # Fallback without syntax highlighting
+                # Fallback: plain text with line numbers
+                lines = code.split('\n')
+                line_numbers = '\n'.join(str(i) for i in range(1, len(lines) + 1))
                 escaped_code = self.escape_html(code)
-                html_content = f'<div class="source-file"><div class="file-header">{file_path.name}</div><pre><code>{escaped_code}</code></pre></div>'
+
+                html_content = f'''<div class="source-file">
+                    <div class="file-header">{file_path.name}</div>
+                    <div class="highlight">
+                        <table class="highlighttable"><tr>
+                            <td class="linenos"><pre>{line_numbers}</pre></td>
+                            <td class="code"><pre><code>{escaped_code}</code></pre></td>
+                        </tr></table>
+                    </div>
+                </div>'''
 
             # Wrap in HTML template
             full_html = self.wrap_html(html_content, file_path.name)
@@ -391,6 +448,73 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             text-align: right;
             user-select: none;
             border-right: 1px solid #ddd;
+        }}
+
+        .highlighttable {{
+            width: 100%;
+            border-spacing: 0;
+        }}
+
+        .highlighttable td {{
+            padding: 0;
+            vertical-align: top;
+        }}
+
+        .highlighttable .linenos {{
+            width: 50px;
+        }}
+
+        .highlighttable .code {{
+            width: 100%;
+        }}
+
+        .image-viewer {{
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            background: #fff;
+        }}
+
+        .image-header {{
+            background: #2d2d2d;
+            color: #f0f0f0;
+            padding: 10px 15px;
+            font-size: 0.95em;
+            font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+
+        .image-header .filename {{
+            font-weight: 500;
+        }}
+
+        .image-header .filesize {{
+            color: #999;
+            font-size: 0.9em;
+        }}
+
+        .image-container {{
+            padding: 20px;
+            text-align: center;
+            background: #f9f9f9;
+            background-image:
+                linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }}
+
+        .image-container img {{
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: white;
         }}
 
         .error {{
