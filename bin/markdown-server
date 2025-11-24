@@ -28,6 +28,18 @@ from pygments.lexers import guess_lexer_for_filename
 from pygments.formatters import HtmlFormatter
 
 
+# Source code file extensions to display with syntax highlighting
+SOURCE_CODE_EXTENSIONS = {
+    '.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.c', '.cpp', '.h', '.hpp',
+    '.rs', '.go', '.rb', '.php', '.swift', '.kt', '.scala', '.sh', '.bash',
+    '.zsh', '.fish', '.css', '.scss', '.sass', '.less', '.html', '.xml',
+    '.json', '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf', '.sql',
+    '.r', '.R', '.m', '.lua', '.vim', '.el', '.clj', '.ex', '.exs',
+    '.hs', '.ml', '.fs', '.fsx', '.pl', '.pm', '.tcl', '.awk', '.sed',
+    '.dart', '.vue', '.svelte', '.zig', '.nim', '.cr', '.jl', '.lisp',
+}
+
+
 class MarkdownHandler(SimpleHTTPRequestHandler):
     """Custom handler for serving markdown files as HTML"""
 
@@ -63,6 +75,10 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         if fs_path.suffix == '.md' and fs_path.exists():
             return self.serve_markdown(fs_path)
 
+        # Handle source code files
+        if fs_path.suffix.lower() in SOURCE_CODE_EXTENSIONS and fs_path.exists():
+            return self.serve_source_code(fs_path)
+
         # Default behavior for other files
         return super().do_GET()
 
@@ -96,6 +112,45 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         except Exception as e:
             self.send_error(500, f"Error processing markdown: {str(e)}")
+
+    def serve_source_code(self, file_path):
+        """Serve source code file with syntax highlighting"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                code = f.read()
+
+            # Syntax highlight with pygments
+            try:
+                lexer = guess_lexer_for_filename(file_path, code)
+                formatter = HtmlFormatter(
+                    linenos='table',
+                    cssclass='highlight',
+                    full=False
+                )
+                highlighted = highlight(code, lexer, formatter)
+
+                # Wrap in a container
+                html_content = f'<div class="source-file"><div class="file-header">{file_path.name}</div>{highlighted}</div>'
+            except Exception:
+                # Fallback without syntax highlighting
+                escaped_code = self.escape_html(code)
+                html_content = f'<div class="source-file"><div class="file-header">{file_path.name}</div><pre><code>{escaped_code}</code></pre></div>'
+
+            # Wrap in HTML template
+            full_html = self.wrap_html(html_content, file_path.name)
+
+            # Send response
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', len(full_html.encode('utf-8')))
+            self.end_headers()
+            self.wfile.write(full_html.encode('utf-8'))
+
+        except UnicodeDecodeError:
+            # File is likely binary, serve it normally
+            return super().do_GET()
+        except Exception as e:
+            self.send_error(500, f"Error processing source file: {str(e)}")
 
     def process_wikilinks(self, content):
         """Process wikilinks: [[Topic]] or [[Topic|Display Text]]"""
@@ -301,6 +356,41 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         .embed-container pre {{
             margin: 0;
             border-radius: 0;
+        }}
+
+        .source-file {{
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }}
+
+        .file-header {{
+            background: #2d2d2d;
+            color: #f0f0f0;
+            padding: 10px 15px;
+            font-size: 0.95em;
+            font-family: monospace;
+            font-weight: 500;
+        }}
+
+        .source-file pre {{
+            margin: 0;
+            padding: 15px;
+            overflow-x: auto;
+        }}
+
+        .source-file .highlight {{
+            background: #fff;
+        }}
+
+        .source-file .linenos {{
+            background: #f5f5f5;
+            color: #999;
+            padding-right: 10px;
+            text-align: right;
+            user-select: none;
+            border-right: 1px solid #ddd;
         }}
 
         .error {{
