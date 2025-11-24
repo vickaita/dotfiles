@@ -1,0 +1,360 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.8"
+# dependencies = [
+#   "markdown",
+#   "pygments",
+# ]
+# ///
+"""
+Markdown Server - Serves markdown files as HTML with code embedding support
+
+Usage:
+    uv run markdown-server [port]
+    or just: markdown-server [port]
+
+Default port: 8000
+"""
+
+import os
+import sys
+import re
+import urllib.parse
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from pathlib import Path
+import markdown
+from pygments import highlight
+from pygments.lexers import guess_lexer_for_filename
+from pygments.formatters import HtmlFormatter
+
+
+class MarkdownHandler(SimpleHTTPRequestHandler):
+    """Custom handler for serving markdown files as HTML"""
+
+    def do_GET(self):
+        """Handle GET requests"""
+        # Parse the URL
+        parsed_path = urllib.parse.urlparse(self.path)
+        path = urllib.parse.unquote(parsed_path.path)
+
+        # Remove leading slash and resolve to filesystem path
+        if path.startswith('/'):
+            path = path[1:]
+
+        fs_path = Path(os.getcwd()) / path if path else Path(os.getcwd())
+
+        # Handle directories
+        if fs_path.is_dir():
+            # Check for index.html first
+            index_html = fs_path / 'index.html'
+            if index_html.exists():
+                self.path = str(Path(path) / 'index.html')
+                return super().do_GET()
+
+            # Then check for index.md
+            index_md = fs_path / 'index.md'
+            if index_md.exists():
+                return self.serve_markdown(index_md)
+
+            # Otherwise serve directory listing
+            return self.serve_directory_listing(fs_path, path)
+
+        # Handle markdown files
+        if fs_path.suffix == '.md' and fs_path.exists():
+            return self.serve_markdown(fs_path)
+
+        # Default behavior for other files
+        return super().do_GET()
+
+    def serve_markdown(self, file_path):
+        """Convert and serve markdown file as HTML"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            # Process wikilinks [[Topic]] -> Topic.md links
+            content = self.process_wikilinks(content)
+
+            # Process code embeddings before markdown conversion
+            content = self.process_embeds(content, file_path.parent)
+
+            # Convert markdown to HTML
+            html_content = markdown.markdown(
+                content,
+                extensions=['fenced_code', 'tables', 'codehilite']
+            )
+
+            # Wrap in HTML template
+            full_html = self.wrap_html(html_content, file_path.name)
+
+            # Send response
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', len(full_html.encode('utf-8')))
+            self.end_headers()
+            self.wfile.write(full_html.encode('utf-8'))
+
+        except Exception as e:
+            self.send_error(500, f"Error processing markdown: {str(e)}")
+
+    def process_wikilinks(self, content):
+        """Process wikilinks: [[Topic]] or [[Topic|Display Text]]"""
+        def replace_wikilink(match):
+            link_content = match.group(1)
+
+            # Check for pipe syntax: [[Topic|Display Text]]
+            if '|' in link_content:
+                topic, display = link_content.split('|', 1)
+                topic = topic.strip()
+                display = display.strip()
+            else:
+                topic = link_content.strip()
+                display = topic
+
+            # Convert to markdown link
+            return f'[{display}]({topic}.md)'
+
+        return re.sub(r'\[\[([^\]]+)\]\]', replace_wikilink, content)
+
+    def process_embeds(self, content, base_path):
+        """Process custom embed syntax: [embed:path/to/file.py#L10-20]"""
+        pattern = r'\[embed:([^\]]+)\]'
+
+        def replace_embed(match):
+            spec = match.group(1)
+            return self.generate_code_embed(spec, base_path)
+
+        return re.sub(pattern, replace_embed, content)
+
+    def generate_code_embed(self, spec, base_path):
+        """Generate HTML for code embedding"""
+        # Parse the spec: path/to/file.py#L10-20
+        parts = spec.split('#')
+        file_path = parts[0]
+        line_range = parts[1] if len(parts) > 1 else None
+
+        # Resolve file path
+        full_path = base_path / file_path
+        if not full_path.exists():
+            return f'<div class="error">File not found: {file_path}</div>'
+
+        try:
+            with open(full_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+
+            # Extract line range if specified
+            start_line, end_line = 1, len(lines)
+            if line_range:
+                # Parse L10-20 or L10
+                match = re.match(r'L?(\d+)(?:-(\d+))?', line_range)
+                if match:
+                    start_line = int(match.group(1))
+                    end_line = int(match.group(2)) if match.group(2) else start_line
+
+            # Get the code snippet
+            code_lines = lines[start_line-1:end_line]
+            code = ''.join(code_lines)
+
+            # Syntax highlight with pygments
+            try:
+                lexer = guess_lexer_for_filename(full_path, code)
+                formatter = HtmlFormatter(
+                    linenos='inline',
+                    linenostart=start_line,
+                    cssclass='highlight'
+                )
+                highlighted = highlight(code, lexer, formatter)
+                return f'<div class="embed-container"><div class="embed-header">{file_path} (L{start_line}-L{end_line})</div>{highlighted}</div>'
+            except:
+                # Fallback without syntax highlighting
+                code_html = f'<pre><code>{self.escape_html(code)}</code></pre>'
+                return f'<div class="embed-container"><div class="embed-header">{file_path} (L{start_line}-L{end_line})</div>{code_html}</div>'
+
+        except Exception as e:
+            return f'<div class="error">Error reading file: {str(e)}</div>'
+
+    def escape_html(self, text):
+        """Escape HTML special characters"""
+        return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+    def serve_directory_listing(self, dir_path, url_path):
+        """Serve a simple directory listing"""
+        try:
+            entries = sorted(dir_path.iterdir(), key=lambda x: (not x.is_dir(), x.name))
+
+            html_parts = ['<ul class="directory-listing">']
+
+            # Add parent directory link if not at root
+            if url_path:
+                parent = str(Path(url_path).parent) if url_path != '.' else ''
+                html_parts.append(f'<li class="dir"><a href="/{parent}">../</a></li>')
+
+            for entry in entries:
+                name = entry.name
+                if entry.is_dir():
+                    link = f'/{url_path}/{name}' if url_path else f'/{name}'
+                    html_parts.append(f'<li class="dir"><a href="{link}">{name}/</a></li>')
+                else:
+                    link = f'/{url_path}/{name}' if url_path else f'/{name}'
+                    html_parts.append(f'<li class="file"><a href="{link}">{name}</a></li>')
+
+            html_parts.append('</ul>')
+
+            title = f"Index of /{url_path}" if url_path else "Index of /"
+            full_html = self.wrap_html(''.join(html_parts), title)
+
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', len(full_html.encode('utf-8')))
+            self.end_headers()
+            self.wfile.write(full_html.encode('utf-8'))
+
+        except Exception as e:
+            self.send_error(500, f"Error listing directory: {str(e)}")
+
+    def wrap_html(self, content, title="Markdown Server"):
+        """Wrap content in HTML template with styling"""
+        # Get pygments CSS
+        pygments_css = HtmlFormatter().get_style_defs('.highlight')
+
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{title}</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }}
+
+        a {{
+            color: #0066cc;
+            text-decoration: none;
+        }}
+
+        a:hover {{
+            text-decoration: underline;
+        }}
+
+        pre {{
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }}
+
+        code {{
+            background: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: "Monaco", "Menlo", "Courier New", monospace;
+        }}
+
+        pre code {{
+            background: none;
+            padding: 0;
+        }}
+
+        .directory-listing {{
+            list-style: none;
+            padding: 0;
+        }}
+
+        .directory-listing li {{
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }}
+
+        .directory-listing li:hover {{
+            background: #f9f9f9;
+        }}
+
+        .directory-listing .dir a::before {{
+            content: "📁 ";
+        }}
+
+        .directory-listing .file a::before {{
+            content: "📄 ";
+        }}
+
+        .embed-container {{
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }}
+
+        .embed-header {{
+            background: #f0f0f0;
+            padding: 8px 12px;
+            font-size: 0.9em;
+            color: #666;
+            font-family: monospace;
+        }}
+
+        .embed-container pre {{
+            margin: 0;
+            border-radius: 0;
+        }}
+
+        .error {{
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c00;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }}
+
+        table {{
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }}
+
+        th, td {{
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }}
+
+        th {{
+            background: #f5f5f5;
+            font-weight: bold;
+        }}
+
+        {pygments_css}
+    </style>
+</head>
+<body>
+    {content}
+</body>
+</html>"""
+
+
+def main():
+    """Main entry point"""
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+
+    server_address = ('', port)
+    httpd = HTTPServer(server_address, MarkdownHandler)
+
+    print(f"Markdown Server running at http://localhost:{port}/")
+    print(f"Serving: {os.getcwd()}")
+    print("Press Ctrl+C to stop")
+
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down server...")
+        httpd.shutdown()
+
+
+if __name__ == '__main__':
+    main()
