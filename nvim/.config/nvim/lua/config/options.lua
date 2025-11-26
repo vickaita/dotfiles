@@ -25,3 +25,13 @@ vim.opt.relativenumber = false
 
 -- open vertical splits to the right
 vim.opt.splitright = true
+
+-- spell file configuration
+-- First file (local): machine-specific words (not committed)
+-- Second file (committed): shared words across all machines
+-- zg adds to the first writable file in the list
+local data_dir = vim.fn.stdpath("data")
+vim.opt.spellfile = {
+  data_dir .. "/spell/en.utf-8.add", -- local dictionary (per-machine)
+  vim.fn.stdpath("config") .. "/spell/en.utf-8.add", -- shared dictionary (committed)
+}
