@@ -5,6 +5,7 @@ return {
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
       "nvim-treesitter/nvim-treesitter-context",
+      "andymass/vim-matchup",
     },
     opts = {
       ensure_installed = {
@@ -38,6 +39,11 @@ return {
       },
       indent = {
         enable = true,
+      },
+      -- Enable vim-matchup integration with Treesitter
+      matchup = {
+        enable = true,
+        -- disable = { "c", "ruby" },  -- optional: list languages to disable
       },
       textobjects = {
         select = {
