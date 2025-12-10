@@ -1,0 +1,53 @@
+# Readline configuration for bash
+# This file configures the GNU Readline library used by bash and other programs
+
+# Use emacs-style key bindings (default, but explicit is good)
+set editing-mode emacs
+
+# Completion behavior
+set show-all-if-ambiguous on          # Show completions immediately if ambiguous
+set show-all-if-unmodified on         # Show completions even without modification
+set completion-ignore-case on         # Case-insensitive completion
+set mark-symlinked-directories on     # Add trailing slash to symlinked directories
+set visible-stats on                  # Append file type indicator (*, /, @, =, |)
+set colored-stats on                  # Color completions by file type
+set colored-completion-prefix on      # Color the common prefix in completions
+
+# Better completion display
+set menu-complete-display-prefix on   # Show common prefix before cycling through completions
+set page-completions off              # Don't paginate completions
+set completion-query-items 200        # Ask before showing if more than 200 items
+
+# History behavior
+set history-preserve-point on         # Keep cursor position when navigating history
+set revert-all-at-newline on          # Revert all changes to history lines when pressing Enter
+
+# Better line editing
+set enable-bracketed-paste on         # Handle pasted text as a single unit
+set skip-completed-text on            # Skip over completed text when tab-completing
+
+# Key bindings (most are default in emacs mode, but listed for clarity)
+# Note: Ctrl-X Ctrl-R terminal reset from zsh can't be replicated in readline
+
+# History search (incremental)
+"\C-r": reverse-search-history        # Ctrl-R: search backward
+"\C-s": forward-search-history        # Ctrl-S: search forward (may need stty -ixon)
+
+# Movement
+"\C-a": beginning-of-line             # Ctrl-A: start of line
+"\C-e": end-of-line                   # Ctrl-E: end of line
+"\C-f": forward-char                  # Ctrl-F: forward char
+"\C-b": backward-char                 # Ctrl-B: backward char
+
+# Deletion
+"\C-d": delete-char                   # Ctrl-D: delete char
+"\C-h": backward-delete-char          # Ctrl-H: backspace
+"\C-w": unix-word-rubout              # Ctrl-W: delete word backward
+"\C-k": kill-line                     # Ctrl-K: delete to end of line
+"\C-u": unix-line-discard             # Ctrl-U: delete entire line
+
+# Other useful bindings
+"\C-y": yank                          # Ctrl-Y: paste
+"\C-l": clear-screen                  # Ctrl-L: clear screen
+"\C-p": previous-history              # Ctrl-P: previous command
+"\C-n": next-history                  # Ctrl-N: next command
