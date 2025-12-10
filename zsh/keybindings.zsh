@@ -21,3 +21,12 @@ bindkey '^S' history-incremental-search-forward  # NOTE: may be blocked by termi
 bindkey '^M' accept-line     # Enter
 bindkey '^J' accept-line     # Ctrl-J also acts as Enter
 bindkey '^L' clear-screen
+
+# Terminal recovery function for frozen nvim sessions (especially in Zellij)
+# Press Ctrl-X Ctrl-R to reset terminal state
+reset-terminal() {
+    tput reset 2>/dev/null || true
+    zle reset-prompt
+}
+zle -N reset-terminal
+bindkey '^X^R' reset-terminal
