@@ -34,6 +34,7 @@ COMMON_PACKAGES=(
     atuin
     bat
     btop
+    copilot-cli
     curl
     delta
     difftastic
