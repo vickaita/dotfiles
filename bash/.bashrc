@@ -21,22 +21,43 @@ safe_source() {
     fi
 }
 
-safe_source "$DOTFILES/shared/shell/homebrew.sh"
-safe_source "$DOTFILES/shared/shell/catppuccin-colors.sh"
-safe_source "$DOTFILES/shared/shell/utils.sh"
-safe_source "$DOTFILES/shared/shell/prompt.sh"
-safe_source "$DOTFILES/shared/shell/history.sh"
-safe_source "$DOTFILES/shared/shell/rust.sh"
-safe_source "$DOTFILES/shared/shell/direnv.sh"
-safe_source "$DOTFILES/shared/shell/fzf.sh"
-safe_source "$DOTFILES/shared/shell/mise.sh"
-safe_source "$DOTFILES/shared/shell/zoxide.sh"
-safe_source "$DOTFILES/shared/shell/editor-binding.sh"
-safe_source "$DOTFILES/shared/shell/less-pager.sh"
-safe_source "$DOTFILES/shared/shell/claude.sh"
-safe_source "$DOTFILES/shared/shell/atuin.sh"
-safe_source "$DOTFILES/shared/shell/aliases.sh"
-safe_source "$DOTFILES/shared/shell/gh-copilot.sh"
+# Source optional files without warnings
+optional_source() {
+    [[ -f "$1" ]] && source "$1"
+}
+
+# Source files with automatic disable flag checking
+# Derives flag name from filename: less-pager.sh -> DOTFILES_DISABLE_LESS_PAGER
+conditional_source() {
+    local file="$1"
+    local basename="${file##*/}"          # Extract filename
+    local module="${basename%.*}"         # Remove extension
+    local module_upper="${module^^}"      # Uppercase (bash 4+)
+    local flag_name="DOTFILES_DISABLE_${module_upper//-/_}"  # Replace - with _
+    [[ -z "${!flag_name}" ]] && safe_source "$file"
+}
+
+# Use this file to set any environment variables for disabling any of the
+# conditional_source modules
+optional_source "$HOME/.bashrc.local.pre"
+
+# Source shell configuration files
+conditional_source "$DOTFILES/shared/shell/homebrew.sh"
+conditional_source "$DOTFILES/shared/shell/catppuccin-colors.sh"
+conditional_source "$DOTFILES/shared/shell/utils.sh"
+conditional_source "$DOTFILES/shared/shell/prompt.sh"
+conditional_source "$DOTFILES/shared/shell/history.sh"
+conditional_source "$DOTFILES/shared/shell/rust.sh"
+conditional_source "$DOTFILES/shared/shell/direnv.sh"
+conditional_source "$DOTFILES/shared/shell/fzf.sh"
+conditional_source "$DOTFILES/shared/shell/mise.sh"
+conditional_source "$DOTFILES/shared/shell/zoxide.sh"
+conditional_source "$DOTFILES/shared/shell/editor-binding.sh"
+conditional_source "$DOTFILES/shared/shell/less-pager.sh"
+conditional_source "$DOTFILES/shared/shell/claude.sh"
+conditional_source "$DOTFILES/shared/shell/atuin.sh"
+conditional_source "$DOTFILES/shared/shell/aliases.sh"
+conditional_source "$DOTFILES/shared/shell/gh-copilot.sh"
 
 # Add custom bin directory to PATH
 prepend_to_path "$DOTFILES/bin"
@@ -135,6 +156,4 @@ if ! shopt -oq posix; then
 fi
 
 # Source local configuration
-if [[ -f ~/.bashrc.local ]]; then
-    safe_source ~/.bashrc.local
-fi
+optional_source ~/.bashrc.local
