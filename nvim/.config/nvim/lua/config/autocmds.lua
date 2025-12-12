@@ -91,7 +91,12 @@ vim.api.nvim_create_autocmd("FileType", {
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "markdown", "text", "gitcommit", "rst", "asciidoc" },
-  command = "setlocal wrap",
+  callback = function()
+    -- Only enable wrap if the user hasn't explicitly disabled it
+    if vim.g.user_disabled_wrap_for_text_filetypes ~= true then
+      vim.opt_local.wrap = true
+    end
+  end,
 })
 
 vim.api.nvim_create_autocmd("FileType", {

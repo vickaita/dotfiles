@@ -72,6 +72,7 @@ return {
             colorcolumn = vim.opt.colorcolumn:get()[1] or "",
             wrap = vim.opt.wrap:get(),
             auto_import_folding_enabled = vim.g.auto_import_folding_enabled,
+            user_disabled_wrap_for_text_filetypes = vim.g.user_disabled_wrap_for_text_filetypes,
           }
 
           vim.fn.writefile({ vim.fn.json_encode(settings) }, settings_file)
@@ -116,6 +117,10 @@ return {
 
             if settings.auto_import_folding_enabled ~= nil then
               vim.g.auto_import_folding_enabled = settings.auto_import_folding_enabled
+            end
+
+            if settings.user_disabled_wrap_for_text_filetypes ~= nil then
+              vim.g.user_disabled_wrap_for_text_filetypes = settings.user_disabled_wrap_for_text_filetypes
             end
           end
         end,

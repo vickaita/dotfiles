@@ -23,7 +23,12 @@ end
 
 -- Toggle text wrapping
 function M.toggle_text_wrap()
-  vim.opt.wrap = not vim.opt.wrap:get()
+  local new_wrap_state = not vim.opt.wrap:get()
+  vim.opt.wrap = new_wrap_state
+
+  -- Track user preference for text filetypes globally
+  -- This prevents FileType autocmds from overriding the user's choice
+  vim.g.user_disabled_wrap_for_text_filetypes = not new_wrap_state
 end
 
 -- Toggle overflow text highlighting
