@@ -193,13 +193,13 @@ return {
           vim.keymap.set(
             "n",
             "<leader>ci",
-            vim.lsp.buf.incoming_calls,
+            function() require('util.lsp').incoming_calls_with_fzf({ jump1 = true }) end,
             vim.tbl_extend("force", opts, { desc = "Incoming calls" })
           )
           vim.keymap.set(
             "n",
             "<leader>co",
-            vim.lsp.buf.outgoing_calls,
+            function() require('util.lsp').outgoing_calls_with_fzf({ jump1 = true }) end,
             vim.tbl_extend("force", opts, { desc = "Outgoing calls" })
           )
 
