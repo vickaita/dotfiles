@@ -50,17 +50,19 @@ conditional_source "$DOTFILES/shared/shell/history.sh"
 conditional_source "$DOTFILES/shared/shell/rust.sh"
 conditional_source "$DOTFILES/shared/shell/direnv.sh"
 conditional_source "$DOTFILES/shared/shell/fzf.sh"
-conditional_source "$DOTFILES/shared/shell/mise.sh"
 conditional_source "$DOTFILES/shared/shell/zoxide.sh"
 conditional_source "$DOTFILES/shared/shell/editor-binding.sh"
 conditional_source "$DOTFILES/shared/shell/less-pager.sh"
-conditional_source "$DOTFILES/shared/shell/claude.sh"
 conditional_source "$DOTFILES/shared/shell/atuin.sh"
 conditional_source "$DOTFILES/shared/shell/aliases.sh"
 conditional_source "$DOTFILES/shared/shell/gh-copilot.sh"
 
-# Add custom bin directory to PATH
+# Add custom bin directories to PATH
 prepend_to_path "$DOTFILES/bin"
+prepend_to_path "$HOME/.local/bin"
+
+# Source mise after custom paths so that its paths will be first in the list
+conditional_source "$DOTFILES/shared/shell/mise.sh"
 
 # Configure completion system with smart daily caching
 # IMPORTANT: This must run AFTER all shell scripts that modify fpath
