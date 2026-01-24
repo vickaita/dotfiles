@@ -4,6 +4,10 @@ vim.opt.clipboard = ""
 vim.opt.colorcolumn = "+1"
 vim.opt.mouse = "a"
 
+-- search settings
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+
 -- enable automatic text wrapping
 vim.o.formatoptions = vim.o.formatoptions .. "t"
 vim.opt.textwidth = 80

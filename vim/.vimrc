@@ -1,80 +1,70 @@
-command! EditVimConfig :edit ~/.config/nvim/init.vim
+" Minimal vim config - for quick, lightweight editing
+" For full IDE features, use nvim
 
-if empty(glob('~/.vim/autoload/plug.vim'))
-  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
-endif
+set nocompatible
+filetype plugin indent on
+syntax enable
 
-let g:coc_global_extensions = [
-      \ 'coc-css',
-      \ 'coc-diagnostic',
-      \ 'coc-eslint',
-      \ 'coc-elixir',
-      \ 'coc-html',
-      \ 'coc-jest',
-      \ 'coc-json',
-      \ 'coc-prettier',
-      \ 'coc-pyright',
-      \ 'coc-spell-checker',
-      \ 'coc-tabnine',
-      \ 'coc-tsserver',
-      \ 'coc-rls',
-      \ 'coc-yaml',
-      \ ]
+" --- Core Settings ---
+set encoding=utf-8
+set hidden
+set nomodeline
+set mouse=a
+set showcmd
+set ruler
+set laststatus=2
+set wildmenu
+set visualbell t_vb=
 
-call plug#begin('~/.vim/plugged')
-Plug 'SirVer/ultisnips'
-Plug 'airblade/vim-gitgutter'
-Plug 'arcticicestudio/nord-vim'
-Plug 'clojure-vim/vim-jack-in'
-Plug 'eraserhd/parinfer-rust', {'do': 'cargo build --release'}
-Plug 'honza/vim-snippets'
-Plug 'jiangmiao/auto-pairs'
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-Plug 'junegunn/fzf.vim'
-Plug 'lifepillar/vim-solarized8'
-Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': {-> coc#util#install()}}
-Plug 'Olical/conjure', {'tag': 'v4.22.1'}
-Plug 'preservim/tagbar'
-Plug 'radenling/vim-dispatch-neovim' " Only in Neovim:
-Plug 'simnalamburt/vim-mundo'
-Plug 'sheerun/vim-polyglot'
-Plug 'tpope/vim-commentary'
-Plug 'tpope/vim-dispatch'
-Plug 'tpope/vim-eunuch'
-Plug 'tpope/vim-fireplace'
-Plug 'tpope/vim-fugitive'
-Plug 'tpope/vim-markdown'
-Plug 'tpope/vim-surround'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
-Plug 'vim-nerdtree/nerdtree'
-Plug 'vim-test/vim-test'
-Plug 'vimwiki/vimwiki'
-call plug#end()
+" --- Search ---
+set hlsearch
+set incsearch
+set ignorecase
+set smartcase
 
-" TODO: set the `.dotfiles` directory from the environment variable instead of
-"       hard coding it.
-source ~/.dotfiles/shared/vim/init/base.vim
-source ~/.dotfiles/shared/vim/init/coc.vim
-source ~/.dotfiles/shared/vim/init/colorscheme.vim
-source ~/.dotfiles/shared/vim/init/ctags.vim
-source ~/.dotfiles/shared/vim/init/filetype.vim
-source ~/.dotfiles/shared/vim/init/fzf.vim
-source ~/.dotfiles/shared/vim/init/nerdtree.vim
-source ~/.dotfiles/shared/vim/init/vimwiki.vim
+" --- Display ---
+set number
+set colorcolumn=81
+set listchars=tab:→\ ,trail:⋅
+set list
+set showmatch
 
-" Autopairs
-let g:AutoPairsFlyMode = 0
+" --- Indentation (default: 4 spaces) ---
+set expandtab
+set shiftwidth=4
+set tabstop=4
+set softtabstop=4
+set autoindent
 
-" FZF
-command! -bang -nargs=* Rg
-  \ call fzf#vim#grep(
-  \   'rg --column --line-number --no-heading --color=always '.shellescape(<q-args>), 1,
-  \   <bang>0 ? fzf#vim#with_preview('up:60%')
-  \           : fzf#vim#with_preview('right:50%:hidden', '?'),
-  \   <bang>0)
-nnoremap <C-x><C-b> :Buffers<CR>
-nnoremap <C-x><C-f> :Files<CR>
-nnoremap <C-x><C-g> :GFiles<CR>
+" --- Undo ---
+set undofile
+set undodir=~/.vimundo
+
+" --- Timing ---
+set notimeout ttimeout ttimeoutlen=10
+
+" --- Colorscheme ---
+set termguicolors
+silent! colorscheme catppuccin_mocha
+
+" --- Keymaps ---
+" Make Y behave like D and C (yank to end of line)
+nnoremap Y y$
+
+" Clear search highlighting
+nnoremap <silent> <Esc> :nohlsearch<CR>
+
+" --- Filetype-specific indentation ---
+augroup filetypes
+  autocmd!
+  " 2-space indentation
+  autocmd FileType astro,css,elixir,html,javascript,json,lua,ruby,typescript,typescriptreact,yaml
+        \ setlocal shiftwidth=2 tabstop=2 softtabstop=2
+
+  " Prose settings
+  autocmd FileType markdown setlocal textwidth=80 formatoptions+=t spell
+  autocmd FileType gitcommit setlocal spell
+
+  " Recognize .mdx as markdown
+  autocmd BufNewFile,BufRead *.mdx setfiletype markdown
+augroup END
