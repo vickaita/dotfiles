@@ -30,113 +30,8 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-COMMON_PACKAGES=(
-    atuin
-    bat
-    btop
-    copilot-cli
-    curl
-    delta
-    difftastic
-    direnv
-    eza
-    fd
-    ffmpeg
-    fzf
-    gh
-    git
-    git-branchless
-    glances
-    gnupg
-    gum
-    htop
-    imagemagick
-    jj
-    jq
-    lazygit
-    lesspipe
-    lynx
-    mise
-    neovim
-    pandoc
-    poppler
-    ripgrep
-    ripgrep-all
-    shellcheck
-    shellharden
-    shfmt
-    stow
-    tesseract
-    tldr
-    tmux
-    tmuxinator
-    tpm
-    tree
-    uv
-    vim
-    w3m
-    wget
-    yq
-    zellij
-    zoxide
-)
-
-# GUI applications (casks) - macOS only
-CASK_PACKAGES=(ghostty)
-
-# Check if a Homebrew package is installed (universal)
-is_package_installed() {
-    local package="$1"
-    brew list --formula | grep -q "^${package}$" 2>/dev/null
-}
-
-# Check if a cask is installed (macOS only)
-is_cask_installed() {
-    local cask="$1"
-    brew list --cask | grep -q "^${cask}$" 2>/dev/null
-}
-
-# Install Homebrew packages only if not already installed (universal)
-install_packages() {
-    local packages=("$@")
-    local to_install=()
-
-    for package in "${packages[@]}"; do
-        if ! is_package_installed "$package"; then
-            to_install+=("$package")
-        else
-            log_info "$package is already installed, skipping"
-        fi
-    done
-
-    if [[ ${#to_install[@]} -gt 0 ]]; then
-        log_info "Installing packages: ${to_install[*]}"
-        brew install "${to_install[@]}"
-    else
-        log_info "All packages are already installed"
-    fi
-}
-
-# Install cask packages only if not already installed (GUI applications)
-install_casks() {
-    local casks=("$@")
-    local to_install=()
-
-    for cask in "${casks[@]}"; do
-        if ! is_cask_installed "$cask"; then
-            to_install+=("$cask")
-        else
-            log_info "$cask is already installed, skipping"
-        fi
-    done
-
-    if [[ ${#to_install[@]} -gt 0 ]]; then
-        log_info "Installing casks: ${to_install[*]}"
-        brew install --cask "${to_install[@]}"
-    else
-        log_info "All casks are already installed"
-    fi
-}
+# Path to Brewfile
+BREWFILE="$DOTFILES/Brewfile"
 
 # Install Linux build tools required for Homebrew
 install_linux_build_tools() {
@@ -216,18 +111,18 @@ install_homebrew() {
         brew update
     fi
 
-    # Install packages
-    install_packages "${COMMON_PACKAGES[@]}"
-
-    # Install cask packages (GUI applications) — macOS only
-    if [[ "$OS" = "Darwin" ]] && [[ ${#CASK_PACKAGES[@]} -gt 0 ]]; then
-        install_casks "${CASK_PACKAGES[@]}"
+    # Install packages from Brewfile
+    if [[ -f "$BREWFILE" ]]; then
+        log_info "Installing packages from Brewfile..."
+        brew bundle --file="$BREWFILE"
+        log_info "Package installation complete!"
+    else
+        log_error "Brewfile not found at $BREWFILE"
+        exit 1
     fi
 
     # Setup global language versions
     setup_global_languages
-
-    log_info "Package installation complete!"
 }
 
 # Setup global language versions using mise configuration
