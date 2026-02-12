@@ -22,12 +22,12 @@ return {
       filesystem = {
         window = {
           position = "left",
-          width = 30,
+          width = 60,
         },
       },
       window = {
         position = "left",
-        width = 30,
+        width = 60,
         mapping_options = {
           noremap = true,
           nowait = true,
