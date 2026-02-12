@@ -122,3 +122,33 @@ LAYOUT_EOF
     # Cleanup
     rm -f "$layout_file"
 }
+
+# nvim-listen - Launch Neovim with a predictable socket path
+# Simpler alternative to nva() - just nvim with socket, no zellij orchestration
+nvim-listen() {
+    local socket_path
+
+    if [[ -n "$1" ]]; then
+        # User-provided name
+        socket_path="/tmp/nvim-$1.sock"
+    else
+        # Derive from pwd (hash for uniqueness)
+        local pwd_hash
+        if command -v md5sum >/dev/null 2>&1; then
+            pwd_hash=$(echo "$PWD" | md5sum | cut -d' ' -f1 | head -c 8)
+        else
+            # macOS uses md5 -q
+            pwd_hash=$(echo "$PWD" | md5 -q | head -c 8)
+        fi
+        socket_path="/tmp/nvim-${pwd_hash}.sock"
+    fi
+
+    # Clean stale socket
+    [[ -e "$socket_path" ]] && rm -f "$socket_path"
+
+    # Export for current shell and child processes
+    export NVA_SOCKET="$socket_path"
+
+    echo "Neovim listening on: $socket_path"
+    nvim --listen "$socket_path"
+}
