@@ -4,7 +4,7 @@
 # Provides convenient aliases for command suggestions and explanations
 
 if ! command -v copilot >/dev/null 2>&1; then
-    printf "GitHub Copilot CLI not found; install via 'brew install copilot-cli'.\n" >&2
+    printf "GitHub Copilot CLI not found; install via 'brew install copilot'.\n" >&2
     return
 fi
 

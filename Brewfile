@@ -5,7 +5,7 @@
 brew "atuin"
 brew "bat"
 brew "btop"
-brew "copilot-cli"
+brew "copilot"
 brew "curl"
 brew "delta"
 brew "difftastic"
