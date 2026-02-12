@@ -56,6 +56,7 @@ conditional_source "$DOTFILES/shared/shell/less-pager.sh"
 conditional_source "$DOTFILES/shared/shell/atuin.sh"
 conditional_source "$DOTFILES/shared/shell/aliases.sh"
 conditional_source "$DOTFILES/shared/shell/gh-copilot.sh"
+conditional_source "$DOTFILES/shared/shell/nva.sh"
 
 # Add custom bin directories to PATH
 prepend_to_path "$DOTFILES/bin"

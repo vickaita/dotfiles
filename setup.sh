@@ -464,6 +464,7 @@ stow_configs() {
         "tmux"
         "vim"
         "zellij"
+        "agents"
         "zsh"
     )
 

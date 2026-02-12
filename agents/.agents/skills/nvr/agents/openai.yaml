@@ -1,0 +1,4 @@
+interface:
+  display_name: "NVR - Neovim Remote"
+  short_description: "Control a connected Neovim instance"
+  default_prompt: "Use nvr to interact with the connected Neovim editor via $NVA_SOCKET."
