@@ -8,6 +8,7 @@ idiomatic_version_file_enable_tools = ["node", "python", "ruby"]
 
 [tools]
 node = "lts"
+"npm:@mariozechner/pi-coding-agent" = "latest"
 python = "latest"
 ruby = "latest"
 
