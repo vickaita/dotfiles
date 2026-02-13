@@ -7,7 +7,7 @@
   "context": {
     "files": []
   },
-  "lastChangelogVersion": "0.52.10",
+  "lastChangelogVersion": "0.52.11",
   "defaultProvider": "github-copilot",
   "defaultModel": "gpt-5.2-codex",
   "hideThinkingBlock": false,

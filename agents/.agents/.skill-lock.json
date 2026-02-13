@@ -18,6 +18,42 @@
       "skillFolderHash": "98904a7d8e0e04b9bd46220b9b17298f45fe0b72",
       "installedAt": "2026-02-13T01:01:48.088Z",
       "updatedAt": "2026-02-13T01:01:48.088Z"
+    },
+    "commit-splitter": {
+      "source": "sundial-org/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/sundial-org/skills.git",
+      "skillPath": "skills/commit-splitter/SKILL.md",
+      "skillFolderHash": "324c95abd6247b905af16febce8dca2b3a57a6be",
+      "installedAt": "2026-02-13T22:09:28.289Z",
+      "updatedAt": "2026-02-13T22:09:28.289Z"
+    },
+    "using-git-worktrees": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/using-git-worktrees/SKILL.md",
+      "skillFolderHash": "a5b3f5965f321175a7f07dcadff0bb79adb9e9f7",
+      "installedAt": "2026-02-13T22:10:24.973Z",
+      "updatedAt": "2026-02-13T22:10:24.973Z"
+    },
+    "git-advanced-workflows": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/developer-essentials/skills/git-advanced-workflows/SKILL.md",
+      "skillFolderHash": "8f1c0e844c47a4446b69c0bb36b73447bc26ca50",
+      "installedAt": "2026-02-13T22:11:23.434Z",
+      "updatedAt": "2026-02-13T22:11:23.434Z"
+    },
+    "git-commit": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/git-commit/SKILL.md",
+      "skillFolderHash": "883a6a7466f55a9cd9f22cf1cce2d9333fc9b998",
+      "installedAt": "2026-02-13T22:11:46.697Z",
+      "updatedAt": "2026-02-13T22:11:46.697Z"
     }
   },
   "dismissed": {
@@ -30,6 +66,7 @@
     "github-copilot",
     "kimi-cli",
     "opencode",
-    "claude-code"
+    "claude-code",
+    "pi"
   ]
 }
