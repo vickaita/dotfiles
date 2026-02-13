@@ -1,4 +1,6 @@
 agents/.pi/auth.json
+agents/.pi/agent/auth.json
+agents/.pi/agent/sessions/
 nvim/.config/coc/
 nvim/.config/iterm2/
 nvim/.config/github-copilot/
