@@ -9,7 +9,7 @@
   },
   "lastChangelogVersion": "0.52.11",
   "defaultProvider": "github-copilot",
-  "defaultModel": "gpt-5.2-codex",
+  "defaultModel": "claude-haiku-4.5",
   "hideThinkingBlock": false,
   "enabledModels": [
     "github-copilot/gpt-5.3-codex",
@@ -23,5 +23,6 @@
   ],
   "packages": [
     "npm:lsp-pi"
-  ]
+  ],
+  "theme": "catppuccin-mocha"
 }
