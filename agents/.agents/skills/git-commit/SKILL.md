@@ -11,6 +11,12 @@ allowed-tools: Bash
 
 Create standardized, semantic git commits using the Conventional Commits specification. Analyze the actual diff to determine appropriate type, scope, and message.
 
+## Line Length Limits
+Follow the 50/72 rule for commit messages:
+- First line of commit is limited to 50 characters
+- Body of the commit is wrapped at 72 characters
+- Code and pre-formatted text may exceed these boundaries, e.g. stack trace
+
 ## Conventional Commit Format
 
 ```

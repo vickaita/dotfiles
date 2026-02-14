@@ -9,7 +9,7 @@
   },
   "lastChangelogVersion": "0.52.11",
   "defaultProvider": "github-copilot",
-  "defaultModel": "claude-haiku-4.5",
+  "defaultModel": "claude-opus-4.6",
   "hideThinkingBlock": false,
   "enabledModels": [
     "github-copilot/gpt-5.3-codex",
