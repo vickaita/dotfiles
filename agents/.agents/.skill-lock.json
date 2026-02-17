@@ -54,6 +54,24 @@
       "skillFolderHash": "883a6a7466f55a9cd9f22cf1cce2d9333fc9b998",
       "installedAt": "2026-02-13T22:11:46.697Z",
       "updatedAt": "2026-02-13T22:11:46.697Z"
+    },
+    "jsonapi": {
+      "source": "prowler-cloud/prowler",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/prowler-cloud/prowler.git",
+      "skillPath": "skills/jsonapi/SKILL.md",
+      "skillFolderHash": "7663b913a8f79a24863c080b183e67323ec27d02",
+      "installedAt": "2026-02-16T03:35:09.912Z",
+      "updatedAt": "2026-02-16T03:35:09.912Z"
+    },
+    "agent-browser": {
+      "source": "vercel-labs/agent-browser",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-browser.git",
+      "skillPath": "skills/agent-browser/SKILL.md",
+      "skillFolderHash": "d9ed23aaf02a172820a8b42964cfe2d21e06e25b",
+      "installedAt": "2026-02-16T03:40:09.170Z",
+      "updatedAt": "2026-02-16T03:40:09.170Z"
     }
   },
   "dismissed": {
