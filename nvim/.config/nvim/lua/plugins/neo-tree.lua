@@ -19,10 +19,19 @@ return {
     ---@module "neo-tree"
     ---@type neotree.Config?
     opts = {
+      open_files_do_not_replace_types = { "terminal", "trouble", "qf" },
       filesystem = {
         window = {
           position = "left",
           width = 60,
+        },
+      },
+      event_handlers = {
+        {
+          event = "file_open_requested",
+          handler = function()
+            require("neo-tree.command").execute({ action = "close" })
+          end,
         },
       },
       window = {
