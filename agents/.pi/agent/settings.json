@@ -7,7 +7,7 @@
   "context": {
     "files": []
   },
-  "lastChangelogVersion": "0.52.12",
+  "lastChangelogVersion": "0.53.0",
   "defaultProvider": "github-copilot",
   "defaultModel": "claude-sonnet-4.5",
   "hideThinkingBlock": false,
