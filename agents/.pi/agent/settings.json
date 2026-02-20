@@ -7,15 +7,15 @@
   "context": {
     "files": []
   },
-  "lastChangelogVersion": "0.53.0",
+  "lastChangelogVersion": "0.54.0",
   "defaultProvider": "github-copilot",
-  "defaultModel": "claude-sonnet-4.5",
+  "defaultModel": "claude-haiku-4.5",
   "hideThinkingBlock": false,
   "enabledModels": [
-    "github-copilot/gpt-5.3-codex",
     "github-copilot/claude-opus-4.6",
-    "github-copilot/claude-sonnet-4.5",
-    "github-copilot/claude-haiku-4.5"
+    "github-copilot/claude-haiku-4.5",
+    "github-copilot/gpt-5.2-codex",
+    "github-copilot/claude-sonnet-4.6"
   ],
   "defaultThinkingLevel": "medium",
   "skills": [
