@@ -141,6 +141,28 @@ return {
               end
             end,
           },
+          {
+            "<leader>uc",
+            function()
+              require("treesitter-context").toggle()
+            end,
+            desc = function()
+              local ok, ctx = pcall(require, "treesitter-context")
+              if ok and ctx.enabled() then
+                return "Disable treesitter context"
+              else
+                return "Enable treesitter context"
+              end
+            end,
+            icon = function()
+              local ok, ctx = pcall(require, "treesitter-context")
+              if ok and ctx.enabled() then
+                return { icon = "", color = "green" }
+              else
+                return { icon = "", color = "red" }
+              end
+            end,
+          },
           { "<leader>v", group = "vimwiki" },
           { "<leader>vd", group = "diary" },
           { "<leader>w", group = "workspace", icon = "󰷉" },

@@ -123,7 +123,7 @@ return {
       line_numbers = true,
       multiline_threshold = 20,
       trim_scope = "outer",
-      mode = "cursor",
+      mode = "topline",
       separator = nil,
       zindex = 20,
     },
