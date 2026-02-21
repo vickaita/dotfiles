@@ -189,6 +189,7 @@ keybinds {
         bind "Ctrl c" "Backspace" { SwitchToMode "Normal"; }
         bind "Ctrl s" { SwitchToMode "Scroll"; }
         bind "d" { Detach; }
+        bind "q" { Quit; }
         bind "w" {
             LaunchOrFocusPlugin "session-manager" {
                 floating true
