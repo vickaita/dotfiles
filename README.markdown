@@ -248,6 +248,27 @@ brew update && brew upgrade
 sudo apt update && sudo apt upgrade
 ```
 
+### Secret Scanning (gitleaks)
+
+This repo includes automated gitleaks scanning on pull requests and pushes to
+`main` via GitHub Actions.
+
+Run a local scan before pushing:
+
+```bash
+gitleaks git -v
+```
+
+Pre-commit scanning is also configured through repo-managed hooks.
+
+For existing clones, enable them once:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+After running `./setup.sh`, this is configured automatically.
+
 ## Troubleshooting
 
 ### Stow Conflicts

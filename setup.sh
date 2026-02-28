@@ -522,6 +522,23 @@ trust_mise_configs() {
     fi
 }
 
+# Configure repository-managed git hooks
+setup_git_hooks() {
+    if ! command -v git >/dev/null 2>&1; then
+        log_warn "git not installed; skipping git hook setup"
+        return
+    fi
+
+    if ! git -C "$DOTFILES" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        log_warn "Not a git repository at $DOTFILES; skipping git hook setup"
+        return
+    fi
+
+    log_info "Configuring repository git hooks..."
+    git -C "$DOTFILES" config core.hooksPath .githooks
+    log_info "Git hooks enabled (core.hooksPath=.githooks)"
+}
+
 # Main function
 main() {
     log_info "Starting system setup..."
@@ -573,6 +590,8 @@ main() {
     else
         log_info "Skipping stowing configuration files (--skip-stow)"
     fi
+
+    setup_git_hooks
 
     log_info "Setup complete! 🎉"
 }

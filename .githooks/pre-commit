@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "pre-commit: gitleaks is required but not installed."
+    echo "Install it with: brew install gitleaks"
+    exit 1
+fi
+
+# Prefer staged-only scans for fast local commits.
+if gitleaks help protect >/dev/null 2>&1; then
+    exec gitleaks protect --staged --redact --verbose
+fi
+
+if gitleaks git --help 2>/dev/null | rg -q -- "--staged"; then
+    exec gitleaks git --staged --redact --verbose
+fi
+
+echo "pre-commit: this gitleaks version does not support staged pre-commit scanning."
+echo "Run 'gitleaks git -v' manually, then update gitleaks."
+exit 1
