@@ -157,9 +157,25 @@ return {
             icon = function()
               local ok, ctx = pcall(require, "treesitter-context")
               if ok and ctx.enabled() then
-                return { icon = "", color = "green" }
+                return { icon = "", color = "green" }
               else
-                return { icon = "", color = "red" }
+                return { icon = "", color = "red" }
+              end
+            end,
+          },
+          {
+            "<leader>uE",
+            function()
+              vim.g.neo_tree_auto_close = not vim.g.neo_tree_auto_close
+            end,
+            desc = function()
+              return vim.g.neo_tree_auto_close and "Disable neo-tree auto-close" or "Enable neo-tree auto-close"
+            end,
+            icon = function()
+              if vim.g.neo_tree_auto_close then
+                return { icon = "", color = "green" }
+              else
+                return { icon = "", color = "red" }
               end
             end,
           },

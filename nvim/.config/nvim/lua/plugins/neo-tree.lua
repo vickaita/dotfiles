@@ -30,7 +30,9 @@ return {
         {
           event = "file_open_requested",
           handler = function()
-            require("neo-tree.command").execute({ action = "close" })
+            if vim.g.neo_tree_auto_close then
+              require("neo-tree.command").execute({ action = "close" })
+            end
           end,
         },
       },
@@ -46,6 +48,9 @@ return {
       enable_mouse_support = true,
     },
     config = function(_, opts)
+      if vim.g.neo_tree_auto_close == nil then
+        vim.g.neo_tree_auto_close = true
+      end
       require("neo-tree").setup(opts)
       
       -- Open neo-tree by default if configured via neoconf
