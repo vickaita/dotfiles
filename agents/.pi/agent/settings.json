@@ -7,7 +7,7 @@
   "context": {
     "files": []
   },
-  "lastChangelogVersion": "0.54.0",
+  "lastChangelogVersion": "0.54.2",
   "defaultProvider": "github-copilot",
   "defaultModel": "claude-haiku-4.5",
   "hideThinkingBlock": false,

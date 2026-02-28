@@ -111,11 +111,15 @@ return {
         },
         -- To-do lists
         to_do = {
-          symbols = { " ", "-", "x" }, -- [ ], [-], [x]
-          update_parents = true,
-          not_started = " ",
-          in_progress = "-",
-          complete = "x",
+          statuses = {
+            not_started = { marker = " " },
+            in_progress = { marker = "-" },
+            complete = { marker = { "X", "x" } },
+          },
+          status_order = { "not_started", "in_progress", "complete" },
+          status_propagation = {
+            up = true,
+          },
         },
         -- Mappings
         mappings = {
