@@ -150,6 +150,29 @@ vim.api.nvim_create_autocmd("BufReadPost", {
   end,
 })
 
+-- Exit timing diagnostics (temporary)
+local _exit_t0 = 0
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  callback = function()
+    _exit_t0 = vim.uv.hrtime()
+  end,
+})
+vim.api.nvim_create_autocmd("VimLeave", {
+  callback = function()
+    local ms = (vim.uv.hrtime() - _exit_t0) / 1e6
+    local lsp_clients = vim.lsp.get_clients()
+    local client_names = vim.tbl_map(function(c) return c.name end, lsp_clients)
+    local f = io.open("/tmp/nvim_exit.log", "a")
+    if f then
+      f:write(string.format(
+        "VimLeavePre→VimLeave: %.0fms | LSP clients at exit: [%s]\n",
+        ms, table.concat(client_names, ", ")
+      ))
+      f:close()
+    end
+  end,
+})
+
 -- Terminal settings
 vim.api.nvim_create_autocmd("TermOpen", {
   callback = function()
