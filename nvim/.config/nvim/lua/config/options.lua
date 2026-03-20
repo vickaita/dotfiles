@@ -13,9 +13,9 @@ vim.o.formatoptions = vim.o.formatoptions .. "t"
 vim.opt.textwidth = 80
 
 -- configure line wrapping
--- only configures line wrapping, but you need to `set wrap`
--- to enable it in the current buffer; by default, it is off
--- and only configured for certain file types, see autocmds.lua
+-- markdown/text filetypes default to nowrap; user can toggle with <leader>uw
+-- the flag below prevents the FileType autocmd from enabling wrap by default
+vim.g.user_disabled_wrap_for_text_filetypes = true
 vim.opt.linebreak = true
 vim.opt.breakindent = true
 vim.opt.showbreak = "↳ "

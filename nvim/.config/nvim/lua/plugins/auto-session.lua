@@ -121,6 +121,15 @@ return {
 
             if settings.user_disabled_wrap_for_text_filetypes ~= nil then
               vim.g.user_disabled_wrap_for_text_filetypes = settings.user_disabled_wrap_for_text_filetypes
+              -- FileType autocmd fired before this ran, so reapply wrap to open windows
+              local text_fts = { markdown = true, text = true, gitcommit = true, rst = true, asciidoc = true }
+              local wrap_on = not (vim.g.user_disabled_wrap_for_text_filetypes == true)
+              for _, win in ipairs(vim.api.nvim_list_wins()) do
+                local buf = vim.api.nvim_win_get_buf(win)
+                if text_fts[vim.bo[buf].filetype] then
+                  vim.wo[win].wrap = wrap_on
+                end
+              end
             end
           end
         end,
