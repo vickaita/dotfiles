@@ -23,6 +23,7 @@ Thumbs.db
 
 # Agent files
 **/.claude/settings.local.json
+**/.claude/worktrees/
 
 # OS generated files
 .AppleDouble
