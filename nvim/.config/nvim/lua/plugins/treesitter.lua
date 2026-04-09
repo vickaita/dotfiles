@@ -15,7 +15,6 @@ return {
       ensure_installed = {
         "bash",
         "c",
-        "cucumber",
         "diff",
         "html",
         "javascript",
