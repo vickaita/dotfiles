@@ -110,6 +110,13 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- Programming Languages
+
+-- Gherkin / Cucumber
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "cucumber" },
+  command = "setlocal shiftwidth=2 tabstop=2 expandtab softtabstop=2",
+})
+
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "rust" },
   command = "setlocal textwidth=100 shiftwidth=4 tabstop=4 expandtab softtabstop=4",
