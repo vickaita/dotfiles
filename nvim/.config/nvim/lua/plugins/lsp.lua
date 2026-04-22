@@ -44,7 +44,7 @@ return {
     opts = {
       keymap = { preset = "default" },
       completion = {
-        ghost_text = { enabled = true },
+        ghost_text = { enabled = function() return vim.bo.filetype ~= "markdown" end },
         list = { selection = { auto_insert = false } },
         documentation = { auto_show = true, window = { border = "rounded" } },
         menu = {

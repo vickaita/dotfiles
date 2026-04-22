@@ -94,6 +94,43 @@ return {
     "jakewvincent/mkdnflow.nvim",
     ft = { "markdown", "md" },
     config = function()
+      -- Extends mkdnflow's link-following to support Obsidian block reference syntax.
+      -- Standard markdown anchors target headings (e.g. #items), but Obsidian also
+      -- supports block anchors: append `^blockid` to any line to create an anchor,
+      -- then link to it with `#^blockid`. mkdnflow doesn't know this syntax, so we
+      -- intercept <CR>, handle block refs ourselves, and fall back to MkdnEnter for
+      -- everything else.
+      local function follow_link()
+        local line = vim.api.nvim_get_current_line()
+        local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+        local start_pos = 1
+        while true do
+          local s, e, block_id = line:find("%[.-%]%(#%^([^%)]+)%)", start_pos)
+          if not s then break end
+          if col >= s and col <= e then
+            local search_pat = "%^" .. vim.pesc(block_id) .. "%s*$"
+            local buf_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+            for i, l in ipairs(buf_lines) do
+              if l:match(search_pat) then
+                vim.api.nvim_win_set_cursor(0, { i, 0 })
+                return
+              end
+            end
+            vim.notify("Block anchor '^" .. block_id .. "' not found", vim.log.levels.WARN)
+            return
+          end
+          start_pos = e + 1
+        end
+        vim.cmd("MkdnEnter")
+      end
+
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "markdown", "md" },
+        callback = function()
+          vim.keymap.set("n", "<CR>", follow_link, { buffer = true, desc = "Follow markdown link" })
+        end,
+      })
+
       require("mkdnflow").setup({
         -- Links and paths
         links = {
@@ -123,7 +160,7 @@ return {
         },
         -- Mappings
         mappings = {
-          MkdnEnter = { { "n", "v" }, "<CR>" },
+          MkdnEnter = false,
           MkdnTab = false,
           MkdnSTab = false,
           MkdnNextLink = { "n", "<Tab>" },
@@ -134,7 +171,7 @@ return {
           MkdnGoForward = { "n", "<Del>" },
           MkdnCreateLink = false,
           MkdnCreateLinkFromClipboard = { { "n", "v" }, "<leader>p" },
-          MkdnFollowLink = { "n", "<CR>" },
+          MkdnFollowLink = false,
           MkdnDestroyLink = { "n", "<M-CR>" },
           MkdnTagSpan = { "v", "<M-CR>" },
           MkdnMoveSource = { "n", "<F2>" },
