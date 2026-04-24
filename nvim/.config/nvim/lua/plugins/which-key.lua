@@ -179,7 +179,7 @@ return {
               end
             end,
           },
-          { "<leader>v", group = "vimwiki" },
+          { "<leader>v", group = "notes" },
           { "<leader>vd", group = "diary" },
           { "<leader>w", group = "workspace", icon = "󰷉" },
           {

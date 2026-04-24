@@ -19,6 +19,7 @@ Default port: 8000
 import os
 import sys
 import re
+import html
 import urllib.parse
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -101,6 +102,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
             # Process code embeddings before markdown conversion
             content = self.process_embeds(content, file_path.parent)
+
+            # Convert Mermaid fences into browser-rendered diagram blocks
+            content = self.process_mermaid_blocks(content)
 
             # Convert markdown to HTML
             html_content = markdown.markdown(
@@ -237,6 +241,17 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             return self.generate_code_embed(spec, base_path)
 
         return re.sub(pattern, replace_embed, content)
+
+    def process_mermaid_blocks(self, content):
+        """Convert fenced Mermaid blocks to HTML consumed by Mermaid JS."""
+        pattern = r'^```[ \t]*mermaid[^\n]*\n(.*?)^```[ \t]*$'
+
+        def replace_mermaid(match):
+            diagram = match.group(1).strip('\n')
+            escaped_diagram = html.escape(diagram, quote=False)
+            return f'<pre class="mermaid">{escaped_diagram}</pre>'
+
+        return re.sub(pattern, replace_mermaid, content, flags=re.MULTILINE | re.DOTALL)
 
     def generate_code_embed(self, spec, base_path):
         """Generate HTML for code embedding"""
@@ -526,6 +541,15 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             margin: 10px 0;
         }}
 
+        .mermaid {{
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+            padding: 20px;
+            text-align: center;
+        }}
+
         table {{
             border-collapse: collapse;
             width: 100%;
@@ -548,6 +572,13 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 </head>
 <body>
     {content}
+    <script type="module">
+        import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+        mermaid.initialize({{
+            startOnLoad: true,
+            securityLevel: "strict"
+        }});
+    </script>
 </body>
 </html>"""
 

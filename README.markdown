@@ -93,7 +93,7 @@ The `setup.sh` script performs this automatically.
 ### Editors & IDEs
 
 - **nvim**: Modern Neovim configuration with Lua-based setup
-- **vim**: Classic Vim configuration with shared settings
+- **vim**: Minimal classic Vim configuration
 
 ### Shells & Terminals
 
@@ -115,7 +115,6 @@ The `setup.sh` script performs this automatically.
 ### Shared Components
 
 - **shared/shell**: Common shell utilities and functions
-- **shared/vim**: Shared Vim/Neovim configurations
 
 ## Customization
 

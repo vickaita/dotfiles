@@ -28,13 +28,6 @@ vim.api.nvim_create_autocmd("FileType", {
   command = "setlocal textwidth=79 shiftwidth=4 tabstop=4 expandtab softtabstop=4",
 })
 
-
--- Vimwiki
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "vimwiki", "wiki" },
-  command = "setlocal textwidth=80 shiftwidth=4 tabstop=4",
-})
-
 -- Web Development
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "css", "scss", "sass", "less" },

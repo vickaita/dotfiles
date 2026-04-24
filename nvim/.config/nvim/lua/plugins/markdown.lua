@@ -56,7 +56,7 @@ return {
           -- icons = { "●", "○", "◆", "◇" },
           icons = { "•" },
         },
-        -- Wiki link configuration for vimwiki
+        -- Wiki link rendering
         link = {
           wiki = {
             icon = "󱗖 ",
@@ -94,6 +94,47 @@ return {
     "jakewvincent/mkdnflow.nvim",
     ft = { "markdown", "md" },
     config = function()
+      local function url_encode(value)
+        return tostring(value):gsub("[^%w%-_%.~]", function(char)
+          return string.format("%%%02X", string.byte(char))
+        end)
+      end
+
+      local function is_port_in_use(port)
+        if vim.fn.executable("lsof") ~= 1 then
+          return false
+        end
+
+        local output = vim.fn.system({ "lsof", "-ti", "-iTCP:" .. tostring(port) })
+        return vim.v.shell_error == 0 and output ~= ""
+      end
+
+      local function markdown_preview()
+        local file = vim.api.nvim_buf_get_name(0)
+        if file == "" then
+          vim.notify("Save the markdown file before previewing it", vim.log.levels.WARN)
+          return
+        end
+
+        local dir = vim.fn.fnamemodify(file, ":p:h")
+        local name = vim.fn.fnamemodify(file, ":t")
+        local port = 8000
+
+        if not is_port_in_use(port) then
+          if vim.fn.executable("markdown-server") ~= 1 then
+            vim.notify("markdown-server is not available on PATH", vim.log.levels.ERROR)
+            return
+          end
+
+          vim.fn.jobstart({ "markdown-server", tostring(port) }, {
+            cwd = dir,
+            detach = true,
+          })
+        end
+
+        vim.ui.open("http://localhost:" .. port .. "/" .. url_encode(name))
+      end
+
       -- Extends mkdnflow's link-following to support Obsidian block reference syntax.
       -- Standard markdown anchors target headings (e.g. #items), but Obsidian also
       -- supports block anchors: append `^blockid` to any line to create an anchor,
@@ -128,6 +169,9 @@ return {
       vim.api.nvim_create_autocmd("FileType", {
         pattern = { "markdown", "md" },
         callback = function()
+          vim.api.nvim_buf_create_user_command(0, "MarkdownPreview", markdown_preview, {
+            desc = "Open current markdown file in markdown-server",
+          })
           vim.keymap.set("n", "<CR>", follow_link, { buffer = true, desc = "Follow markdown link" })
         end,
       })
