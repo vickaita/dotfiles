@@ -153,8 +153,7 @@ return {
             local buf_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
             for i, l in ipairs(buf_lines) do
               if l:match(search_pat) then
-                vim.cmd("normal! m'")
-                vim.api.nvim_win_set_cursor(0, { i, 0 })
+                vim.cmd("normal! " .. i .. "G")
                 return
               end
             end
