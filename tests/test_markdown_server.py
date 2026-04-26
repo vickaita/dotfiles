@@ -1,6 +1,7 @@
 import importlib.util
 import http.client
 import os
+import re
 import tempfile
 import threading
 import unittest
@@ -53,6 +54,21 @@ print("still code")
         self.assertIn("Alice-&gt;&gt;Bob: &lt;hello&gt;", processed)
         self.assertIn("```python", processed)
         self.assertIn('print("still code")', processed)
+
+    def test_heading_styles_do_not_draw_underlines(self):
+        module = load_markdown_server()
+        handler = module.MarkdownHandler.__new__(module.MarkdownHandler)
+
+        rendered = handler.wrap_html(
+            "<h1>Title</h1><h2>Section</h2><h3>Subsection</h3>",
+            "Title",
+        )
+
+        for selector in ("h1", "h2", ".dir-title"):
+            with self.subTest(selector=selector):
+                self.assertIsNone(
+                    re.search(rf"{re.escape(selector)}\s*\{{[^}}]*border-bottom", rendered)
+                )
 
     def test_relative_link_to_sibling_directory_serves_target_file(self):
         module = load_markdown_server()

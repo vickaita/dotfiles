@@ -861,8 +861,8 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             letter-spacing: -0.01em;
         }}
 
-        h1 {{ font-size: 2rem; margin-top: 0.2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }}
-        h2 {{ font-size: 1.55rem; padding-bottom: 0.25em; border-bottom: 1px solid var(--border); }}
+        h1 {{ font-size: 2rem; margin-top: 0.2em; }}
+        h2 {{ font-size: 1.55rem; }}
         h3 {{ font-size: 1.25rem; }}
         h4 {{ font-size: 1.05rem; }}
         h5, h6 {{ font-size: 0.95rem; color: var(--text-muted); }}
@@ -917,7 +917,7 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         hr {{
             border: 0;
-            border-top: 1px solid var(--border);
+            border-top: 2px solid var(--border);
             margin: 2.5em 0;
         }}
 
@@ -1172,8 +1172,6 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             color: var(--text-muted);
             font-weight: 500;
             margin: 0 0 1em;
-            padding-bottom: 0.5em;
-            border-bottom: 1px solid var(--border);
         }}
 
         .dir-listing {{ font-family: var(--sans); }}
