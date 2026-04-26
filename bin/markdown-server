@@ -16,7 +16,9 @@ Usage:
 Default port: 8000
 """
 
+import json
 import os
+import subprocess
 import sys
 import re
 import html
@@ -26,8 +28,21 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 import markdown
 from pygments import highlight
-from pygments.lexers import guess_lexer_for_filename
+from pygments.lexers import guess_lexer_for_filename, get_lexer_by_name
+from pygments.util import ClassNotFound
 from pygments.formatters import HtmlFormatter
+
+SNIPPET_PATTERN = re.compile(
+    r'^\[(?P<text>[^\]\n]+?)\]\((?P<href>[^)\n]+?)\)[ \t]*\n+'
+    r'^```(?P<lang>[\w+\-.]*)[ \t]*\n'
+    r'(?P<code>.*?)\n'
+    r'^```[ \t]*$',
+    re.MULTILINE | re.DOTALL,
+)
+
+SNIPPET_TEXT_PATTERN = re.compile(
+    r'^(?P<path>[^:\n]+):(?P<start>\d+)(?:-(?P<end>\d+))?(?:#(?P<hash>[0-9a-fA-F]{4,40}))?$'
+)
 
 
 # Image file extensions to display in browser
@@ -64,6 +79,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         # Parse the URL
         parsed_path = urllib.parse.urlparse(self.path)
         path = urllib.parse.unquote(parsed_path.path)
+
+        if path == '/_snippet':
+            return self.serve_snippet_fragment(parsed_path.query)
 
         # Remove leading slash and resolve to filesystem path
         if path.startswith('/'):
@@ -123,8 +141,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             # Process wikilinks [[Topic]] -> Topic.md links
             content = self.process_wikilinks(content)
 
-            # Process code embeddings before markdown conversion
-            content = self.process_embeds(content, file_path.parent)
+            # Replace [path:line-range](href) + ```code``` pairs with placeholders.
+            # Real HTML is spliced back in after the markdown pass.
+            content, snippet_blocks = self.process_code_snippets(content, file_path.parent)
 
             # Convert Mermaid fences into browser-rendered diagram blocks
             content = self.process_mermaid_blocks(content)
@@ -134,6 +153,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
                 content,
                 extensions=['fenced_code', 'tables', 'codehilite', 'toc']
             )
+
+            for token, snippet_html in snippet_blocks.items():
+                html_content = html_content.replace(f'<p>{token}</p>', snippet_html)
 
             # Wrap in HTML template
             full_html = self.wrap_html(
@@ -234,6 +256,41 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, f"Error processing source file: {str(e)}")
 
+    def serve_snippet_fragment(self, query_string):
+        """Return Pygments-highlighted HTML for a range of a file.
+
+        Query params: path (abs), start, end, hash (optional), lang (optional).
+        Responds with JSON: {html, start, end, total}.
+        """
+        try:
+            params = urllib.parse.parse_qs(query_string)
+            abs_path = Path(params['path'][0])
+            start = max(1, int(params['start'][0]))
+            end = max(start, int(params['end'][0]))
+            commit_hash = params.get('hash', [''])[0]
+            lang = params.get('lang', [''])[0]
+
+            lines = self.read_source_lines(abs_path, commit_hash)
+            total = len(lines)
+            end = min(end, total)
+            code = '\n'.join(lines[start - 1:end])
+            highlighted = self.highlight_snippet(lang, abs_path, code, start)
+
+            payload = json.dumps({
+                'html': highlighted,
+                'start': start,
+                'end': end,
+                'total': total,
+            }).encode('utf-8')
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', len(payload))
+            self.end_headers()
+            self.wfile.write(payload)
+        except Exception as e:
+            self.send_error(500, f'Error loading snippet: {e}')
+
     def process_wikilinks(self, content):
         """Process wikilinks: [[Topic]] or [[Topic|Display Text]]"""
         def replace_wikilink(match):
@@ -253,15 +310,194 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         return re.sub(r'\[\[([^\]]+)\]\]', replace_wikilink, content)
 
-    def process_embeds(self, content, base_path):
-        """Process custom embed syntax: [embed:path/to/file.py#L10-20]"""
-        pattern = r'\[embed:([^\]]+)\]'
+    def process_code_snippets(self, content, base_path):
+        """Replace [path:start-end(#hash)](href) + ```code``` pairs with placeholders.
 
-        def replace_embed(match):
-            spec = match.group(1)
-            return self.generate_code_embed(spec, base_path)
+        Returns (modified_content, {token: html_block}). The caller substitutes
+        rendered HTML for each token after running the markdown converter.
+        """
+        blocks = {}
 
-        return re.sub(pattern, replace_embed, content)
+        def replace(match):
+            link_text = match.group('text').strip()
+            link_meta = SNIPPET_TEXT_PATTERN.match(link_text)
+            if not link_meta:
+                return match.group(0)
+
+            href = match.group('href').strip()
+            lang = (match.group('lang') or '').strip()
+            code = match.group('code')
+
+            rel_path = link_meta.group('path').strip()
+            start = int(link_meta.group('start'))
+            end = int(link_meta.group('end')) if link_meta.group('end') else start
+            commit_hash = link_meta.group('hash') or ''
+
+            try:
+                abs_path = (base_path / rel_path).resolve()
+            except (OSError, ValueError):
+                return match.group(0)
+
+            snippet_html = self.render_snippet_block(
+                rel_path=rel_path,
+                abs_path=abs_path,
+                href=href,
+                start=start,
+                end=end,
+                commit_hash=commit_hash,
+                lang=lang,
+                code=code,
+            )
+
+            token = f'SNIPPETPLACEHOLDER{len(blocks):04d}TOKEN'
+            blocks[token] = snippet_html
+            return f'\n\n{token}\n\n'
+
+        new_content = SNIPPET_PATTERN.sub(replace, content)
+        return new_content, blocks
+
+    def render_snippet_block(self, rel_path, abs_path, href, start, end,
+                             commit_hash, lang, code):
+        """Render a single snippet card to HTML."""
+        statuses = self.snippet_status(abs_path, start, end, commit_hash, code)
+        body_html = self.highlight_snippet(lang, abs_path, code, start)
+
+        # Determine total line count to know if expand has more to reveal.
+        try:
+            total = self.count_source_lines(abs_path, commit_hash)
+        except Exception:
+            total = 0
+
+        label = html.escape(f'{rel_path}:{start}' + (f'-{end}' if end != start else '')
+                            + (f'#{commit_hash}' if commit_hash else ''))
+        href_attr = html.escape(href, quote=True)
+        data_attrs = (
+            f'data-path="{html.escape(str(abs_path), quote=True)}" '
+            f'data-start="{start}" data-end="{end}" '
+            f'data-hash="{html.escape(commit_hash, quote=True)}" '
+            f'data-lang="{html.escape(lang, quote=True)}" '
+            f'data-total="{total}"'
+        )
+
+        badges_html = ''.join(self.render_status_badge(s) for s in statuses)
+
+        expand_up = (
+            '<button class="snippet-expand snippet-expand-up" data-direction="up" '
+            'type="button" title="Show more above (shift-click for all)">'
+            '<span class="chev">⌃</span> show more above</button>'
+            if start > 1 else ''
+        )
+        expand_down = (
+            '<button class="snippet-expand snippet-expand-down" data-direction="down" '
+            'type="button" title="Show more below (shift-click for all)">'
+            '<span class="chev">⌄</span> show more below</button>'
+            if total == 0 or end < total else ''
+        )
+
+        return (
+            f'<div class="snippet" {data_attrs}>'
+            f'<div class="snippet-header">'
+            f'<a class="snippet-link" href="{href_attr}">{label}</a>'
+            f'{badges_html}'
+            f'</div>'
+            f'{expand_up}'
+            f'<div class="snippet-body">{body_html}</div>'
+            f'{expand_down}'
+            f'</div>'
+        )
+
+    def highlight_snippet(self, lang, abs_path, code, linenostart):
+        """Return Pygments-highlighted HTML with a starting line number."""
+        formatter = HtmlFormatter(linenos='table', linenostart=linenostart,
+                                  cssclass='highlight')
+        try:
+            if lang:
+                lexer = get_lexer_by_name(lang)
+            else:
+                lexer = guess_lexer_for_filename(str(abs_path), code)
+        except (ClassNotFound, Exception):
+            try:
+                lexer = guess_lexer_for_filename(str(abs_path), code)
+            except Exception:
+                from pygments.lexers.special import TextLexer
+                lexer = TextLexer()
+        return highlight(code, lexer, formatter)
+
+    def read_source_lines(self, abs_path, commit_hash):
+        """Return the file content as a list of lines (no trailing newlines)."""
+        if commit_hash:
+            repo_root = self.find_git_root(abs_path)
+            if not repo_root:
+                raise FileNotFoundError(f'no git repo for {abs_path}')
+            rel = abs_path.resolve().relative_to(repo_root.resolve())
+            result = subprocess.run(
+                ['git', '-C', str(repo_root), 'show', f'{commit_hash}:{rel}'],
+                capture_output=True, check=True, text=True,
+            )
+            text = result.stdout
+        else:
+            text = Path(abs_path).read_text(encoding='utf-8')
+        return text.splitlines()
+
+    def count_source_lines(self, abs_path, commit_hash):
+        try:
+            return len(self.read_source_lines(abs_path, commit_hash))
+        except Exception:
+            return 0
+
+    @staticmethod
+    def find_git_root(path):
+        path = Path(path).resolve()
+        for ancestor in [path, *path.parents]:
+            if (ancestor / '.git').exists():
+                return ancestor
+        return None
+
+    BADGES = {
+        'drifted': ('drifted', 'Snippet differs from source'),
+        'missing-commit': ('missing commit', 'Link has no commit hash; comparing against working tree'),
+        'invalid-commit': ('invalid commit', 'Commit hash not found in repository'),
+    }
+
+    WARN_ICON = (
+        '<svg class="warn-icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">'
+        '<path fill="currentColor" d="M7.13 1.86a1 1 0 0 1 1.74 0l6.43 11.32A1 1 0 0 1 14.43 15H1.57a1 1 0 0 1-.87-1.82L7.13 1.86zM8 5.5a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 0 1.5 0v-3.5A.75.75 0 0 0 8 5.5zm0 6.25a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>'
+        '</svg>'
+    )
+
+    def render_status_badge(self, status):
+        label, title = self.BADGES.get(status, (status, ''))
+        return (
+            f'<span class="snippet-badge snippet-badge-{status}" title="{html.escape(title, quote=True)}">'
+            f'{self.WARN_ICON}<span>{html.escape(label)}</span></span>'
+        )
+
+    def snippet_status(self, abs_path, start, end, commit_hash, code):
+        """Return a list of warning statuses for a snippet.
+
+        Possible values: 'missing-commit', 'invalid-commit', 'drifted'.
+        """
+        statuses = []
+        if commit_hash:
+            try:
+                lines = self.read_source_lines(abs_path, commit_hash)
+            except Exception:
+                return ['invalid-commit']
+        else:
+            statuses.append('missing-commit')
+            try:
+                lines = self.read_source_lines(abs_path, '')
+            except Exception:
+                return statuses
+
+        actual = lines[start - 1:end]
+        pasted = code.split('\n')
+        # Tolerate a single trailing empty line in the pasted block.
+        if pasted and pasted[-1] == '':
+            pasted = pasted[:-1]
+        if actual != pasted:
+            statuses.append('drifted')
+        return statuses
 
     def process_mermaid_blocks(self, content):
         """Convert fenced Mermaid blocks to HTML consumed by Mermaid JS."""
@@ -273,53 +509,6 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             return f'<pre class="mermaid">{escaped_diagram}</pre>'
 
         return re.sub(pattern, replace_mermaid, content, flags=re.MULTILINE | re.DOTALL)
-
-    def generate_code_embed(self, spec, base_path):
-        """Generate HTML for code embedding"""
-        # Parse the spec: path/to/file.py#L10-20
-        parts = spec.split('#')
-        file_path = parts[0]
-        line_range = parts[1] if len(parts) > 1 else None
-
-        # Resolve file path
-        full_path = base_path / file_path
-        if not full_path.exists():
-            return f'<div class="error">File not found: {file_path}</div>'
-
-        try:
-            with open(full_path, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-
-            # Extract line range if specified
-            start_line, end_line = 1, len(lines)
-            if line_range:
-                # Parse L10-20 or L10
-                match = re.match(r'L?(\d+)(?:-(\d+))?', line_range)
-                if match:
-                    start_line = int(match.group(1))
-                    end_line = int(match.group(2)) if match.group(2) else start_line
-
-            # Get the code snippet
-            code_lines = lines[start_line-1:end_line]
-            code = ''.join(code_lines)
-
-            # Syntax highlight with pygments
-            try:
-                lexer = guess_lexer_for_filename(full_path, code)
-                formatter = HtmlFormatter(
-                    linenos='inline',
-                    linenostart=start_line,
-                    cssclass='highlight'
-                )
-                highlighted = highlight(code, lexer, formatter)
-                return f'<div class="embed-container"><div class="embed-header">{file_path} (L{start_line}-L{end_line})</div>{highlighted}</div>'
-            except:
-                # Fallback without syntax highlighting
-                code_html = f'<pre><code>{self.escape_html(code)}</code></pre>'
-                return f'<div class="embed-container"><div class="embed-header">{file_path} (L{start_line}-L{end_line})</div>{code_html}</div>'
-
-        except Exception as e:
-            return f'<div class="error">Error reading file: {str(e)}</div>'
 
     def escape_html(self, text):
         """Escape HTML special characters"""
@@ -611,7 +800,7 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         h1 code, h2 code, h3 code, h4 code {{ font-size: 0.9em; }}
 
-        .embed-container,
+        .snippet,
         .source-file {{
             margin: 1.6em 0;
             border: 1px solid var(--border);
@@ -621,18 +810,88 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             box-shadow: var(--shadow);
         }}
 
-        .embed-header,
+        .snippet-header,
         .file-header {{
             background: var(--surface-2);
             color: var(--text-muted);
             padding: 8px 14px;
             font: 0.85rem var(--mono);
             border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }}
 
         .file-header {{ color: var(--text); font-weight: 500; }}
 
-        .embed-container pre,
+        .snippet-link {{
+            color: var(--accent);
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }}
+
+        .snippet-link:hover {{ text-decoration: underline; }}
+
+        .snippet-badge {{
+            font-size: 0.7rem;
+            font-family: var(--sans);
+            color: var(--bg);
+            padding: 1px 8px 1px 6px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }}
+
+        .snippet-badge .warn-icon {{ display: block; }}
+
+        .snippet-badge-drifted {{ background: #d97706; }}
+        .snippet-badge-missing-commit {{ background: #6b7280; }}
+        .snippet-badge-invalid-commit {{ background: #dc2626; }}
+
+        @media (prefers-color-scheme: dark) {{
+            .snippet-badge {{ color: #1a1a1a; }}
+            .snippet-badge-drifted {{ background: #f59e0b; }}
+            .snippet-badge-missing-commit {{ background: #9ca3af; }}
+            .snippet-badge-invalid-commit {{ background: #f87171; }}
+        }}
+
+        .snippet-expand {{
+            display: block;
+            width: 100%;
+            border: none;
+            background: var(--surface);
+            color: var(--text-muted);
+            font: 0.8rem var(--mono);
+            padding: 4px 14px;
+            cursor: pointer;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }}
+
+        .snippet-expand-down {{ border-bottom: none; border-top: 1px solid var(--border); }}
+
+        .snippet-expand:hover {{ background: var(--surface-2); color: var(--text); }}
+
+        .snippet-expand .chev {{
+            display: inline-block;
+            width: 1.4em;
+            text-align: center;
+            font-weight: 700;
+        }}
+
+        .snippet-body {{
+            background: var(--code-bg);
+            overflow-x: auto;
+        }}
+
+        .snippet pre,
         .source-file pre {{
             margin: 0;
             border: none;
@@ -643,7 +902,7 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         .source-file .highlight {{ background: var(--code-bg); }}
 
         .source-file .linenos,
-        .embed-container .linenos {{
+        .snippet .linenos {{
             background: var(--surface);
             color: var(--text-muted);
             padding-right: 10px;
@@ -825,6 +1084,107 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             startOnLoad: true,
             securityLevel: "strict",
             theme: isDark ? "dark" : "default"
+        }});
+
+        const EXPAND_STEP = 10;
+
+        async function fetchRange(snippet, start, end) {{
+            const params = new URLSearchParams({{
+                path: snippet.dataset.path,
+                start: String(start),
+                end: String(end),
+                hash: snippet.dataset.hash || "",
+                lang: snippet.dataset.lang || "",
+            }});
+            const res = await fetch(`/_snippet?${{params}}`);
+            if (!res.ok) throw new Error(`snippet fetch failed: ${{res.status}}`);
+            return res.json();
+        }}
+
+        // Parse the server-rendered Pygments table and return its lineno/code <pre> elements.
+        // We never inject markup as a string; we move the parsed DOM nodes directly.
+        function parseFragment(htmlString) {{
+            const doc = new DOMParser().parseFromString(htmlString, "text/html");
+            const linenosPre = doc.querySelector(".linenos pre");
+            const codePre = doc.querySelector(".code pre, td.code pre");
+            return {{ linenosPre, codePre }};
+        }}
+
+        function moveChildren(sourcePre, targetPre, position) {{
+            if (!sourcePre || !targetPre) return;
+            const newline = document.createTextNode("\\n");
+            const nodes = Array.from(sourcePre.childNodes);
+            if (position === "prepend") {{
+                targetPre.prepend(newline);
+                for (let i = nodes.length - 1; i >= 0; i--) {{
+                    targetPre.prepend(nodes[i]);
+                }}
+            }} else {{
+                targetPre.append(newline);
+                for (const node of nodes) {{
+                    targetPre.append(node);
+                }}
+            }}
+        }}
+
+        function targets(snippet) {{
+            return {{
+                linenosPre: snippet.querySelector(".linenos pre"),
+                codePre: snippet.querySelector(".code pre, td.code pre"),
+            }};
+        }}
+
+        function updateButtons(snippet) {{
+            const start = parseInt(snippet.dataset.start, 10);
+            const end = parseInt(snippet.dataset.end, 10);
+            const total = parseInt(snippet.dataset.total, 10) || 0;
+            const up = snippet.querySelector(".snippet-expand-up");
+            const down = snippet.querySelector(".snippet-expand-down");
+            if (up && start <= 1) up.remove();
+            if (down && total > 0 && end >= total) down.remove();
+        }}
+
+        document.addEventListener("click", async (event) => {{
+            const button = event.target.closest(".snippet-expand");
+            if (!button) return;
+            const snippet = button.closest(".snippet");
+            if (!snippet) return;
+            event.preventDefault();
+
+            const direction = button.dataset.direction;
+            const start = parseInt(snippet.dataset.start, 10);
+            const end = parseInt(snippet.dataset.end, 10);
+            const total = parseInt(snippet.dataset.total, 10) || 0;
+            const expandAll = event.shiftKey;
+            const dest = targets(snippet);
+            if (!dest.linenosPre || !dest.codePre) return;
+
+            try {{
+                if (direction === "up") {{
+                    if (start <= 1) return;
+                    const newStart = expandAll ? 1 : Math.max(1, start - EXPAND_STEP);
+                    const data = await fetchRange(snippet, newStart, start - 1);
+                    const fragment = parseFragment(data.html);
+                    moveChildren(fragment.linenosPre, dest.linenosPre, "prepend");
+                    moveChildren(fragment.codePre, dest.codePre, "prepend");
+                    snippet.dataset.start = String(data.start);
+                }} else {{
+                    if (total > 0 && end >= total) return;
+                    const fallbackEnd = end + EXPAND_STEP;
+                    const newEnd = expandAll && total > 0 ? total : fallbackEnd;
+                    const data = await fetchRange(snippet, end + 1, newEnd);
+                    const fragment = parseFragment(data.html);
+                    moveChildren(fragment.linenosPre, dest.linenosPre, "append");
+                    moveChildren(fragment.codePre, dest.codePre, "append");
+                    snippet.dataset.end = String(data.end);
+                    if (!snippet.dataset.total || snippet.dataset.total === "0") {{
+                        snippet.dataset.total = String(data.total);
+                    }}
+                }}
+                updateButtons(snippet);
+            }} catch (err) {{
+                console.error(err);
+            }}
         }});
     </script>
 </body>
