@@ -64,6 +64,32 @@ SNIPPET_TEXT_PATTERN = re.compile(
 # Image file extensions to display in browser
 IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp', '.ico'}
 
+TASK_ICONS = {
+    'open': (
+        '<svg class="task-icon task-icon-open" viewBox="0 0 16 16" width="17" height="17" aria-hidden="true">'
+        '<rect x="1.5" y="1.5" width="13" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+        '</svg>'
+    ),
+    'done': (
+        '<svg class="task-icon task-icon-done" viewBox="0 0 16 16" width="17" height="17" aria-hidden="true">'
+        '<rect x="1.5" y="1.5" width="13" height="13" rx="3" fill="currentColor"/>'
+        '<path d="M4.2 8.4 L6.8 11 L11.8 5.6" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+        '</svg>'
+    ),
+    'wip': (
+        '<svg class="task-icon task-icon-wip" viewBox="0 0 16 16" width="17" height="17" aria-hidden="true">'
+        '<rect x="1.5" y="1.5" width="13" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+        '<circle cx="8" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+        '<path d="M8 6.2 V8 L9.4 9.1" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>'
+        '</svg>'
+    ),
+}
+
+TASK_PATTERN = re.compile(
+    r'^([ \t]*(?:[-*+]|\d+\.)[ \t]+)\[(?P<state>[ xX\-])\][ \t]+',
+    re.MULTILINE,
+)
+
 FOLDER_ICON = (
     '<svg class="icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">'
     '<path fill="currentColor" d="M1.5 3a1 1 0 0 1 1-1h3.382a1 1 0 0 1 .894.553L7.618 4H13.5a1 1 0 0 1 1 1v7.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V3z"/>'
@@ -156,6 +182,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
             # Process wikilinks [[Topic]] -> Topic.md links
             content = self.process_wikilinks(content)
+
+            # Replace task-list checkboxes with SVG icons
+            content = self.process_tasks(content)
 
             # Replace [path:line-range](href) + ```code``` pairs with placeholders.
             # Real HTML is spliced back in after the markdown pass.
@@ -327,6 +356,17 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             return f'[{display}]({topic}.md)'
 
         return re.sub(r'\[\[([^\]]+)\]\]', replace_wikilink, content)
+
+    def process_tasks(self, content):
+        """Replace `- [ ]`, `- [x]`, `- [-]` checkboxes with SVG icons."""
+        state_map = {' ': 'open', 'x': 'done', '-': 'wip'}
+
+        def replace(match):
+            prefix = match.group(1)
+            state = state_map[match.group('state').lower()]
+            return f'{prefix}{TASK_ICONS[state]} '
+
+        return TASK_PATTERN.sub(replace, content)
 
     def process_code_snippets(self, content, base_path):
         """Replace [path:start-end(#hash)](href) + ```code``` pairs with placeholders.
@@ -780,6 +820,28 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         li > .snippet:first-child,
         li > .source-file:first-child {{ margin-top: 0.4em; }}
         li::marker {{ color: var(--text-muted); }}
+
+        li:has(> .task-icon),
+        li:has(> p > .task-icon:first-child) {{
+            list-style: none;
+            margin-left: -1.4em;
+        }}
+
+        .task-icon {{
+            display: inline-block;
+            vertical-align: -3px;
+            margin-right: 0.45em;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }}
+
+        .task-icon-done {{ color: #16a34a; }}
+        .task-icon-wip {{ color: #d97706; }}
+
+        @media (prefers-color-scheme: dark) {{
+            .task-icon-done {{ color: #4ade80; }}
+            .task-icon-wip {{ color: #f59e0b; }}
+        }}
 
         hr {{
             border: 0;
