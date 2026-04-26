@@ -125,19 +125,26 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         if path == '/_snippet':
             return self.serve_snippet_fragment(parsed_path.query)
 
+        canonical_path = re.sub(r'/+', '/', parsed_path.path)
+        if canonical_path != parsed_path.path:
+            return self.redirect_to_url_path(parsed_path, canonical_path)
+
         # Remove leading slash and resolve to filesystem path
         if path.startswith('/'):
             path = path[1:]
 
-        fs_path = Path(os.getcwd()) / path if path else Path(os.getcwd())
+        path = self.strip_line_suffix(path)
+        fs_path = self.resolve_request_path(path)
 
         # Handle directories
         if fs_path.is_dir():
+            if not parsed_path.path.endswith('/'):
+                return self.redirect_to_directory_url(parsed_path)
+
             # Check for index.html first
             index_html = fs_path / 'index.html'
             if index_html.exists():
-                self.path = str(Path(path) / 'index.html')
-                return super().do_GET()
+                return self.serve_static_file(index_html)
 
             # Then check for index.md
             index_md = fs_path / 'index.md'
@@ -164,7 +171,7 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
                 return self.serve_image(fs_path, path)
             else:
                 # Serve the raw image file for img tags
-                return super().do_GET()
+                return self.serve_static_file(fs_path)
 
         # Try to serve all other files as text with line numbers
         # Binary files will fall back to normal serving
@@ -173,6 +180,60 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         # Default behavior for files that don't exist
         return super().do_GET()
+
+    def redirect_to_directory_url(self, parsed_path):
+        """Redirect directory URLs to a trailing slash for relative links."""
+        return self.redirect_to_url_path(parsed_path, f'{parsed_path.path}/')
+
+    def redirect_to_url_path(self, parsed_path, url_path):
+        """Redirect while preserving query parameters."""
+        location = urllib.parse.urlunparse((
+            '',
+            '',
+            url_path,
+            parsed_path.params,
+            parsed_path.query,
+            '',
+        ))
+        self.send_response(301)
+        self.send_header('Location', location)
+        self.send_header('Content-Length', '0')
+        self.end_headers()
+
+    @staticmethod
+    def strip_line_suffix(path):
+        """Remove editor-style :line or :line-range suffixes from URL paths."""
+        return re.sub(r':\d+(?:-\d+)?$', '', path)
+
+    def resolve_request_path(self, path):
+        """Map a URL path to a file, allowing links to sibling workspace dirs."""
+        cwd = Path(os.getcwd()).resolve()
+        if not path:
+            return cwd
+
+        primary = (cwd / path).resolve()
+        if primary.exists():
+            return primary
+
+        sibling = (cwd.parent / path).resolve()
+        if sibling.exists():
+            return sibling
+
+        return primary
+
+    def serve_static_file(self, file_path):
+        """Serve a file directly from an already-resolved filesystem path."""
+        try:
+            with open(file_path, 'rb') as f:
+                stat = os.fstat(f.fileno())
+                self.send_response(200)
+                self.send_header('Content-type', self.guess_type(str(file_path)))
+                self.send_header('Content-Length', str(stat.st_size))
+                self.send_header('Last-Modified', self.date_time_string(stat.st_mtime))
+                self.end_headers()
+                self.copyfile(f, self.wfile)
+        except OSError:
+            self.send_error(404, "File not found")
 
     def serve_markdown(self, file_path):
         """Convert and serve markdown file as HTML"""
@@ -299,7 +360,7 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         except UnicodeDecodeError:
             # File is likely binary, serve it normally
-            return super().do_GET()
+            return self.serve_static_file(file_path)
         except Exception as e:
             self.send_error(500, f"Error processing source file: {str(e)}")
 
@@ -430,7 +491,10 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         label = html.escape(f'{rel_path}:{start}' + (f'-{end}' if end != start else '')
                             + (f'#{commit_hash}' if commit_hash else ''))
-        href_attr = html.escape(href, quote=True)
+        # Strip line numbers and commit hash from href for actual link target
+        clean_href = href.split(':')[0] if ':' in href else href
+        clean_href = clean_href.split('#')[0] if '#' in clean_href else clean_href
+        href_attr = html.escape(clean_href, quote=True)
         data_attrs = (
             f'data-path="{html.escape(str(abs_path), quote=True)}" '
             f'data-start="{start}" data-end="{end}" '
@@ -638,10 +702,15 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
     def relative_url(self, file_path):
         """Compute the URL path (no leading slash) for a filesystem path."""
+        resolved = Path(file_path).resolve()
+        cwd = Path(os.getcwd()).resolve()
         try:
-            return str(Path(file_path).resolve().relative_to(Path(os.getcwd()).resolve()))
+            return str(resolved.relative_to(cwd))
         except (ValueError, OSError):
-            return ''
+            try:
+                return str(Path('..') / resolved.relative_to(cwd.parent))
+            except (ValueError, OSError):
+                return ''
 
     def render_breadcrumb(self, url_path):
         """Build a breadcrumb of clickable path segments."""
@@ -673,6 +742,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{title_escaped}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
     <style>
         :root {{
             --bg: #fdfcf9;
@@ -688,9 +760,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             --code-inline-bg: #ecebe4;
             --blockquote-border: #c8c4b6;
             --shadow: 0 1px 2px rgba(0,0,0,0.04);
-            --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            --serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-            --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --serif: "Source Serif 4", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+            --mono: Monaco, ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
         }}
 
         @media (prefers-color-scheme: dark) {{
