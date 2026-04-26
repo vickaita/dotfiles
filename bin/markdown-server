@@ -33,12 +33,28 @@ from pygments.util import ClassNotFound
 from pygments.formatters import HtmlFormatter
 
 SNIPPET_PATTERN = re.compile(
-    r'^\[(?P<text>[^\]\n]+?)\]\((?P<href>[^)\n]+?)\)[ \t]*\n+'
-    r'^```(?P<lang>[\w+\-.]*)[ \t]*\n'
+    r'^(?P<lead>[ \t]*(?:(?:[-*+]|\d+\.)[ \t]+)?)'
+    r'\[(?P<text>[^\]\n]+?)\]\((?P<href>[^)\n]+?)\)[ \t]*\n+'
+    r'^(?P<fence_indent>[ \t]*)```(?P<lang>[\w+\-.]*)[ \t]*\n'
     r'(?P<code>.*?)\n'
-    r'^```[ \t]*$',
+    r'^(?P=fence_indent)```[ \t]*$',
     re.MULTILINE | re.DOTALL,
 )
+
+
+def strip_block_indent(text, indent):
+    """Strip a common leading indent from each non-blank line."""
+    if not indent:
+        return text
+    out = []
+    for line in text.split('\n'):
+        if line.startswith(indent):
+            out.append(line[len(indent):])
+        elif line.strip() == '':
+            out.append('')
+        else:
+            out.append(line)
+    return '\n'.join(out)
 
 SNIPPET_TEXT_PATTERN = re.compile(
     r'^(?P<path>[^:\n]+):(?P<start>\d+)(?:-(?P<end>\d+))?(?:#(?P<hash>[0-9a-fA-F]{4,40}))?$'
@@ -151,11 +167,13 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             # Convert markdown to HTML
             html_content = markdown.markdown(
                 content,
-                extensions=['fenced_code', 'tables', 'codehilite', 'toc']
+                extensions=['fenced_code', 'tables', 'codehilite', 'toc', 'sane_lists']
             )
 
             for token, snippet_html in snippet_blocks.items():
                 html_content = html_content.replace(f'<p>{token}</p>', snippet_html)
+                # Fallback for tight lists where the token isn't wrapped in <p>.
+                html_content = html_content.replace(token, snippet_html)
 
             # Wrap in HTML template
             full_html = self.wrap_html(
@@ -326,7 +344,8 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
             href = match.group('href').strip()
             lang = (match.group('lang') or '').strip()
-            code = match.group('code')
+            fence_indent = match.group('fence_indent') or ''
+            code = strip_block_indent(match.group('code'), fence_indent)
 
             rel_path = link_meta.group('path').strip()
             start = int(link_meta.group('start'))
@@ -351,7 +370,8 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
             token = f'SNIPPETPLACEHOLDER{len(blocks):04d}TOKEN'
             blocks[token] = snippet_html
-            return f'\n\n{token}\n\n'
+            lead = match.group('lead') or ''
+            return f'{lead}{token}'
 
         new_content = SNIPPET_PATTERN.sub(replace, content)
         return new_content, blocks
@@ -754,9 +774,12 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         p {{ margin: 0.9em 0; }}
 
-        ul, ol {{ padding-left: 1.5em; margin: 0.8em 0; }}
+        ul, ol {{ padding-left: 2em; margin: 0.8em 0; }}
         li {{ margin: 0.25em 0; }}
         li > p {{ margin: 0.3em 0; }}
+        li > .snippet:first-child,
+        li > .source-file:first-child {{ margin-top: 0.4em; }}
+        li::marker {{ color: var(--text-muted); }}
 
         hr {{
             border: 0;
