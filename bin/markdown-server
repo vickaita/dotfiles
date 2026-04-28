@@ -27,6 +27,8 @@ from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 import markdown
+from markdown.extensions import Extension
+from markdown.treeprocessors import Treeprocessor
 from pygments import highlight
 from pygments.lexers import guess_lexer_for_filename, get_lexer_by_name
 from pygments.util import ClassNotFound
@@ -40,6 +42,88 @@ SNIPPET_PATTERN = re.compile(
     r'^(?P=fence_indent)```[ \t]*$',
     re.MULTILINE | re.DOTALL,
 )
+
+FRONTMATTER_PATTERN = re.compile(
+    r'\A---[ \t]*\r?\n(?P<body>.*?)(?:\r?\n)---[ \t]*(?:\r?\n|$)',
+    re.DOTALL,
+)
+
+FENCED_CODE_PATTERN = re.compile(
+    r'(^[ \t]*```.*?^[ \t]*```[ \t]*$)',
+    re.MULTILINE | re.DOTALL,
+)
+
+BACKSLASH_MATH_PATTERN = re.compile(
+    r'\\\[(?P<display>.*?)\\\]|\\\((?P<inline>.*?)\\\)',
+    re.DOTALL,
+)
+
+OBSIDIAN_BLOCK_ANCHOR_PATTERN = re.compile(
+    r'[ \t]+\^(?P<anchor>[A-Za-z0-9_-]+)[ \t]*$'
+)
+
+
+class ObsidianBlockAnchorExtension(Extension):
+    """Attach Obsidian block anchors (`^id`) to rendered block elements."""
+
+    def extendMarkdown(self, md):
+        md.treeprocessors.register(
+            ObsidianBlockAnchorTreeprocessor(md),
+            'obsidian_block_anchors',
+            15,
+        )
+
+
+class ObsidianBlockAnchorTreeprocessor(Treeprocessor):
+    TARGET_TAGS = {
+        'p', 'li',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'dt', 'dd', 'td', 'th',
+    }
+    SKIP_TAGS = {'code', 'pre', 'script', 'style'}
+
+    def run(self, root):
+        self.apply_anchors(root)
+        return root
+
+    def apply_anchors(self, element):
+        tag = self.local_tag(element)
+        if tag in self.SKIP_TAGS:
+            return
+
+        if tag in self.TARGET_TAGS:
+            self.apply_anchor_to_element(element)
+
+        for child in list(element):
+            self.apply_anchors(child)
+
+    def apply_anchor_to_element(self, element):
+        for owner, attr, value in reversed(list(self.text_slots(element))):
+            if not value.strip():
+                continue
+
+            match = OBSIDIAN_BLOCK_ANCHOR_PATTERN.search(value)
+            if not match:
+                return
+
+            setattr(owner, attr, value[:match.start()])
+            element.set('id', f"^{match.group('anchor')}")
+            return
+
+    def text_slots(self, element):
+        if element.text:
+            yield element, 'text', element.text
+
+        for child in list(element):
+            tag = self.local_tag(child)
+            if tag not in self.SKIP_TAGS and tag not in self.TARGET_TAGS:
+                yield from self.text_slots(child)
+            if child.tail:
+                yield child, 'tail', child.tail
+
+    @staticmethod
+    def local_tag(element):
+        return element.tag.rsplit('}', 1)[-1] if isinstance(element.tag, str) else ''
 
 
 def strip_block_indent(text, indent):
@@ -63,6 +147,23 @@ SNIPPET_TEXT_PATTERN = re.compile(
 
 # Image file extensions to display in browser
 IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp', '.ico'}
+SEARCH_RESULT_LIMIT = 20
+SEARCH_CONTENT_LIMIT = 40
+MARKDOWN_EXTENSIONS = [
+    'fenced_code',
+    'tables',
+    'codehilite',
+    'toc',
+    'sane_lists',
+    'def_list',
+    ObsidianBlockAnchorExtension(),
+]
+MARKDOWN_EXTENSION_CONFIGS = {
+    'codehilite': {
+        'css_class': 'highlight',
+        'guess_lang': False,
+    },
+}
 
 TASK_ICONS = {
     'open': (
@@ -124,6 +225,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         if path == '/_snippet':
             return self.serve_snippet_fragment(parsed_path.query)
+
+        if path == '/_search':
+            return self.serve_search_results(parsed_path.query)
 
         canonical_path = re.sub(r'/+', '/', parsed_path.path)
         if canonical_path != parsed_path.path:
@@ -241,6 +345,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
+            # Render YAML-style frontmatter as a visible preformatted block.
+            content = self.process_frontmatter(content)
+
             # Process wikilinks [[Topic]] -> Topic.md links
             content = self.process_wikilinks(content)
 
@@ -254,16 +361,24 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             # Convert Mermaid fences into browser-rendered diagram blocks
             content = self.process_mermaid_blocks(content)
 
+            # Preserve \(inline\) and \[display\] math delimiters through Markdown.
+            content, math_blocks = self.process_backslash_math(content)
+
             # Convert markdown to HTML
             html_content = markdown.markdown(
                 content,
-                extensions=['fenced_code', 'tables', 'codehilite', 'toc', 'sane_lists']
+                extensions=MARKDOWN_EXTENSIONS,
+                extension_configs=MARKDOWN_EXTENSION_CONFIGS,
             )
 
             for token, snippet_html in snippet_blocks.items():
                 html_content = html_content.replace(f'<p>{token}</p>', snippet_html)
                 # Fallback for tight lists where the token isn't wrapped in <p>.
                 html_content = html_content.replace(token, snippet_html)
+
+            for token, math_html in math_blocks.items():
+                html_content = html_content.replace(f'<p>{token}</p>', math_html)
+                html_content = html_content.replace(token, math_html)
 
             # Wrap in HTML template
             full_html = self.wrap_html(
@@ -398,6 +513,225 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             self.wfile.write(payload)
         except Exception as e:
             self.send_error(500, f'Error loading snippet: {e}')
+
+    def serve_search_results(self, query_string):
+        """Return filename and content search results for the served root."""
+        try:
+            params = urllib.parse.parse_qs(query_string)
+            query = params.get('q', [''])[0].strip()
+            results = self.search(query)
+            payload = json.dumps({'results': results}).encode('utf-8')
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', len(payload))
+            self.end_headers()
+            self.wfile.write(payload)
+        except Exception as e:
+            self.send_error(500, f'Error searching: {e}')
+
+    def search(self, query):
+        """Search the served root by filename first, then file contents."""
+        if not query:
+            return []
+
+        root = Path(os.getcwd()).resolve()
+        results = []
+        seen = set()
+
+        for rel_path in self.search_filename_matches(root, query):
+            key = ('filename', rel_path)
+            if key in seen:
+                continue
+            seen.add(key)
+            results.append({
+                'type': 'filename',
+                'path': rel_path,
+                'url': self.search_url(rel_path),
+                'label': rel_path,
+            })
+            if len(results) >= SEARCH_RESULT_LIMIT:
+                return results
+
+        for match in self.search_content_matches(root, query):
+            key = ('content', match['path'], match['line'])
+            if key in seen:
+                continue
+            seen.add(key)
+            results.append(match)
+            if len(results) >= SEARCH_RESULT_LIMIT:
+                break
+
+        return results
+
+    def search_filename_matches(self, root, query):
+        query_lower = query.lower()
+        matches = []
+        for rel_path in self.rg_files(root):
+            name_lower = rel_path.lower()
+            index = name_lower.find(query_lower)
+            if index == -1:
+                continue
+            basename = Path(rel_path).name.lower()
+            basename_index = basename.find(query_lower)
+            matches.append((
+                0 if basename_index == 0 else 1 if basename_index > -1 else 2,
+                index,
+                len(rel_path),
+                rel_path,
+            ))
+        return [match[-1] for match in sorted(matches)[:SEARCH_RESULT_LIMIT]]
+
+    def rg_files(self, root):
+        try:
+            result = subprocess.run(
+                ['rg', '--files'],
+                cwd=str(root),
+                capture_output=True,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            return self.walk_files(root)
+        if result.returncode not in (0, 1):
+            return []
+        return [
+            path for path in result.stdout.splitlines()
+            if self.is_safe_search_path(path)
+        ]
+
+    def walk_files(self, root):
+        paths = []
+        for current_root, dirnames, filenames in os.walk(root):
+            dirnames[:] = [
+                dirname for dirname in dirnames
+                if not dirname.startswith('.') and dirname != '__pycache__'
+            ]
+            for filename in filenames:
+                if filename.startswith('.'):
+                    continue
+                abs_path = Path(current_root) / filename
+                try:
+                    rel_path = str(abs_path.relative_to(root))
+                except ValueError:
+                    continue
+                if self.is_safe_search_path(rel_path):
+                    paths.append(rel_path)
+        return paths
+
+    def search_content_matches(self, root, query):
+        try:
+            result = subprocess.run(
+                [
+                    'rg',
+                    '--json',
+                    '--fixed-strings',
+                    '--smart-case',
+                    '--max-count', '3',
+                    '--',
+                    query,
+                    '.',
+                ],
+                cwd=str(root),
+                capture_output=True,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            return []
+
+        if result.returncode not in (0, 1):
+            return []
+
+        matches = []
+        for line in result.stdout.splitlines():
+            if len(matches) >= SEARCH_CONTENT_LIMIT:
+                break
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if event.get('type') != 'match':
+                continue
+            data = event.get('data', {})
+            path = data.get('path', {}).get('text', '')
+            path = path[2:] if path.startswith('./') else path
+            if not self.is_safe_search_path(path):
+                continue
+            line_number = data.get('line_number')
+            preview = data.get('lines', {}).get('text', '').strip()
+            if not path or not line_number:
+                continue
+            matches.append({
+                'type': 'content',
+                'path': path,
+                'url': self.search_url(path, line_number),
+                'line': line_number,
+                'preview': preview,
+                'label': f'{path}:{line_number}',
+            })
+        return matches
+
+    @staticmethod
+    def is_safe_search_path(path):
+        if not path or path.startswith('/'):
+            return False
+        parts = Path(path).parts
+        return '..' not in parts
+
+    @staticmethod
+    def search_url(rel_path, line=None):
+        url = '/' + urllib.parse.quote(rel_path, safe='/')
+        if line:
+            url += f':{line}'
+        return url
+
+    def process_frontmatter(self, content):
+        """Render top-of-file frontmatter in a preformatted box."""
+        match = FRONTMATTER_PATTERN.match(content)
+        if not match:
+            return content
+
+        frontmatter = match.group('body').replace('\r\n', '\n')
+        rendered = (
+            '<pre class="frontmatter"><code>'
+            f'{html.escape(frontmatter)}'
+            '</code></pre>\n\n'
+        )
+        return rendered + content[match.end():]
+
+    def process_backslash_math(self, content):
+        """Protect LaTeX backslash math delimiters from Markdown escaping."""
+        blocks = {}
+        segments = FENCED_CODE_PATTERN.split(content)
+
+        def replace(match):
+            display = match.group('display')
+            if display is not None:
+                if not display.strip():
+                    return match.group(0)
+                rendered = (
+                    '<div class="math-display">'
+                    f'\\[{html.escape(display)}\\]'
+                    '</div>'
+                )
+            else:
+                if not match.group('inline').strip():
+                    return match.group(0)
+                rendered = (
+                    '<span class="math-inline">'
+                    f'\\({html.escape(match.group("inline"))}\\)'
+                    '</span>'
+                )
+
+            token = f'MATHPLACEHOLDER{len(blocks):04d}TOKEN'
+            blocks[token] = rendered
+            return token
+
+        for index in range(0, len(segments), 2):
+            segments[index] = BACKSLASH_MATH_PATTERN.sub(replace, segments[index])
+
+        return ''.join(segments), blocks
 
     def process_wikilinks(self, content):
         """Process wikilinks: [[Topic]] or [[Topic|Display Text]]"""
@@ -729,10 +1063,31 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         sep = '<span class="crumb-sep">/</span>'
         return f'<nav class="breadcrumb">{sep.join(crumbs)}</nav>'
 
+    @staticmethod
+    def prefix_css_selectors(css, prefix):
+        """Prefix simple Pygments CSS selectors for theme-scoped overrides."""
+        def replace(match):
+            selectors = match.group(1).strip()
+            prefixed = ', '.join(
+                f'{prefix} {selector.strip()}'
+                for selector in selectors.split(',')
+            )
+            return f'{prefixed} {{'
+
+        return re.sub(r'(?m)^([^@\n][^{]+)\{', replace, css)
+
     def wrap_html(self, content, title="Markdown Server", url_path=''):
         """Wrap content in HTML template with styling"""
         pygments_css_light = HtmlFormatter(style='friendly').get_style_defs('.highlight')
         pygments_css_dark = HtmlFormatter(style='monokai').get_style_defs('.highlight')
+        pygments_css_dark_forced = self.prefix_css_selectors(
+            pygments_css_dark,
+            ':root[data-theme="dark"]',
+        )
+        pygments_css_dark_system = self.prefix_css_selectors(
+            pygments_css_dark,
+            ':root:not([data-theme="light"])',
+        )
         breadcrumb = self.render_breadcrumb(url_path)
         title_escaped = html.escape(title)
 
@@ -745,6 +1100,18 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
+    <script>
+        (() => {{
+            try {{
+                const theme = localStorage.getItem("markdown-server-theme");
+                if (theme === "light" || theme === "dark") {{
+                    document.documentElement.dataset.theme = theme;
+                }}
+            }} catch (error) {{
+                // Ignore storage access failures and keep the system theme.
+            }}
+        }})();
+    </script>
     <style>
         :root {{
             --bg: #fdfcf9;
@@ -765,8 +1132,24 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             --mono: Monaco, ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
         }}
 
+        :root[data-theme="dark"] {{
+            --bg: #0f1115;
+            --surface: #161922;
+            --surface-2: #1f2330;
+            --border: #2a2f3d;
+            --border-strong: #3a4053;
+            --text: #e6e8ee;
+            --text-muted: #9aa1b3;
+            --accent: #7aa7ff;
+            --accent-hover: #a7c3ff;
+            --code-bg: #161922;
+            --code-inline-bg: #1f2330;
+            --blockquote-border: #3a4053;
+            --shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }}
+
         @media (prefers-color-scheme: dark) {{
-            :root {{
+            :root:not([data-theme="light"]) {{
                 --bg: #0f1115;
                 --surface: #161922;
                 --surface-2: #1f2330;
@@ -801,7 +1184,7 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             padding: 28px 24px 80px;
         }}
 
-        .breadcrumb {{
+        .page-chrome {{
             position: sticky;
             top: 0;
             z-index: 10;
@@ -810,12 +1193,28 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             -webkit-backdrop-filter: saturate(180%) blur(8px);
             border-bottom: 1px solid var(--border);
             padding: 10px 24px;
-            font: 13px/1.4 var(--mono);
             color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }}
+
+        .breadcrumb {{
+            min-width: 0;
+            flex: 1;
+            font: 13px/1.4 var(--mono);
             display: flex;
             flex-wrap: wrap;
             gap: 4px 6px;
             align-items: center;
+        }}
+
+        .controls {{
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-muted);
         }}
 
         .breadcrumb .crumb,
@@ -955,6 +1354,19 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             font-size: 1em;
         }}
 
+        .highlight {{
+            margin: 1em 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--code-bg);
+            box-shadow: var(--shadow);
+        }}
+
+        .highlight > pre {{
+            margin: 0;
+            box-shadow: none;
+        }}
+
         h1 code, h2 code, h3 code, h4 code {{ font-size: 0.9em; }}
 
         .snippet,
@@ -1052,6 +1464,13 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         .source-file pre {{
             margin: 0;
             border: none;
+            border-radius: 0;
+            box-shadow: none;
+        }}
+
+        .snippet .highlight,
+        .source-file .highlight {{
+            margin: 0;
             border-radius: 0;
             box-shadow: none;
         }}
@@ -1202,12 +1621,258 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         .dir-listing .modified {{ text-align: left; width: 12em; }}
         .dir-listing .size {{ width: 6em; }}
 
+        .config-toggle {{
+            width: 22px;
+            height: 22px;
+            border: 0;
+            padding: 0;
+            background: transparent;
+            color: inherit;
+            display: inline-grid;
+            place-items: center;
+            cursor: pointer;
+        }}
+
+        .config-toggle:hover,
+        .config-toggle[aria-expanded="true"] {{
+            color: var(--text);
+        }}
+
+        .config-toggle svg,
+        .config-close svg {{
+            display: block;
+        }}
+
+        .config-scrim {{
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            background: color-mix(in srgb, var(--bg) 58%, transparent);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }}
+
+        .config-scrim[hidden] {{ display: none; }}
+
+        .config-drawer {{
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 100;
+            width: min(340px, 92vw);
+            height: 100vh;
+            padding: 18px;
+            border-left: 1px solid var(--border-strong);
+            background: var(--surface);
+            box-shadow: -18px 0 50px rgba(0, 0, 0, 0.18);
+            transform: translateX(calc(100% + 2px));
+            transition: transform 160ms ease;
+            font-family: var(--sans);
+        }}
+
+        .config-drawer.is-open {{
+            transform: translateX(0);
+        }}
+
+        .config-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }}
+
+        .config-title {{
+            margin: 0;
+            font: 650 1rem/1.3 var(--sans);
+            color: var(--text);
+        }}
+
+        .config-close {{
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text-muted);
+            display: inline-grid;
+            place-items: center;
+            cursor: pointer;
+        }}
+
+        .config-close:hover {{
+            color: var(--text);
+            background: var(--surface-2);
+        }}
+
+        .config-group {{
+            margin: 18px 0 0;
+            padding: 0;
+            border: 0;
+        }}
+
+        .config-group legend {{
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            font: 0.78rem/1.4 var(--sans);
+            text-transform: uppercase;
+        }}
+
+        .theme-picker {{
+            display: grid;
+            gap: 8px;
+        }}
+
+        .theme-option {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font: 0.92rem/1.3 var(--sans);
+            cursor: pointer;
+        }}
+
+        .theme-option:hover {{
+            border-color: var(--border-strong);
+            background: var(--surface-2);
+        }}
+
+        .theme-option input {{
+            accent-color: var(--accent);
+            margin: 0;
+        }}
+
+        .search-overlay {{
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: grid;
+            place-items: start center;
+            padding: 12vh 16px 24px;
+            background: color-mix(in srgb, var(--bg) 72%, transparent);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }}
+
+        .search-overlay[hidden] {{ display: none; }}
+
+        .search-panel {{
+            width: min(720px, 100%);
+            max-height: min(620px, 72vh);
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            background: var(--surface);
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .search-input-row {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }}
+
+        .search-icon {{
+            color: var(--text-muted);
+            font: 1.1rem/1 var(--sans);
+            user-select: none;
+        }}
+
+        #search-input {{
+            min-width: 0;
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font: 1rem/1.4 var(--sans);
+            outline: none;
+        }}
+
+        #search-input::placeholder {{ color: var(--text-muted); }}
+
+        .search-key {{
+            border: 1px solid var(--border);
+            border-bottom-color: var(--border-strong);
+            border-radius: 5px;
+            padding: 1px 6px;
+            color: var(--text-muted);
+            background: var(--surface);
+            font: 0.75rem/1.4 var(--mono);
+        }}
+
+        .search-status {{
+            padding: 10px 14px;
+            color: var(--text-muted);
+            font: 0.85rem/1.4 var(--sans);
+            border-bottom: 1px solid var(--border);
+        }}
+
+        .search-status:empty {{ display: none; }}
+
+        .search-results {{
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+        }}
+
+        .search-result {{
+            width: 100%;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 4px 12px;
+            padding: 10px 14px;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            text-align: left;
+            cursor: pointer;
+            font: 0.9rem/1.35 var(--sans);
+        }}
+
+        .search-result:hover,
+        .search-result.is-active {{
+            background: var(--surface-2);
+        }}
+
+        .search-result-title {{
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 600;
+        }}
+
+        .search-result-kind,
+        .search-result-preview {{
+            color: var(--text-muted);
+            font: 0.78rem/1.35 var(--mono);
+        }}
+
+        .search-result-preview {{
+            grid-column: 1 / -1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }}
+
         @media (max-width: 600px) {{
             main {{ padding: 16px 14px 60px; }}
             body {{ font-size: 16px; }}
             h1 {{ font-size: 1.7rem; }}
             h2 {{ font-size: 1.35rem; }}
             .dir-listing .modified {{ display: none; }}
+            .search-overlay {{ padding-top: 8vh; }}
+            .search-panel {{ max-height: 80vh; }}
         }}
 
         @media print {{
@@ -1222,19 +1887,109 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         {pygments_css_light}
 
+        {pygments_css_dark_forced}
+
         @media (prefers-color-scheme: dark) {{
-            {pygments_css_dark}
+            {pygments_css_dark_system}
         }}
     </style>
 </head>
 <body>
-    {breadcrumb}
+    <div class="page-chrome">
+        {breadcrumb}
+        <div class="controls">
+            <button id="config-toggle" class="config-toggle" type="button" aria-label="Open configuration" aria-controls="config-panel" aria-expanded="false" title="Configuration">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/>
+                    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6l-.08.08a2 2 0 1 1-3.84 0L10 20a1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1l-.08-.08a2 2 0 1 1 0-3.84L4 10a1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6l.08-.08a2 2 0 1 1 3.84 0L14 4a1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 .6 1l.08.08a2 2 0 1 1 0 3.84L20 14a1.7 1.7 0 0 0-.6 1Z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div id="config-scrim" class="config-scrim" hidden></div>
+    <aside id="config-panel" class="config-drawer" role="dialog" aria-modal="true" aria-label="Configuration" aria-hidden="true" inert>
+        <div class="config-header">
+            <h2 class="config-title">Configuration</h2>
+            <button id="config-close" class="config-close" type="button" aria-label="Close configuration">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/>
+                </svg>
+            </button>
+        </div>
+        <fieldset class="config-group">
+            <legend>Theme</legend>
+            <div class="theme-picker">
+                <label class="theme-option">
+                    <input type="radio" name="theme-choice" value="system" checked>
+                    <span>System</span>
+                </label>
+                <label class="theme-option">
+                    <input type="radio" name="theme-choice" value="light">
+                    <span>Light</span>
+                </label>
+                <label class="theme-option">
+                    <input type="radio" name="theme-choice" value="dark">
+                    <span>Dark</span>
+                </label>
+            </div>
+        </fieldset>
+    </aside>
+    <div id="search-overlay" class="search-overlay" hidden>
+        <section class="search-panel" role="dialog" aria-modal="true" aria-label="Search">
+            <div class="search-input-row">
+                <span class="search-icon" aria-hidden="true">⌕</span>
+                <input id="search-input" type="search" placeholder="Search files and contents" autocomplete="off" spellcheck="false">
+                <kbd class="search-key">Esc</kbd>
+            </div>
+            <div id="search-status" class="search-status">Type to search</div>
+            <div id="search-results" class="search-results" role="listbox" aria-label="Search results"></div>
+        </section>
+    </div>
     <main>
         {content}
     </main>
+    <script>
+        window.MathJax = {{
+            tex: {{
+                inlineMath: [["$", "$"], ["\\\\(", "\\\\)"]],
+                displayMath: [["$$", "$$"], ["\\\\[", "\\\\]"]],
+                processEscapes: true
+            }},
+            options: {{
+                skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+            }}
+        }};
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script type="module">
         import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const THEME_STORAGE_KEY = "markdown-server-theme";
+        const systemThemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+        function getSelectedTheme() {{
+            try {{
+                const theme = localStorage.getItem(THEME_STORAGE_KEY);
+                return theme === "light" || theme === "dark" ? theme : "system";
+            }} catch (error) {{
+                return "system";
+            }}
+        }}
+
+        function shouldUseDarkTheme(theme) {{
+            return theme === "dark" || (theme === "system" && systemThemeQuery.matches);
+        }}
+
+        function applyTheme(theme) {{
+            if (theme === "light" || theme === "dark") {{
+                document.documentElement.dataset.theme = theme;
+            }} else {{
+                delete document.documentElement.dataset.theme;
+            }}
+        }}
+
+        const initialTheme = getSelectedTheme();
+        applyTheme(initialTheme);
+        const isDark = shouldUseDarkTheme(initialTheme);
         mermaid.initialize({{
             startOnLoad: true,
             securityLevel: "strict",
@@ -1242,6 +1997,253 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         }});
 
         const EXPAND_STEP = 10;
+        const SEARCH_DEBOUNCE_MS = 120;
+        const configToggle = document.getElementById("config-toggle");
+        const configPanel = document.getElementById("config-panel");
+        const configClose = document.getElementById("config-close");
+        const configScrim = document.getElementById("config-scrim");
+        const themeChoices = Array.from(document.querySelectorAll('input[name="theme-choice"]'));
+        const searchOverlay = document.getElementById("search-overlay");
+        const searchInput = document.getElementById("search-input");
+        const searchStatus = document.getElementById("search-status");
+        const searchResultsEl = document.getElementById("search-results");
+        let searchTimer = null;
+        let searchSequence = 0;
+        let searchResults = [];
+        let activeSearchIndex = -1;
+
+        function isSearchOpen() {{
+            return searchOverlay && !searchOverlay.hidden;
+        }}
+
+        function isConfigOpen() {{
+            return configPanel && configPanel.classList.contains("is-open");
+        }}
+
+        function openConfig() {{
+            if (!configToggle || !configPanel || !configScrim) return;
+            configPanel.classList.add("is-open");
+            configPanel.setAttribute("aria-hidden", "false");
+            configPanel.removeAttribute("inert");
+            configToggle.setAttribute("aria-expanded", "true");
+            configToggle.setAttribute("aria-label", "Close configuration");
+            configScrim.hidden = false;
+            window.setTimeout(() => configClose?.focus(), 0);
+        }}
+
+        function closeConfig() {{
+            if (!configToggle || !configPanel || !configScrim) return;
+            configPanel.classList.remove("is-open");
+            configPanel.setAttribute("aria-hidden", "true");
+            configPanel.setAttribute("inert", "");
+            configToggle.setAttribute("aria-expanded", "false");
+            configToggle.setAttribute("aria-label", "Open configuration");
+            configScrim.hidden = true;
+        }}
+
+        function setThemeChoice(theme) {{
+            const selectedTheme = theme === "light" || theme === "dark" ? theme : "system";
+            for (const choice of themeChoices) {{
+                choice.checked = choice.value === selectedTheme;
+            }}
+            applyTheme(selectedTheme);
+            try {{
+                if (selectedTheme === "system") {{
+                    localStorage.removeItem(THEME_STORAGE_KEY);
+                }} else {{
+                    localStorage.setItem(THEME_STORAGE_KEY, selectedTheme);
+                }}
+            }} catch (error) {{
+                // Keep the in-page theme even when browser storage is unavailable.
+            }}
+        }}
+
+        setThemeChoice(initialTheme);
+
+        if (configToggle) {{
+            configToggle.addEventListener("click", () => {{
+                if (isConfigOpen()) {{
+                    closeConfig();
+                }} else {{
+                    openConfig();
+                }}
+            }});
+        }}
+
+        if (configClose) {{
+            configClose.addEventListener("click", closeConfig);
+        }}
+
+        if (configScrim) {{
+            configScrim.addEventListener("click", closeConfig);
+        }}
+
+        for (const choice of themeChoices) {{
+            choice.addEventListener("change", () => {{
+                if (choice.checked) setThemeChoice(choice.value);
+            }});
+        }}
+
+        systemThemeQuery.addEventListener("change", () => {{
+            if (getSelectedTheme() === "system") applyTheme("system");
+        }});
+
+        function openSearch() {{
+            if (!searchOverlay || !searchInput) return;
+            searchOverlay.hidden = false;
+            window.setTimeout(() => {{
+                searchInput.focus();
+                searchInput.select();
+            }}, 0);
+        }}
+
+        function closeSearch() {{
+            if (!searchOverlay) return;
+            searchOverlay.hidden = true;
+        }}
+
+        function setSearchStatus(text) {{
+            if (searchStatus) searchStatus.textContent = text;
+        }}
+
+        function setActiveSearchIndex(index) {{
+            activeSearchIndex = index;
+            const items = searchResultsEl ? searchResultsEl.querySelectorAll(".search-result") : [];
+            items.forEach((item, itemIndex) => {{
+                const isActive = itemIndex === activeSearchIndex;
+                item.classList.toggle("is-active", isActive);
+                item.setAttribute("aria-selected", isActive ? "true" : "false");
+                if (isActive) item.scrollIntoView({{ block: "nearest" }});
+            }});
+        }}
+
+        function openSearchResult(index) {{
+            const result = searchResults[index];
+            if (!result) return;
+            window.location.href = result.url;
+        }}
+
+        function renderSearchResults(results) {{
+            if (!searchResultsEl) return;
+            searchResults = results;
+            searchResultsEl.replaceChildren();
+            for (const [index, result] of results.entries()) {{
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "search-result";
+                button.setAttribute("role", "option");
+                button.setAttribute("aria-selected", "false");
+                button.dataset.index = String(index);
+
+                const title = document.createElement("span");
+                title.className = "search-result-title";
+                title.textContent = result.label || result.path;
+
+                const kind = document.createElement("span");
+                kind.className = "search-result-kind";
+                kind.textContent = result.type === "content" ? "content" : "file";
+
+                button.append(title, kind);
+                if (result.preview) {{
+                    const preview = document.createElement("span");
+                    preview.className = "search-result-preview";
+                    preview.textContent = result.preview;
+                    button.append(preview);
+                }}
+                searchResultsEl.append(button);
+            }}
+            setActiveSearchIndex(results.length ? 0 : -1);
+        }}
+
+        async function runSearch(query, sequence) {{
+            if (!query) {{
+                renderSearchResults([]);
+                setSearchStatus("Type to search");
+                return;
+            }}
+            setSearchStatus("Searching...");
+            const params = new URLSearchParams({{ q: query }});
+            try {{
+                const response = await fetch(`/_search?${{params}}`);
+                if (!response.ok) throw new Error(`search failed: ${{response.status}}`);
+                const data = await response.json();
+                if (sequence !== searchSequence) return;
+                renderSearchResults(data.results || []);
+                setSearchStatus(searchResults.length ? "" : "No results");
+            }} catch (error) {{
+                if (sequence !== searchSequence) return;
+                console.error(error);
+                renderSearchResults([]);
+                setSearchStatus("Search failed");
+            }}
+        }}
+
+        function scheduleSearch() {{
+            if (!searchInput) return;
+            window.clearTimeout(searchTimer);
+            const query = searchInput.value.trim();
+            const sequence = ++searchSequence;
+            searchTimer = window.setTimeout(() => runSearch(query, sequence), SEARCH_DEBOUNCE_MS);
+        }}
+
+        document.addEventListener("keydown", (event) => {{
+            const key = event.key.toLowerCase();
+            if ((event.metaKey || event.ctrlKey) && key === "k") {{
+                event.preventDefault();
+                openSearch();
+                scheduleSearch();
+                return;
+            }}
+            if (!isSearchOpen()) return;
+            if (event.key === "Escape") {{
+                event.preventDefault();
+                closeSearch();
+            }} else if (event.key === "ArrowDown" || (event.ctrlKey && key === "n")) {{
+                event.preventDefault();
+                if (searchResults.length) {{
+                    setActiveSearchIndex((activeSearchIndex + 1) % searchResults.length);
+                }}
+            }} else if (event.key === "ArrowUp" || (event.ctrlKey && key === "p")) {{
+                event.preventDefault();
+                if (searchResults.length) {{
+                    setActiveSearchIndex((activeSearchIndex - 1 + searchResults.length) % searchResults.length);
+                }}
+            }} else if (event.key === "Enter") {{
+                event.preventDefault();
+                openSearchResult(activeSearchIndex);
+            }}
+        }});
+
+        document.addEventListener("keydown", (event) => {{
+            if (event.key === "Escape" && isConfigOpen()) {{
+                event.preventDefault();
+                closeConfig();
+                configToggle?.focus();
+            }}
+        }});
+
+        if (searchInput) {{
+            searchInput.addEventListener("input", scheduleSearch);
+        }}
+
+        if (searchResultsEl) {{
+            searchResultsEl.addEventListener("click", (event) => {{
+                const button = event.target.closest(".search-result");
+                if (!button) return;
+                openSearchResult(parseInt(button.dataset.index, 10));
+            }});
+            searchResultsEl.addEventListener("mousemove", (event) => {{
+                const button = event.target.closest(".search-result");
+                if (!button) return;
+                setActiveSearchIndex(parseInt(button.dataset.index, 10));
+            }});
+        }}
+
+        if (searchOverlay) {{
+            searchOverlay.addEventListener("click", (event) => {{
+                if (event.target === searchOverlay) closeSearch();
+            }});
+        }}
 
         async function fetchRange(snippet, start, end) {{
             const params = new URLSearchParams({{
