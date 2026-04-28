@@ -90,6 +90,100 @@ print("still code")
         self.assertRegex(rendered, r"\.highlight\s*\{[^}]*overflow:\s*hidden")
         self.assertRegex(rendered, r"\.highlight\s*>\s*pre\s*\{[^}]*margin:\s*0")
 
+    def test_snippet_expand_buttons_draw_explicit_body_separators(self):
+        module = load_markdown_server()
+        handler = module.MarkdownHandler.__new__(module.MarkdownHandler)
+
+        rendered = handler.wrap_html("<p>snippet</p>", "Snippet")
+
+        self.assertRegex(
+            rendered,
+            r"\.snippet-expand-up\s*\{[^}]*border-bottom:\s*1px solid var\(--border\)",
+        )
+        self.assertRegex(
+            rendered,
+            r"\.snippet-expand-down\s*\{[^}]*border-top:\s*1px solid var\(--border\)",
+        )
+        self.assertIsNone(re.search(r"\.snippet-expand-(?:up|down)\s*\{[^}]*box-shadow", rendered))
+        self.assertRegex(rendered, r"\.highlighttable\s*\{[^}]*margin:\s*0")
+        self.assertRegex(rendered, r"\.highlighttable td\s*\{[^}]*border-bottom:\s*none")
+
+    def test_snippet_expand_buttons_use_svg_chevrons(self):
+        module = load_markdown_server()
+        handler = module.MarkdownHandler.__new__(module.MarkdownHandler)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "test_foo.py"
+            source.write_text("line 1\nline 2\nline 3\n", encoding="utf-8")
+
+            rendered = handler.render_snippet_block(
+                "test_foo.py",
+                source,
+                "test_foo.py:2",
+                2,
+                2,
+                "",
+                "python",
+                "line 2",
+            )
+
+        self.assertIn('<svg class="chev"', rendered)
+        self.assertIn('data-direction="up"', rendered)
+        self.assertIn('data-direction="down"', rendered)
+        self.assertNotIn('<span class="chev">', rendered)
+        self.assertNotIn("⌃", rendered)
+        self.assertNotIn("⌄", rendered)
+
+    def test_snippet_linenos_nested_pygments_elements_inherit_gutter_background(self):
+        module = load_markdown_server()
+        handler = module.MarkdownHandler.__new__(module.MarkdownHandler)
+
+        rendered = handler.wrap_html(
+            '<div class="snippet"><div class="highlight"><table class="highlighttable">'
+            '<tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td>'
+            '<td class="code"><div><pre>code</pre></div></td></tr></table></div></div>',
+            "Snippet",
+        )
+
+        self.assertRegex(
+            rendered,
+            r"\.source-file \.linenos \.linenodiv,\s*"
+            r"\.snippet \.linenos \.linenodiv,\s*"
+            r"\.source-file \.linenos pre,\s*"
+            r"\.snippet \.linenos pre\s*\{[^}]*background:\s*inherit",
+        )
+
+    def test_snippet_expansion_script_does_not_insert_code_line_separator(self):
+        module = load_markdown_server()
+        handler = module.MarkdownHandler.__new__(module.MarkdownHandler)
+
+        rendered = handler.wrap_html("<p>snippet</p>", "Snippet")
+
+        self.assertIn("function moveChildren(sourcePre, targetPre, position, addSeparator = true)", rendered)
+        self.assertIn('moveChildren(fragment.linenosPre, dest.linenosPre, "append");', rendered)
+        self.assertIn('moveChildren(fragment.codePre, dest.codePre, "append", false);', rendered)
+        self.assertIn('moveChildren(fragment.linenosPre, dest.linenosPre, "prepend");', rendered)
+        self.assertIn('moveChildren(fragment.codePre, dest.codePre, "prepend", false);', rendered)
+
+    def test_highlight_snippet_preserves_leading_blank_lines_in_numbered_ranges(self):
+        module = load_markdown_server()
+        handler = module.MarkdownHandler.__new__(module.MarkdownHandler)
+
+        rendered = handler.highlight_snippet(
+            "python",
+            Path("test_foo.py"),
+            "\ndef test_add_zero():\n    assert add(1, 0) == 1",
+            10,
+        )
+
+        self.assertIn('<span class="normal">10</span>', rendered)
+        self.assertIn('<span class="normal">11</span>', rendered)
+        self.assertIn('<span class="normal">12</span>', rendered)
+        self.assertLess(
+            rendered.index('<span class="normal">10</span>'),
+            rendered.index('<span class="k">def</span>'),
+        )
+
     def test_relative_link_to_sibling_directory_serves_target_file(self):
         module = load_markdown_server()
 

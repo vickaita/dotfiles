@@ -140,6 +140,15 @@ def strip_block_indent(text, indent):
             out.append(line)
     return '\n'.join(out)
 
+
+def preserve_lexer_blank_lines(lexer):
+    """Keep Pygments from stripping blank lines out of numbered source ranges."""
+    if hasattr(lexer, 'stripnl'):
+        lexer.stripnl = False
+    if hasattr(lexer, 'stripall'):
+        lexer.stripall = False
+    return lexer
+
 SNIPPET_TEXT_PATTERN = re.compile(
     r'^(?P<path>[^:\n]+):(?P<start>\d+)(?:-(?P<end>\d+))?(?:#(?P<hash>[0-9a-fA-F]{4,40}))?$'
 )
@@ -435,7 +444,7 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
             # Try syntax highlighting with pygments
             try:
-                lexer = guess_lexer_for_filename(file_path, code)
+                lexer = preserve_lexer_blank_lines(guess_lexer_for_filename(file_path, code))
                 formatter = HtmlFormatter(
                     linenos='table',
                     cssclass='highlight',
@@ -811,6 +820,17 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         new_content = SNIPPET_PATTERN.sub(replace, content)
         return new_content, blocks
 
+    @staticmethod
+    def snippet_chevron_svg(direction):
+        path = 'M4 10l4-4 4 4' if direction == 'up' else 'M4 6l4 4 4-4'
+        return (
+            '<svg class="chev" viewBox="0 0 16 16" width="16" height="16" '
+            'aria-hidden="true" focusable="false">'
+            f'<path d="{path}" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"/>'
+            '</svg>'
+        )
+
     def render_snippet_block(self, rel_path, abs_path, href, start, end,
                              commit_hash, lang, code):
         """Render a single snippet card to HTML."""
@@ -842,13 +862,13 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         expand_up = (
             '<button class="snippet-expand snippet-expand-up" data-direction="up" '
             'type="button" title="Show more above (shift-click for all)">'
-            '<span class="chev">⌃</span> show more above</button>'
+            f'{self.snippet_chevron_svg("up")} show more above</button>'
             if start > 1 else ''
         )
         expand_down = (
             '<button class="snippet-expand snippet-expand-down" data-direction="down" '
             'type="button" title="Show more below (shift-click for all)">'
-            '<span class="chev">⌄</span> show more below</button>'
+            f'{self.snippet_chevron_svg("down")} show more below</button>'
             if total == 0 or end < total else ''
         )
 
@@ -870,15 +890,16 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
                                   cssclass='highlight')
         try:
             if lang:
-                lexer = get_lexer_by_name(lang)
+                lexer = get_lexer_by_name(lang, stripnl=False)
             else:
                 lexer = guess_lexer_for_filename(str(abs_path), code)
+            lexer = preserve_lexer_blank_lines(lexer)
         except (ClassNotFound, Exception):
             try:
-                lexer = guess_lexer_for_filename(str(abs_path), code)
+                lexer = preserve_lexer_blank_lines(guess_lexer_for_filename(str(abs_path), code))
             except Exception:
                 from pygments.lexers.special import TextLexer
-                lexer = TextLexer()
+                lexer = preserve_lexer_blank_lines(TextLexer())
         return highlight(code, lexer, formatter)
 
     def read_source_lines(self, abs_path, commit_hash):
@@ -1441,18 +1462,18 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             padding: 4px 14px;
             cursor: pointer;
             text-align: left;
-            border-bottom: 1px solid var(--border);
         }}
 
-        .snippet-expand-down {{ border-bottom: none; border-top: 1px solid var(--border); }}
+        .snippet-expand-up {{ border-bottom: 1px solid var(--border); }}
+        .snippet-expand-down {{ border-top: 1px solid var(--border); }}
 
         .snippet-expand:hover {{ background: var(--surface-2); color: var(--text); }}
 
         .snippet-expand .chev {{
             display: inline-block;
             width: 1.4em;
-            text-align: center;
-            font-weight: 700;
+            height: 1em;
+            vertical-align: -0.15em;
         }}
 
         .snippet-body {{
@@ -1487,14 +1508,24 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             border-right: 1px solid var(--border);
         }}
 
+        .source-file .linenos .linenodiv,
+        .snippet .linenos .linenodiv,
+        .source-file .linenos pre,
+        .snippet .linenos pre {{
+            background: inherit;
+            color: inherit;
+        }}
+
         .highlighttable {{
             width: 100%;
+            margin: 0;
             border-spacing: 0;
         }}
 
         .highlighttable td {{
             padding: 0;
             vertical-align: top;
+            border-bottom: none;
         }}
 
         .highlighttable .linenos {{ width: 3.5em; }}
@@ -2267,17 +2298,17 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             return {{ linenosPre, codePre }};
         }}
 
-        function moveChildren(sourcePre, targetPre, position) {{
+        function moveChildren(sourcePre, targetPre, position, addSeparator = true) {{
             if (!sourcePre || !targetPre) return;
-            const newline = document.createTextNode("\\n");
             const nodes = Array.from(sourcePre.childNodes);
+            const needsSeparator = addSeparator && nodes.length > 0 && targetPre.childNodes.length > 0;
             if (position === "prepend") {{
-                targetPre.prepend(newline);
+                if (needsSeparator) targetPre.prepend(document.createTextNode("\\n"));
                 for (let i = nodes.length - 1; i >= 0; i--) {{
                     targetPre.prepend(nodes[i]);
                 }}
             }} else {{
-                targetPre.append(newline);
+                if (needsSeparator) targetPre.append(document.createTextNode("\\n"));
                 for (const node of nodes) {{
                     targetPre.append(node);
                 }}
@@ -2323,7 +2354,7 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
                     const data = await fetchRange(snippet, newStart, start - 1);
                     const fragment = parseFragment(data.html);
                     moveChildren(fragment.linenosPre, dest.linenosPre, "prepend");
-                    moveChildren(fragment.codePre, dest.codePre, "prepend");
+                    moveChildren(fragment.codePre, dest.codePre, "prepend", false);
                     snippet.dataset.start = String(data.start);
                 }} else {{
                     if (total > 0 && end >= total) return;
@@ -2332,7 +2363,7 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
                     const data = await fetchRange(snippet, end + 1, newEnd);
                     const fragment = parseFragment(data.html);
                     moveChildren(fragment.linenosPre, dest.linenosPre, "append");
-                    moveChildren(fragment.codePre, dest.codePre, "append");
+                    moveChildren(fragment.codePre, dest.codePre, "append", false);
                     snippet.dataset.end = String(data.end);
                     if (!snippet.dataset.total || snippet.dataset.total === "0") {{
                         snippet.dataset.total = String(data.total);
