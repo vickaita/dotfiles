@@ -53,6 +53,13 @@ FENCED_CODE_PATTERN = re.compile(
     re.MULTILINE | re.DOTALL,
 )
 
+TAGGED_CODE_PATTERN = re.compile(
+    r'^(?P<fence_indent>[ \t]*)```(?P<info>[^\n`]*)[ \t]*\n'
+    r'(?P<code>.*?)\n'
+    r'^(?P=fence_indent)```[ \t]*$',
+    re.MULTILINE | re.DOTALL,
+)
+
 BACKSLASH_MATH_PATTERN = re.compile(
     r'\\\[(?P<display>.*?)\\\]|\\\((?P<inline>.*?)\\\)',
     re.DOTALL,
@@ -370,6 +377,9 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             # Convert Mermaid fences into browser-rendered diagram blocks
             content = self.process_mermaid_blocks(content)
 
+            # Convert tagged fenced code blocks into collapsible labeled blocks.
+            content, code_blocks = self.process_tagged_code_blocks(content)
+
             # Preserve \(inline\) and \[display\] math delimiters through Markdown.
             content, math_blocks = self.process_backslash_math(content)
 
@@ -384,6 +394,10 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
                 html_content = html_content.replace(f'<p>{token}</p>', snippet_html)
                 # Fallback for tight lists where the token isn't wrapped in <p>.
                 html_content = html_content.replace(token, snippet_html)
+
+            for token, code_html in code_blocks.items():
+                html_content = html_content.replace(f'<p>{token}</p>', code_html)
+                html_content = html_content.replace(token, code_html)
 
             for token, math_html in math_blocks.items():
                 html_content = html_content.replace(f'<p>{token}</p>', math_html)
@@ -703,11 +717,79 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         frontmatter = match.group('body').replace('\r\n', '\n')
         rendered = (
-            '<pre class="frontmatter"><code>'
+            '<div class="frontmatter-block">'
+            '<div class="frontmatter-label">'
+            '<span>frontmatter</span>'
+            '<button class="frontmatter-toggle" type="button" '
+            'aria-expanded="true" aria-controls="frontmatter-content" '
+            'aria-label="Collapse frontmatter">'
+            '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">'
+            '<path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" '
+            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+            '</svg>'
+            '</button>'
+            '</div>'
+            '<pre class="frontmatter" id="frontmatter-content"><code>'
             f'{html.escape(frontmatter)}'
-            '</code></pre>\n\n'
+            '</code></pre>'
+            '</div>\n\n'
         )
         return rendered + content[match.end():]
+
+    def process_tagged_code_blocks(self, content):
+        """Render tagged fenced code blocks with a collapsible language strip."""
+        blocks = {}
+
+        def replace(match):
+            info = (match.group('info') or '').strip()
+            if not info:
+                return match.group(0)
+
+            lang = info.split()[0].strip()
+            if not lang:
+                return match.group(0)
+
+            code = strip_block_indent(match.group('code'), match.group('fence_indent') or '')
+            token = f'CODEBLOCKPLACEHOLDER{len(blocks):04d}TOKEN'
+            blocks[token] = self.render_code_block(lang, code, len(blocks))
+            return token
+
+        return TAGGED_CODE_PATTERN.sub(replace, content), blocks
+
+    def render_code_block(self, lang, code, index):
+        """Render a tagged fenced code block with syntax highlighting."""
+        lang_label = html.escape(lang)
+        content_id = f'codeblock-content-{index}'
+        label = f'{lang} code'
+        return (
+            '<div class="codeblock-block">'
+            '<div class="codeblock-label">'
+            f'<span>{lang_label}</span>'
+            '<button class="codeblock-toggle" type="button" '
+            f'aria-expanded="true" aria-controls="{content_id}" '
+            f'aria-label="Collapse {html.escape(label, quote=True)}" '
+            f'data-toggle-label="{html.escape(label, quote=True)}">'
+            '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">'
+            '<path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" '
+            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+            '</svg>'
+            '</button>'
+            '</div>'
+            f'<div id="{content_id}" class="codeblock-content">'
+            f'{self.highlight_code_block(lang, code)}'
+            '</div>'
+            '</div>'
+        )
+
+    def highlight_code_block(self, lang, code):
+        """Return Pygments-highlighted HTML for a tagged fenced code block."""
+        formatter = HtmlFormatter(cssclass='highlight')
+        try:
+            lexer = preserve_lexer_blank_lines(get_lexer_by_name(lang, stripnl=False))
+        except (ClassNotFound, Exception):
+            from pygments.lexers.special import TextLexer
+            lexer = preserve_lexer_blank_lines(TextLexer())
+        return highlight(code, lexer, formatter)
 
     def process_backslash_math(self, content):
         """Protect LaTeX backslash math delimiters from Markdown escaping."""
@@ -1142,8 +1224,15 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             --border-strong: #c8c4b6;
             --text: #2a2a2a;
             --text-muted: #6a6a6a;
-            --accent: #2d6cdf;
-            --accent-hover: #1a4fb3;
+            --accent-blue: oklch(0.500 0.155 257);
+            --accent-blue-hover: oklch(0.430 0.155 257);
+            --accent-green: oklch(0.480 0.135 150);
+            --accent-orange: oklch(0.520 0.145 62);
+            --accent-red: oklch(0.500 0.170 25);
+            --accent-purple: oklch(0.500 0.145 300);
+            --accent-yellow: oklch(0.550 0.135 95);
+            --accent: var(--accent-blue);
+            --accent-hover: var(--accent-blue-hover);
             --code-bg: #f3f1ea;
             --code-inline-bg: #ecebe4;
             --blockquote-border: #c8c4b6;
@@ -1161,8 +1250,15 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             --border-strong: #3a4053;
             --text: #e6e8ee;
             --text-muted: #9aa1b3;
-            --accent: #7aa7ff;
-            --accent-hover: #a7c3ff;
+            --accent-blue: oklch(0.760 0.115 257);
+            --accent-blue-hover: oklch(0.840 0.095 257);
+            --accent-green: oklch(0.760 0.120 150);
+            --accent-orange: oklch(0.780 0.130 62);
+            --accent-red: oklch(0.780 0.120 25);
+            --accent-purple: oklch(0.780 0.110 300);
+            --accent-yellow: oklch(0.840 0.120 95);
+            --accent: var(--accent-blue);
+            --accent-hover: var(--accent-blue-hover);
             --code-bg: #161922;
             --code-inline-bg: #1f2330;
             --blockquote-border: #3a4053;
@@ -1178,8 +1274,15 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
                 --border-strong: #3a4053;
                 --text: #e6e8ee;
                 --text-muted: #9aa1b3;
-                --accent: #7aa7ff;
-                --accent-hover: #a7c3ff;
+                --accent-blue: oklch(0.760 0.115 257);
+                --accent-blue-hover: oklch(0.840 0.095 257);
+                --accent-green: oklch(0.760 0.120 150);
+                --accent-orange: oklch(0.780 0.130 62);
+                --accent-red: oklch(0.780 0.120 25);
+                --accent-purple: oklch(0.780 0.110 300);
+                --accent-yellow: oklch(0.840 0.120 95);
+                --accent: var(--accent-blue);
+                --accent-hover: var(--accent-blue-hover);
                 --code-bg: #161922;
                 --code-inline-bg: #1f2330;
                 --blockquote-border: #3a4053;
@@ -1327,13 +1430,8 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             flex-shrink: 0;
         }}
 
-        .task-icon-done {{ color: #16a34a; }}
-        .task-icon-wip {{ color: #d97706; }}
-
-        @media (prefers-color-scheme: dark) {{
-            .task-icon-done {{ color: #4ade80; }}
-            .task-icon-wip {{ color: #f59e0b; }}
-        }}
+        .task-icon-done {{ color: var(--accent-green); }}
+        .task-icon-wip {{ color: var(--accent-orange); }}
 
         hr {{
             border: 0;
@@ -1373,6 +1471,111 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             background: none;
             padding: 0;
             font-size: 1em;
+        }}
+
+        .frontmatter-block {{
+            margin: 1em 0;
+            border: 1px solid var(--accent-purple);
+            border-radius: 8px;
+            overflow: hidden;
+            background: color-mix(in srgb, var(--accent-purple) 8%, var(--code-bg));
+            box-shadow: var(--shadow);
+        }}
+
+        .codeblock-block {{
+            margin: 1em 0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--code-bg);
+            box-shadow: var(--shadow);
+        }}
+
+        .frontmatter-label {{
+            background: var(--accent-purple);
+            color: var(--bg);
+            padding: 4px 12px;
+            font: 650 0.7rem/1.4 var(--sans);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }}
+
+        .codeblock-label {{
+            background: var(--surface-2);
+            color: var(--text-muted);
+            padding: 4px 12px;
+            font: 650 0.7rem/1.4 var(--sans);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }}
+
+        .frontmatter-toggle,
+        .codeblock-toggle {{
+            width: 24px;
+            height: 24px;
+            border: 0;
+            border-radius: 4px;
+            padding: 0;
+            background: transparent;
+            color: inherit;
+            display: inline-grid;
+            place-items: center;
+            cursor: pointer;
+        }}
+
+        .frontmatter-toggle:hover,
+        .codeblock-toggle:hover {{
+            background: color-mix(in srgb, currentColor 14%, transparent);
+        }}
+
+        .frontmatter-toggle svg,
+        .codeblock-toggle svg {{
+            display: block;
+            transition: transform 140ms ease;
+        }}
+
+        .frontmatter-toggle[aria-expanded="false"] svg,
+        .codeblock-toggle[aria-expanded="false"] svg {{
+            transform: rotate(180deg);
+        }}
+
+        :root[data-theme="dark"] .frontmatter-label {{
+            color: #1a1a1a;
+        }}
+
+        @media (prefers-color-scheme: dark) {{
+            :root:not([data-theme="light"]) .frontmatter-label {{ color: #1a1a1a; }}
+        }}
+
+        pre.frontmatter {{
+            margin: 0;
+            border: none;
+            border-radius: 0;
+            background: color-mix(in srgb, var(--accent-purple) 8%, var(--code-bg));
+            box-shadow: none;
+        }}
+
+        .codeblock-block .highlight {{
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }}
+
+        .codeblock-block pre {{
+            margin: 0;
+            border: none;
+            border-radius: 0;
+            background: var(--code-bg);
+            box-shadow: none;
         }}
 
         .highlight {{
@@ -1441,15 +1644,16 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         .snippet-badge .warn-icon {{ display: block; }}
 
-        .snippet-badge-drifted {{ background: #d97706; }}
-        .snippet-badge-missing-commit {{ background: #6b7280; }}
-        .snippet-badge-invalid-commit {{ background: #dc2626; }}
+        .snippet-badge-drifted {{ background: var(--accent-orange); }}
+        .snippet-badge-missing-commit {{ background: var(--accent-purple); }}
+        .snippet-badge-invalid-commit {{ background: var(--accent-red); }}
+
+        :root[data-theme="dark"] .snippet-badge {{
+            color: #1a1a1a;
+        }}
 
         @media (prefers-color-scheme: dark) {{
-            .snippet-badge {{ color: #1a1a1a; }}
-            .snippet-badge-drifted {{ background: #f59e0b; }}
-            .snippet-badge-missing-commit {{ background: #9ca3af; }}
-            .snippet-badge-invalid-commit {{ background: #f87171; }}
+            :root:not([data-theme="light"]) .snippet-badge {{ color: #1a1a1a; }}
         }}
 
         .snippet-expand {{
@@ -1575,8 +1779,8 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         }}
 
         .error {{
-            background: color-mix(in srgb, var(--accent) 8%, var(--bg));
-            border: 1px solid var(--accent);
+            background: color-mix(in srgb, var(--accent-red) 8%, var(--bg));
+            border: 1px solid var(--accent-red);
             color: var(--text);
             padding: 10px 14px;
             border-radius: 6px;
@@ -2331,6 +2535,23 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             if (up && start <= 1) up.remove();
             if (down && total > 0 && end >= total) down.remove();
         }}
+
+        document.addEventListener("click", (event) => {{
+            const button = event.target.closest(".frontmatter-toggle, .codeblock-toggle");
+            if (!button) return;
+            const block = button.closest(".frontmatter-block, .codeblock-block");
+            const content = block ? block.querySelector(".frontmatter, .codeblock-content") : null;
+            if (!content) return;
+
+            const expanded = button.getAttribute("aria-expanded") !== "false";
+            const label = button.dataset.toggleLabel || "frontmatter";
+            button.setAttribute("aria-expanded", expanded ? "false" : "true");
+            button.setAttribute(
+                "aria-label",
+                `${{expanded ? "Expand" : "Collapse"}} ${{label}}`,
+            );
+            content.hidden = expanded;
+        }});
 
         document.addEventListener("click", async (event) => {{
             const button = event.target.closest(".snippet-expand");
