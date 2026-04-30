@@ -14,7 +14,6 @@ return {
     opts = {
       ensure_installed = {
         "ruff",
-        "pyrefly",
       },
     },
   },
@@ -23,7 +22,6 @@ return {
     opts = {
       ensure_installed = {
         "pyright",
-        "pyrefly",
       },
     },
   },
