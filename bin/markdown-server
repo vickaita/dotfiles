@@ -1791,10 +1791,85 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 8px;
+            cursor: zoom-in;
             margin: 1.6em 0;
             padding: 24px;
             text-align: center;
             box-shadow: var(--shadow);
+        }}
+
+        .mermaid:focus-visible {{
+            outline: 3px solid color-mix(in srgb, var(--accent) 65%, transparent);
+            outline-offset: 3px;
+        }}
+
+        .mermaid-lightbox {{
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: grid;
+            place-items: center;
+            padding: 6vh 5vw;
+            background: rgba(0, 0, 0, 0.72);
+        }}
+
+        .mermaid-lightbox[hidden] {{
+            display: none;
+        }}
+
+        .mermaid-lightbox-panel {{
+            position: relative;
+            width: min(94vw, 1400px);
+            height: min(88vh, 1000px);
+            display: grid;
+            place-items: center;
+            overflow: auto;
+            overscroll-behavior: contain;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+        }}
+
+        .mermaid-lightbox-content {{
+            min-width: min-content;
+            padding: 36px;
+        }}
+
+        .mermaid-lightbox-content .mermaid {{
+            margin: 0;
+            border: 0;
+            cursor: zoom-out;
+            box-shadow: none;
+        }}
+
+        .mermaid-lightbox-content svg {{
+            width: min(1200px, calc(94vw - 72px));
+            max-height: calc(88vh - 72px);
+            height: auto;
+        }}
+
+        body.mermaid-lightbox-open {{
+            overflow: hidden;
+        }}
+
+        .mermaid-lightbox-close {{
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            color: white;
+            background: rgba(0, 0, 0, 0.42);
+            cursor: pointer;
+        }}
+
+        .mermaid-lightbox-close:hover {{
+            background: rgba(0, 0, 0, 0.62);
         }}
 
         table {{
@@ -2108,6 +2183,12 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             .dir-listing .modified {{ display: none; }}
             .search-overlay {{ padding-top: 8vh; }}
             .search-panel {{ max-height: 80vh; }}
+            .mermaid-lightbox {{ padding: 5vh 3vw; }}
+            .mermaid-lightbox-panel {{
+                width: 94vw;
+                height: 88vh;
+            }}
+            .mermaid-lightbox-content {{ padding: 24px; }}
         }}
 
         @media print {{
@@ -2183,6 +2264,16 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
     <main>
         {content}
     </main>
+    <div id="mermaid-lightbox" class="mermaid-lightbox" hidden role="dialog" aria-modal="true" aria-label="Expanded Mermaid diagram">
+        <button id="mermaid-lightbox-close" class="mermaid-lightbox-close" type="button" aria-label="Close expanded diagram" title="Close">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+            </svg>
+        </button>
+        <div class="mermaid-lightbox-panel">
+            <div id="mermaid-lightbox-content" class="mermaid-lightbox-content"></div>
+        </div>
+    </div>
     <script>
         window.MathJax = {{
             tex: {{
@@ -2242,6 +2333,10 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         const searchInput = document.getElementById("search-input");
         const searchStatus = document.getElementById("search-status");
         const searchResultsEl = document.getElementById("search-results");
+        const mermaidLightbox = document.getElementById("mermaid-lightbox");
+        const mermaidLightboxContent = document.getElementById("mermaid-lightbox-content");
+        const mermaidLightboxClose = document.getElementById("mermaid-lightbox-close");
+        let activeMermaidSource = null;
         let searchTimer = null;
         let searchSequence = 0;
         let searchResults = [];
@@ -2253,6 +2348,24 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
 
         function isConfigOpen() {{
             return configPanel && configPanel.classList.contains("is-open");
+        }}
+
+        function openMermaidLightbox(source) {{
+            if (!mermaidLightbox || !mermaidLightboxContent || !source) return;
+            activeMermaidSource = source;
+            mermaidLightboxContent.replaceChildren(source.cloneNode(true));
+            mermaidLightbox.hidden = false;
+            document.body.classList.add("mermaid-lightbox-open");
+            mermaidLightboxClose?.focus();
+        }}
+
+        function closeMermaidLightbox() {{
+            if (!mermaidLightbox || !mermaidLightboxContent) return;
+            mermaidLightbox.hidden = true;
+            mermaidLightboxContent.replaceChildren();
+            document.body.classList.remove("mermaid-lightbox-open");
+            activeMermaidSource?.focus();
+            activeMermaidSource = null;
         }}
 
         function openConfig() {{
@@ -2450,6 +2563,11 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
         }});
 
         document.addEventListener("keydown", (event) => {{
+            if (event.key === "Escape" && mermaidLightbox && !mermaidLightbox.hidden) {{
+                event.preventDefault();
+                closeMermaidLightbox();
+                return;
+            }}
             if (event.key === "Escape" && isConfigOpen()) {{
                 event.preventDefault();
                 closeConfig();
@@ -2478,6 +2596,37 @@ class MarkdownHandler(SimpleHTTPRequestHandler):
             searchOverlay.addEventListener("click", (event) => {{
                 if (event.target === searchOverlay) closeSearch();
             }});
+        }}
+
+        document.querySelectorAll(".mermaid").forEach((diagram) => {{
+            diagram.setAttribute("tabindex", "0");
+            diagram.setAttribute("role", "button");
+            diagram.setAttribute("aria-label", "Expand Mermaid diagram");
+        }});
+
+        document.addEventListener("click", (event) => {{
+            if (mermaidLightbox && !mermaidLightbox.hidden) return;
+            const diagram = event.target.closest(".mermaid");
+            if (!diagram || diagram.closest(".mermaid-lightbox")) return;
+            openMermaidLightbox(diagram);
+        }});
+
+        document.addEventListener("keydown", (event) => {{
+            if (event.key !== "Enter" && event.key !== " ") return;
+            const diagram = event.target.closest(".mermaid");
+            if (!diagram || diagram.closest(".mermaid-lightbox")) return;
+            event.preventDefault();
+            openMermaidLightbox(diagram);
+        }});
+
+        if (mermaidLightbox) {{
+            mermaidLightbox.addEventListener("click", (event) => {{
+                if (event.target === mermaidLightbox) closeMermaidLightbox();
+            }});
+        }}
+
+        if (mermaidLightboxClose) {{
+            mermaidLightboxClose.addEventListener("click", closeMermaidLightbox);
         }}
 
         async function fetchRange(snippet, start, end) {{
