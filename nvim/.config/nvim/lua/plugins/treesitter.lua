@@ -120,6 +120,8 @@ return {
   },
   {
     "nvim-treesitter/nvim-treesitter-context",
+    -- TSNode:range() was removed in nvim 0.12; disable until the plugin catches up
+    enabled = vim.fn.has("nvim-0.12") == 0,
     opts = {
       enable = true,
       max_lines = 0,
