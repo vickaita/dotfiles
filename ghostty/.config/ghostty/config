@@ -24,7 +24,9 @@ window-padding-x = 8
 window-padding-y = 8
 
 # Scrollback settings
-scrollback-limit = 100000
+# Ghostty treats this as bytes, not lines. Keep a large per-surface
+# budget so Ghostty and cmux can retain roughly a million typical lines.
+scrollback-limit = 1000000000
 
 # Clipboard
 clipboard-trim-trailing-spaces = true
