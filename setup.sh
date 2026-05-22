@@ -465,6 +465,7 @@ stow_configs() {
         "vim"
         "zellij"
         "agents"
+        "cmux"
         "zsh"
     )
 
