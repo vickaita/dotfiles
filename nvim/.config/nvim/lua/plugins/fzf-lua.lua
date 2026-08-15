@@ -2,51 +2,50 @@ if vim.g.vscode then
   return {}
 end
 
-local function show_git_hunks(diff_cmd, prompt)
-  return function()
-    local fzf = require("fzf-lua")
-    local output = vim.fn.systemlist(diff_cmd)
-    local hunks = {}
-    local current_file = nil
+local function open_git_hunks(diff_cmd, prompt)
+  local fzf = require("fzf-lua")
+  local output = vim.fn.systemlist(diff_cmd)
+  local hunks = {}
+  local current_file = nil
 
-    for _, line in ipairs(output) do
-      if line:match("^%+%+%+ b/(.+)") then
-        current_file = line:match("^%+%+%+ b/(.+)")
-      elseif line:match("^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@(.*)") then
-        local _, _, new_start, new_count, context = line:match("^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@(.*)")
-        if current_file then
-          table.insert(hunks, {
-            filename = current_file,
-            lnum = tonumber(new_start),
-            text = context:gsub("^%s+", ""),
-          })
-        end
+  for _, line in ipairs(output) do
+    if line:match("^%+%+%+ b/(.+)") then
+      current_file = line:match("^%+%+%+ b/(.+)")
+    elseif line:match("^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@(.*)") then
+      local _, _, new_start, new_count, context = line:match("^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@(.*)")
+      if current_file then
+        table.insert(hunks, {
+          filename = current_file,
+          lnum = tonumber(new_start),
+          text = context:gsub("^%s+", ""),
+        })
       end
     end
+  end
 
-    local entries = {}
-    for _, hunk in ipairs(hunks) do
-      table.insert(entries, string.format("%s:%d: %s", hunk.filename, hunk.lnum, hunk.text))
-    end
+  local entries = {}
+  for _, hunk in ipairs(hunks) do
+    table.insert(entries, string.format("%s:%d: %s", hunk.filename, hunk.lnum, hunk.text))
+  end
 
-    -- Determine the git diff command for preview based on input
-    local preview_diff_cmd = diff_cmd:gsub("--unified=0", "-U10")
+  -- Determine the git diff command for preview based on input
+  local preview_diff_cmd = diff_cmd:gsub("--unified=0", "-U10")
 
-    fzf.fzf_exec(entries, {
-      prompt = prompt,
-      actions = {
-        ["default"] = function(selected)
-          if selected and selected[1] then
-            local file, lnum = selected[1]:match("^([^:]+):(%d+):")
-            if file and lnum then
-              vim.cmd("edit " .. file)
-              vim.api.nvim_win_set_cursor(0, {tonumber(lnum), 0})
-            end
+  fzf.fzf_exec(entries, {
+    prompt = prompt,
+    actions = {
+      ["default"] = function(selected)
+        if selected and selected[1] then
+          local file, lnum = selected[1]:match("^([^:]+):(%d+):")
+          if file and lnum then
+            vim.cmd("edit " .. file)
+            vim.api.nvim_win_set_cursor(0, {tonumber(lnum), 0})
           end
-        end,
-      },
-      fzf_opts = {
-        ["--preview"] = string.format([[
+        end
+      end,
+    },
+    fzf_opts = {
+      ["--preview"] = string.format([[
           file=$(echo {} | cut -d: -f1)
           line=$(echo {} | cut -d: -f2)
           %s -- "$file" | awk -v line="$line" '
@@ -74,9 +73,27 @@ local function show_git_hunks(diff_cmd, prompt)
             END { if (!found) exit 1 }
           ' | delta --line-numbers
         ]], preview_diff_cmd),
-      },
-    })
+    },
+  })
+end
+
+local function show_git_hunks(diff_cmd, prompt)
+  return function()
+    open_git_hunks(diff_cmd, prompt)
   end
+end
+
+local function show_default_branch_hunks()
+  local diff = require("util.git_hunks").default_branch_diff()
+  if not diff then
+    vim.notify(
+      "Unable to find a default Git branch (origin/HEAD, origin/main, origin/master, main, or master)",
+      vim.log.levels.ERROR
+    )
+    return
+  end
+
+  open_git_hunks(diff.diff_cmd, diff.prompt)
 end
 
 return {
@@ -98,6 +115,7 @@ return {
       { "<leader>fhs", show_git_hunks("git diff --cached --unified=0", "Git Hunks (Staged)> "), desc = "Git hunks (staged)" },
       { "<leader>fha", show_git_hunks("git diff HEAD --unified=0", "Git Hunks (All)> "), desc = "Git hunks (all)" },
       { "<leader>fhf", "<cmd>FzfLua git_status<cr>", desc = "Git changed files" },
+      { "<leader>fhm", show_default_branch_hunks, desc = "Git hunks (vs default branch)" },
       { "<leader>fq", "<cmd>FzfLua quickfix<cr>", desc = "Quickfix list" },
     },
     config = function(_, opts)

@@ -100,6 +100,7 @@ The `setup.sh` script performs this automatically.
 - **bash**: Bash configuration with shared shell utilities
 - **zsh**: Zsh configuration with optimized startup
 - **tmux**: Terminal multiplexer with custom keybindings
+- **herdr**: Agent multiplexer with Ctrl+Space prefix
 
 ### Development Tools
 
@@ -154,7 +155,7 @@ After setup, you can customize configurations in:
 - **System**: direnv, glances, htop, tree, wget
 - **Development**: lazygit, shellcheck, shellharden, shfmt, lesspipe
 - **Python**: uv (Python package installer)
-- **Terminal**: lynx, w3m, zellij, tmuxinator, tpm
+- **Terminal**: herdr, lynx, w3m, zellij, tmuxinator, tpm
 
 ### Platform Notes
 

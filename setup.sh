@@ -368,6 +368,7 @@ EOF
 # stow creating a symlink to the config directory in the first stowed config
 function setup_config_directory() {
     local config_dir="$HOME/.config"
+    local herdr_config_dir="$config_dir/herdr"
 
     if [ ! -d "$config_dir" ]; then
         echo "Creating $config_dir directory..."
@@ -375,6 +376,16 @@ function setup_config_directory() {
         echo "$config_dir directory created!"
     else
         echo "$config_dir directory already exists."
+    fi
+
+    # Herdr writes logs and session state next to config.toml, so keep the
+    # directory real and only stow the config file into it.
+    if [ ! -d "$herdr_config_dir" ]; then
+        echo "Creating $herdr_config_dir directory..."
+        mkdir -p "$herdr_config_dir"
+        echo "$herdr_config_dir directory created!"
+    else
+        echo "$herdr_config_dir directory already exists."
     fi
 }
 
@@ -455,6 +466,7 @@ stow_configs() {
         "bat"
         "git"
         "ghostty"
+        "herdr"
         "htop"
         "jj"
         "lazygit"
