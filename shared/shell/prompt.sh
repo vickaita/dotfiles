@@ -25,14 +25,18 @@ GIT_PS1_STATESEPARATOR=""
 if [ "$ZSH_VERSION" != "" ]; then
     precmd() {
         local ret_status="%(?:%{%f%}:%{%F{red}%})"
-        __git_ps1 "%F{cyan}%~%f" " ${ret_status}%#%f " " %%B%%F{blue}[%%F{red}%s%%F{blue}]%%b%%f"
+        local remote_prefix=""
+        [[ -n "${SSH_CONNECTION-}" ]] && remote_prefix="%F{yellow}%n@%m%f "
+        __git_ps1 "${remote_prefix}%F{cyan}%~%f" " ${ret_status}%#%f " " %%B%%F{blue}[%%F{red}%s%%F{blue}]%%b%%f"
     }
 fi
 
 if [ "$BASH_VERSION" != "" ]; then
     __prompt_command() {
+        local remote_prefix=""
+        [[ -n "${SSH_CONNECTION-}" ]] && remote_prefix='\[\033[33m\]\u@\h\[\033[0m\] '
         history -a
-        __git_ps1 "\[\033[36m\]\w" "\[\033[0;0m\] $ " " \[\033[1;34m\][\[\033[1;31m\]%s\[\033[1;34m\]]"
+        __git_ps1 "${remote_prefix}\[\033[36m\]\w" "\[\033[0;0m\] $ " " \[\033[1;34m\][\[\033[1;31m\]%s\[\033[1;34m\]]"
     }
     PROMPT_COMMAND+=(__prompt_command)
 fi
