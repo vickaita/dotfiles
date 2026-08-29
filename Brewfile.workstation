@@ -1,0 +1,15 @@
+# Additional packages for workstation setup
+# Install after the common Brewfile.
+
+brew "btop"
+brew "ffmpeg"
+brew "glances"
+brew "imagemagick"
+brew "lynx"
+brew "pandoc"
+brew "poppler"
+brew "tesseract"
+brew "w3m"
+brew "zsh" if OS.linux?
+
+cask "ghostty" if OS.mac?

@@ -1,0 +1,62 @@
+name: Setup tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux test tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y shellcheck shfmt stow zsh
+
+      - name: Install macOS test tools
+        if: runner.os == 'macOS'
+        run: brew install shellcheck shfmt stow
+
+      - name: Check shell syntax
+        run: |
+          bash -n setup.sh tests/test_setup.sh tests/test_prompt.sh bash/.bashrc bash/profiling.sh shared/shell/*.sh
+          zsh -n zsh/.zshrc zsh/.zprofile zsh/.zshenv zsh/keybindings.zsh zsh/profiling.zsh
+
+      - name: Run ShellCheck
+        run: shellcheck -x setup.sh tests/test_setup.sh tests/test_prompt.sh shared/shell/homebrew.sh
+
+      - name: Check shell formatting
+        run: shfmt -d -i 4 -ci setup.sh tests/test_setup.sh tests/test_prompt.sh
+
+      - name: Check Brewfile syntax
+        run: |
+          ruby -c Brewfile
+          ruby -c Brewfile.workstation
+
+      - name: Run prompt tests
+        run: bash tests/test_prompt.sh
+
+      - name: Run setup tests
+        run: bash tests/test_setup.sh
+
+      - name: Preview server profile
+        run: |
+          preview_home="$RUNNER_TEMP/dotfiles-preview-home"
+          mkdir -p "$preview_home"
+          HOME="$preview_home" ./setup.sh --server --dry-run
+          test -z "$(find "$preview_home" -mindepth 1 -print -quit)"

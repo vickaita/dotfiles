@@ -1,5 +1,5 @@
 # mise - Fast, polyglot tool version manager
-# Replaces pyenv, fnm, rbenv, etc. with a single fast tool
+# Provides the repository-managed language runtimes and shell activation.
 # Configuration is stored in ~/.config/mise/config.toml (versioned in dotfiles)
 
 # Check if mise command exists

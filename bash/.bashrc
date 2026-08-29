@@ -8,7 +8,14 @@ case $- in
 *) return ;;
 esac
 
-export DOTFILES="$HOME"/.dotfiles
+_dotfiles_bash_source="${BASH_SOURCE[0]}"
+while [[ -L "$_dotfiles_bash_source" ]]; do
+    _dotfiles_bash_dir="$(cd -P "$(dirname "$_dotfiles_bash_source")" && pwd)"
+    _dotfiles_bash_source="$(readlink "$_dotfiles_bash_source")"
+    [[ "$_dotfiles_bash_source" = /* ]] || _dotfiles_bash_source="$_dotfiles_bash_dir/$_dotfiles_bash_source"
+done
+export DOTFILES="$(cd -P "$(dirname "$_dotfiles_bash_source")/.." && pwd)"
+unset _dotfiles_bash_source _dotfiles_bash_dir
 
 export CURRENT_SHELL="bash"
 
@@ -38,7 +45,7 @@ conditional_source() {
 }
 
 # Enable profiling if requested
-if [[ -n "$BASH_PROFILE" ]]; then
+if [[ -n "${BASH_PROFILE:-}" ]]; then
     source "$DOTFILES/bash/profiling.sh"
     # Create wrapper aliases for timing
     alias safe_source='timing_wrapper safe_source'
@@ -64,8 +71,6 @@ conditional_source "$DOTFILES/shared/shell/editor-binding.sh"
 conditional_source "$DOTFILES/shared/shell/less-pager.sh"
 conditional_source "$DOTFILES/shared/shell/atuin.sh"
 conditional_source "$DOTFILES/shared/shell/aliases.sh"
-conditional_source "$DOTFILES/shared/shell/gh-copilot.sh"
-conditional_source "$DOTFILES/shared/shell/bob.sh"
 
 # Add custom bin directories to PATH
 prepend_to_path "$DOTFILES/bin"
@@ -128,7 +133,7 @@ fi
 optional_source ~/.bashrc.local
 
 # Show profiling results if enabled
-if [[ -n "$BASH_PROFILE" ]]; then
+if [[ -n "${BASH_PROFILE:-}" ]]; then
     echo ""
     echo "=== Bash File Loading Times ==="
     _show_file_times

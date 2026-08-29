@@ -1,325 +1,230 @@
 # Dotfiles
 
-A comprehensive, cross-platform dotfiles setup optimized for development
-productivity across macOS and Ubuntu systems. Features automated installation,
-performance optimizations, and extensive customization options.
+Cross-platform developer configuration for macOS workstations and Ubuntu/Linux
+servers. Setup is profile-driven, preserves existing Bash defaults, and leaves
+SSH completely alone unless explicitly requested.
 
-## Table of Contents
+## Ubuntu server quick start
 
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Installation Options](#installation-options)
-- [Available Modules](#available-modules)
-- [Customization](#customization)
-- [Installed Packages](#installed-packages)
-- [Shell Performance](#shell-performance)
-- [Maintenance](#maintenance)
-- [Troubleshooting](#troubleshooting)
-
-## Features
-
-- **Cross-platform support**: Works seamlessly on macOS and Ubuntu
-- **Automated setup**: One command installs everything you need
-- **Performance optimized**: Fast shell startup with smart completion caching
-- **Modular design**: Use stow to install only what you need
-- **Template system**: Machine-specific configurations with ERB templates
-- **60+ packages**: Automatically installs essential development tools
-- **SSH key management**: Optional SSH key creation and setup
-
-## Quick Start
-
-1. Clone the repository:
-
-    ```bash
-    git clone https://github.com/yourusername/dotfiles ~/.dotfiles
-    cd ~/.dotfiles
-    ```
-
-2. Run the setup script:
-
-    ```bash
-    ./setup.sh
-    ```
-
-3. Restart your shell or source your configuration:
-    ```bash
-    exec $SHELL
-    ```
-
-## Installation Options
-
-### Full Setup
+Run setup as the normal, non-root user whose home directory should be
+configured. The user must have working `sudo`; existing SSH access is enough.
 
 ```bash
-./setup.sh
-```
-
-### Setup with Options
-
-```bash
-# Optionally update Homebrew before installing (macOS and Linux)
-./setup.sh --update-brew
-
-# Selective installation
-./setup.sh --skip-packages    # Skip package installation
-./setup.sh --skip-configs     # Skip config directory setup
-./setup.sh --skip-templates   # Skip template processing
-./setup.sh --skip-ssh         # Skip SSH key management
-./setup.sh --skip-stow        # Skip stowing configuration files
-```
-
-### Manual Module Installation
-
-If you prefer to install specific modules only:
-
-```bash
-# Install specific configurations
-stow nvim      # Neovim configuration
-stow zsh       # Zsh configuration
-stow tmux      # Tmux configuration
-```
-
-**Note:** When setting up manually, trust the repository's Mise configuration
-files so they can be processed correctly:
-
-```bash
-mise trust ~/.dotfiles/mise/.config/mise/config.toml
-```
-
-The `setup.sh` script performs this automatically.
-
-## Available Modules
-
-### Editors & IDEs
-
-- **nvim**: Modern Neovim configuration with Lua-based setup
-- **vim**: Minimal classic Vim configuration
-
-### Shells & Terminals
-
-- **bash**: Bash configuration with shared shell utilities
-- **zsh**: Zsh configuration with optimized startup
-- **tmux**: Terminal multiplexer with custom keybindings
-- **herdr**: Agent multiplexer with Ctrl+Space prefix
-
-### Development Tools
-
-- **git**: Git configuration with template support
-- **prettier**: Code formatting configuration
-
-### System Tools
-
-- **htop**: System monitor configuration
-- **lazygit**: Git TUI configuration
-- **ghostty**: Terminal emulator settings
-
-### Shared Components
-
-- **shared/shell**: Common shell utilities and functions
-
-## Customization
-
-### Environment Variables
-
-Set these environment variables before running setup to customize your
-installation:
-
-```bash
-export GIT_EMAIL="your.email@example.com"
-export GIT_SIGNING_KEY="your-gpg-key-id"
-export GIT_EXCLUDES_FILE="~/.gitignore_global"
-export GIT_EDITOR="nvim"
-```
-
-### Template System
-
-The setup script processes ERB templates for machine-specific configurations:
-
-- `.gitconfig.local.erb` → `~/.gitconfig.local`
-- `.zshrc.local.erb` → `~/.zshrc.local`
-
-Templates support environment variable substitution and conditional logic.
-
-### Local Overrides
-
-After setup, you can customize configurations in:
-
-- `~/.gitconfig.local`: Machine-specific Git settings
-- `~/.zshrc.local`: Machine-specific Zsh settings
-
-## Installed Packages
-
-### Common Tools (All Platforms)
-
-- **Core**: bat, curl, fzf, git, jq, neovim, ripgrep, ruby, stow, tmux, vim
-- **System**: direnv, glances, htop, tree, wget
-- **Development**: lazygit, shellcheck, shellharden, shfmt, lesspipe
-- **Python**: uv (Python package installer)
-- **Terminal**: herdr, lynx, w3m, zellij, tmuxinator, tpm
-
-### Platform Notes
-
-- **Package Manager**: Homebrew on macOS and Linux
-- **Applications**: ghostty (via Homebrew Cask on macOS)
-
-## Shell Performance
-
-The shell configurations are optimized for fast startup:
-
-- **FNM (Fast Node Manager)**: Rust-based Node.js version manager, 40x faster
-  than NVM
-- **Smart completion caching**: Rebuilds only when needed (every 24 hours or
-  when cache is missing)
-- **Lazy loading**: Tools are loaded only when first used
-
-### Rebuilding Completions
-
-After installing new CLI tools, you may want to refresh shell completions
-immediately:
-
-```bash
-rebuild-completions
-```
-
-This utility function will clear the completion cache and rebuild it, making new
-completions available right away. Otherwise, completions automatically rebuild
-within 24 hours.
-
-## GitHub Copilot Extension Setup
-
-The setup script installs the GitHub CLI (`gh`) but does not automatically
-install the Copilot extension due to authentication requirements. To enable
-GitHub Copilot in your terminal:
-
-1. **Authenticate with GitHub**:
-
-    ```bash
-    gh auth login
-    ```
-
-2. **Install the Copilot extension**:
-
-    ```bash
-    gh extension install github/gh-copilot
-    ```
-
-3. **Restart your shell to load aliases**:
-    ```bash
-    exec $SHELL
-    ```
-
-Once set up, you'll have access to these convenient aliases:
-
-- `ghcs` - Get command suggestions (`gh copilot suggest`)
-- `ghce` - Get command explanations (`gh copilot explain`)
-
-**Note**: You need an active GitHub Copilot subscription to use these features.
-
-## Maintenance
-
-### Updating Dotfiles
-
-```bash
+git clone git@github.com:vickaita/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-git pull origin main
-./setup.sh --skip-packages  # Update configs without reinstalling packages
+
+# Read-only preview. Review package, module, and conflict output first.
+./setup.sh --server --dry-run
+
+# Apply the server profile.
+./setup.sh --server
 ```
 
-### Managing Modules
+The server command does not inspect or change `~/.ssh`, start an SSH agent, or
+run `ssh-add`. It also does not replace Ubuntu's `~/.bashrc` or `~/.inputrc`.
+
+## Profiles
+
+`workstation` remains the default for compatibility. `--server` is shorthand
+for `--profile server`.
+
+| Profile | Packages | Configuration modules |
+| --- | --- | --- |
+| `server` | Common developer CLI tools | Bash integration, atuin, bat, git, herdr, htop, jj, lazygit, mise, nvim, prettier, tmux, vim, zellij, agents |
+| `workstation` | Common tools plus media, document, text-browser, and monitoring tools | Server modules plus zsh and Ghostty; cmux on macOS |
+
+The common package set is defined in `Brewfile`: atuin, bat, curl, delta,
+difftastic, direnv, eza, fd, fzf, gh, gitleaks, git, git-branchless, gnupg, gum,
+herdr, htop, jj, jq, lazygit, lesspipe, mise, neovim, neovim-remote, ripgrep,
+ripgrep-all, shellcheck, shellharden, shfmt, stow, tldr, tmux, tmuxinator, tpm,
+tree, uv, vim, wget, yq, zellij, and zoxide.
+
+`Brewfile.workstation` adds btop, ffmpeg, glances, imagemagick, lynx, pandoc,
+poppler, tesseract, and w3m. It installs zsh only on Linux and installs the
+Ghostty cask only on macOS. Neovim is installed directly through Homebrew.
+
+## Safety behavior
+
+Before making changes, setup rejects unsupported operating systems and CPU
+architectures, root execution, and Linux users without usable `sudo`. On a fresh
+Ubuntu/Debian system it installs these Homebrew prerequisites before requiring
+`curl`:
+
+```text
+build-essential procps curl file git ca-certificates
+```
+
+Homebrew is detected at its normal macOS and Linux locations even when it is
+not yet on `PATH`. Setup then runs in this order:
+
+1. Resolve the profile and run preflight checks.
+2. Install profile packages.
+3. Create required real configuration directories.
+4. Stow mise, trust the exact resulting config, and run `mise install`.
+5. Render machine-local templates with mise-managed Ruby.
+6. Integrate Bash and Stow the remaining profile modules.
+7. Optionally manage SSH keys when `--setup-ssh` was supplied.
+8. Enable this repository's Git hooks.
+
+Stow always performs a conflict preview first. Conflicting modules are reported
+and setup exits nonzero; it never uses `stow --adopt`.
+
+### Bash and Readline preservation
+
+The Bash module is not Stowed onto `~/.bashrc`. Instead, setup appends one
+marked block that sources the repository's Bash configuration. It uses the same
+strategy for `~/.inputrc` with a Readline `$include`:
+
+```text
+# >>> dotfiles setup >>>
+source "/absolute/path/to/dotfiles/bash/.bashrc"
+# <<< dotfiles setup <<<
+```
+
+All pre-existing content and file permissions are preserved. Before the first
+changed write, setup creates a UTC timestamped backup such as:
+
+```text
+~/.bashrc.dotfiles-backup.20260829T143000Z
+~/.inputrc.dotfiles-backup.20260829T143000Z
+```
+
+No-op reruns create no additional backup. If the repository moves, the marked
+path is updated atomically. A symlink to the corresponding file in this
+repository is accepted as already configured; any unrelated symlink blocks the
+whole Bash integration step without changing either target.
+
+Use `--skip-module bash` to leave Bash and Readline entirely unchanged.
+
+### SSH is opt-in
+
+Without `--setup-ssh`, setup does not inspect, create, chmod, or modify anything
+under `~/.ssh`, and does not invoke `ssh-agent` or `ssh-add`.
 
 ```bash
-# Install a new module
-stow <module-name>
-
-# Remove a module (unlink its symlinks)
-stow -D <module-name>
-
-# Reinstall a module (useful after updates)
-stow -R <module-name>
+./setup.sh --server --setup-ssh
 ```
 
-### Package Updates
+The opt-in flow can offer to create a default Ed25519 or RSA key interactively.
+It only adds default keys to an already-running agent. It does not create SSH
+client policy, rewrite `Host *`, set `IdentitiesOnly`, change algorithms, or
+start a transient Linux agent. `--skip-ssh` remains accepted as a compatibility
+option and preserves the default no-SSH behavior.
+
+### Templates
+
+Templates are rendered to temporary files through `mise exec -- erb`, checked
+for unresolved ERB, validated when they contain Git configuration, and then
+moved atomically into place. Existing local files and symlinks are never
+overwritten.
+
+Available outputs are:
+
+- `~/.gitconfig.local`
+- `~/.jjconfig.local.toml`
+- `~/.zshrc.local` on the workstation profile
+
+Optional environment variables include `GIT_NAME`, `GIT_EMAIL`,
+`GIT_SIGNING_KEY`, `GIT_EXCLUDES_FILE`, `GIT_EDITOR`, and `JJ_EDITOR`.
+
+## Command-line options
+
+```text
+--profile server|workstation  Select a profile (default: workstation)
+--server                      Alias for --profile server
+--dry-run                     Run read-only checks and print planned actions
+--upgrade                     Update Homebrew and upgrade bundle dependencies
+--update-brew                 Update Homebrew metadata without upgrading packages
+--setup-ssh                   Opt in to SSH key setup
+--skip-ssh                    Preserve the default no-SSH behavior
+--skip-packages               Skip Homebrew and package installation
+--skip-configs                Skip directories, mise setup, templates, Bash, and Stow
+--skip-templates              Skip only local template rendering
+--skip-stow                   Skip only Stow deployment
+--skip-module NAME            Skip one configuration module; repeat as needed
+--help                        Show built-in help
+```
+
+Unknown module names and conflicting profiles are rejected before setup starts.
+Examples:
 
 ```bash
-# macOS
-brew update && brew upgrade
+# Keep Ubuntu Bash completely untouched but install the rest of the server profile.
+./setup.sh --server --skip-module bash
 
-# Ubuntu
-sudo apt update && sudo apt upgrade
+# Omit selected server configuration modules.
+./setup.sh --server --skip-module tmux --skip-module zellij
+
+# Install packages only.
+./setup.sh --server --skip-configs
+
+# Deploy configuration without touching packages.
+./setup.sh --server --skip-packages
 ```
 
-### Secret Scanning (gitleaks)
+`--skip-stow` does not disable mise trust/install when an existing
+`~/.config/mise/config.toml` is present. Use `--skip-module mise` to skip the
+entire managed mise configuration and language-install phase.
 
-This repo includes automated gitleaks scanning on pull requests and pushes to
-`main` via GitHub Actions.
+## Package update policy
 
-Run a local scan before pushing:
+Normal runs use `brew bundle install --no-upgrade`. Already-installed packages
+are not upgraded as an incidental part of setup.
 
 ```bash
-gitleaks git -v
+# Refresh Homebrew metadata, then install missing packages without upgrades.
+./setup.sh --server --update-brew
+
+# Explicitly update Homebrew and upgrade bundle dependencies.
+./setup.sh --server --upgrade
 ```
 
-Pre-commit scanning is also configured through repo-managed hooks.
+## Manual module management
 
-For existing clones, enable them once:
+Configuration modules are GNU Stow packages rooted in this repository:
 
 ```bash
-git config core.hooksPath .githooks
+stow -n -d ~/.dotfiles -t ~ nvim  # preview
+stow -d ~/.dotfiles -t ~ nvim     # install
+stow -D -d ~/.dotfiles -t ~ nvim  # remove links
 ```
 
-After running `./setup.sh`, this is configured automatically.
+Do not manually Stow `bash` over an existing Ubuntu `~/.bashrc`; use setup's
+managed include or source `bash/.bashrc` from your own configuration. When
+managing mise manually, the deployed config is `~/.config/mise/config.toml`:
+
+```bash
+mise trust --yes ~/.config/mise/config.toml
+mise install
+```
+
+## Validation
+
+The setup checks run on Ubuntu and macOS in CI. Locally:
+
+```bash
+bash -n setup.sh tests/test_setup.sh tests/test_prompt.sh shared/shell/*.sh
+zsh -n zsh/.zshrc
+shellcheck -x setup.sh tests/test_setup.sh shared/shell/homebrew.sh
+shfmt -d -i 4 -ci setup.sh tests/test_setup.sh
+bash tests/test_prompt.sh
+bash tests/test_setup.sh
+ruby -c Brewfile
+ruby -c Brewfile.workstation
+```
 
 ## Troubleshooting
 
-### Stow Conflicts
+If dry-run reports a Stow conflict, move or merge the existing target yourself,
+then rerun the preview. Setup deliberately does not adopt conflicting files.
 
-If stow reports conflicts when installing a module:
+If Bash integration reports an unrelated symlink, inspect it with `readlink`
+and decide whether to keep it and use `--skip-module bash`, or replace it
+manually before rerunning setup.
 
-```bash
-# Check what conflicts exist
-stow -n <module-name>
+If template rendering fails, verify that the mise module was deployed and that
+`mise install` completed. A failed or unresolved template never creates the
+destination file.
 
-# Backup existing files and try again
-mv ~/.config/nvim ~/.config/nvim.backup
-stow nvim
-```
-
-### Shell Performance Issues
-
-If shell startup is slow:
-
-```bash
-# Force rebuild completions
-rebuild-completions
-
-# Check shell startup time
-time zsh -i -c exit
-
-# Profile shell startup to identify slow components
-ZSH_PROFILE=1 zsh -i -c exit
-```
-
-### SSH Key Issues
-
-If SSH key creation fails or you need to regenerate:
-
-```bash
-# Generate new SSH key manually
-ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
-
-# Or run setup with only SSH management
-./setup.sh --skip-packages --skip-configs --skip-templates --skip-stow
-```
-
-### ERB Template Processing
-
-If templates aren't processed correctly:
-
-```bash
-# Check if ERB is available
-which erb
-
-# Install ruby if missing (provides ERB)
-brew install ruby    # macOS
-sudo apt install ruby # Ubuntu
-```
+This repository enables `.githooks` through local `core.hooksPath`; gitleaks is
+also run in GitHub Actions.

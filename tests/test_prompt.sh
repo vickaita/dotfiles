@@ -8,20 +8,23 @@ prompt_for() {
     local shell_name=$1
     local connection=${2-}
     local command
+    local prompt_tmp=${TMPDIR:-/tmp}
     local -a shell_args
 
     if [[ $shell_name == bash ]]; then
-        command='DOTFILES=$1; cd /private/tmp; source "$DOTFILES/shared/shell/prompt.sh"; __prompt_command; printf %s "$PS1"'
+        # shellcheck disable=SC2016
+        command='DOTFILES=$1; cd "$2"; source "$DOTFILES/shared/shell/prompt.sh"; __prompt_command; printf %s "$PS1"'
         shell_args=(--noprofile --norc)
     else
-        command='DOTFILES=$1; cd /private/tmp; source "$DOTFILES/shared/shell/prompt.sh"; precmd; print -rn -- "$PROMPT"'
+        # shellcheck disable=SC2016
+        command='DOTFILES=$1; cd "$2"; source "$DOTFILES/shared/shell/prompt.sh"; precmd; print -rn -- "$PROMPT"'
         shell_args=(-f)
     fi
 
     if [[ -n $connection ]]; then
-        SSH_CONNECTION=$connection "$shell_name" "${shell_args[@]}" -c "$command" _ "$dotfiles_root"
+        SSH_CONNECTION=$connection "$shell_name" "${shell_args[@]}" -c "$command" _ "$dotfiles_root" "$prompt_tmp"
     else
-        env -u SSH_CONNECTION "$shell_name" "${shell_args[@]}" -c "$command" _ "$dotfiles_root"
+        env -u SSH_CONNECTION "$shell_name" "${shell_args[@]}" -c "$command" _ "$dotfiles_root" "$prompt_tmp"
     fi
 }
 
