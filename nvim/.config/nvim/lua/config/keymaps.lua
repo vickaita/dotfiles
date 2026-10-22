@@ -94,3 +94,13 @@ local function send_selection_to_agent()
 end
 
 vim.keymap.set("v", "<leader>as", send_selection_to_agent, { desc = "Send to agent" })
+
+vim.keymap.set("x", "<leader>aC", function()
+  require("util.ai_edit").edit_selection()
+end, { desc = "Edit selection with Codex" })
+
+for key, model in pairs({ aH = "haiku", aS = "sonnet", aO = "opus" }) do
+  vim.keymap.set("x", "<leader>" .. key, function()
+    require("util.ai_edit").edit_selection({ provider = "claude", model = model })
+  end, { desc = "Edit selection with Claude " .. model })
+end

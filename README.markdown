@@ -198,6 +198,26 @@ mise trust --yes ~/.config/mise/config.toml
 mise install
 ```
 
+## Neovim AI selection edits
+
+Select text with `v` or whole lines with `V`, press one of the bindings below,
+enter an instruction such as "refactor this" or "add types", and press Enter.
+The model runs in the background and replaces the selection in the buffer. Use `u` to undo;
+save normally when ready. Escape cancels the instruction dialog. Block selections
+are not supported.
+
+| Binding | Model | CLI |
+| --- | --- | --- |
+| `<leader>aC` | Configured Codex model | `codex exec` |
+| `<leader>aH` | Claude Haiku | `claude --print --model haiku` |
+| `<leader>aS` | Claude Sonnet | `claude --print --model sonnet` |
+| `<leader>aO` | Claude Opus | `claude --print --model opus` |
+
+The selected provider's CLI must be on PATH and authenticated (`codex login` or
+`claude auth login`). Each request includes the current unsaved buffer as context.
+If the buffer changes while the request is running, the result is discarded so it
+cannot overwrite those edits.
+
 ## Validation
 
 The setup checks run on Ubuntu and macOS in CI. Locally:
